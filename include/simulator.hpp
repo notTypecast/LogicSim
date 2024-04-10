@@ -1,8 +1,7 @@
 #ifndef SIMULATOR_HPP
 #define SIMULATOR_HPP
 
-#include <iostream>
-#include <memory>
+#include <vector>
 #include <cassert>
 #include "component.hpp"
 
@@ -20,17 +19,29 @@ namespace logicsim
         {
         public:
             template <typename T>
-            Simulator(const T &target)
+            Simulator(T &target)
             {
                 assert((std::is_base_of<Component, T>::value) && "Target must be a Circuit object");
-                _target = std::make_shared<T>(target);
+                _targets.push_back(&target);
+            }
+
+            template <typename T>
+            Simulator(const std::vector<T> &targets)
+            {
+                for (const auto &target : targets)
+                {
+                    assert((std::is_base_of<Component, T>::value) && "Targets must be Circuit objects");
+                    _targets.push_back(&target);
+                }
             }
 
             void tick();
 
+            void check_circuit() const;
+
         protected:
-            std::shared_ptr<Component> _target;
-            int _ticks = 0;
+            std::vector<Component *> _targets;
+            unsigned long _ticks = 0;
         };
     }
 }

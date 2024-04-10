@@ -2,19 +2,26 @@
 #include "simulator.hpp"
 #include "gates.hpp"
 #include "inputs.hpp"
+#include "outputs.hpp"
 
 int main()
 {
-    logicsim::input::Switch sw1(false), sw2(true), sw3(false), sw4(true);
+    logicsim::input::Switch sw1(false), sw2(true), sw3(false);
+    logicsim::input::Oscillator osc(2, 2);
     logicsim::gate::OR or1(sw1, sw2);
     logicsim::gate::NOT not1(sw3);
-    logicsim::gate::AND and2(not1, sw4), and3(or1, and2);
+    logicsim::gate::AND and2(not1, osc);
+    logicsim::gate::XOR xor1(or1, and2);
+    logicsim::output::BaseOutput out(xor1);
 
-    logicsim::sim::Simulator sim(and3);
+    logicsim::sim::Simulator sim(out);
+
+    sim.check_circuit();
 
     for (int i = 0; i < 10; ++i)
     {
         sim.tick();
+        std::cout << "Tick " << i << ": " << out.evaluate() << std::endl;
     }
 
     return 0;

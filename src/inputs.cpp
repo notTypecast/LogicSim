@@ -4,17 +4,12 @@ namespace logicsim
 {
     namespace input
     {
-        Switch::Switch()
-        {
-            _value = false;
-        }
-
         Switch::Switch(bool value)
         {
             _value = value;
         }
 
-        bool Switch::evaluate() const
+        bool Switch::_evaluate()
         {
             return _value;
         }
@@ -22,6 +17,16 @@ namespace logicsim
         void Switch::toggle()
         {
             _value = !_value;
+        }
+
+        Oscillator::Oscillator(unsigned int low_ticks, unsigned int high_ticks) : _low_ticks(low_ticks), _period(low_ticks + high_ticks)
+        {
+        }
+
+        bool Oscillator::_evaluate()
+        {
+            _ticks %= _period;
+            return _ticks >= _low_ticks;
         }
     }
 }

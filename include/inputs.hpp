@@ -10,15 +10,24 @@ namespace logicsim
         class Switch : public Component
         {
         public:
-            Switch();
             Switch(bool value);
-
-            bool evaluate() const override;
 
             void toggle();
 
-        private:
+        protected:
             bool _value;
+            bool _evaluate() override;
+        };
+
+        class Oscillator : public TimeComponent
+        {
+        public:
+            Oscillator(unsigned int low_ticks = 1, unsigned int high_ticks = 1);
+
+        protected:
+            unsigned int _low_ticks;
+            unsigned int _period;
+            bool _evaluate() override;
         };
     }
 }

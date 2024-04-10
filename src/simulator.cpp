@@ -6,8 +6,24 @@ namespace logicsim
     {
         void Simulator::tick()
         {
-            _target->evaluate();
+            for (auto &target : _targets)
+            {
+                target->clear();
+            }
+            for (auto &target : _targets)
+            {
+                target->evaluate();
+            }
+            _targets[0]->evaluate();
             ++_ticks;
+        }
+
+        void Simulator::check_circuit() const
+        {
+            for (const auto &target : _targets)
+            {
+                target->check();
+            }
         }
     }
 }

@@ -4,45 +4,38 @@ namespace logicsim
 {
     namespace gate
     {
-        bool AND::evaluate() const
+        bool AND::_evaluate()
         {
-            _check_inputs();
             return _input1->evaluate() && _input2->evaluate();
         }
 
-        bool OR::evaluate() const
+        bool OR::_evaluate()
         {
-            _check_inputs();
             return _input1->evaluate() || _input2->evaluate();
         }
 
-        bool XOR::evaluate() const
+        bool XOR::_evaluate()
         {
-            _check_inputs();
             return _input1->evaluate() ^ _input2->evaluate();
         }
 
-        bool NAND::evaluate() const
+        bool NAND::_evaluate()
         {
-            _check_inputs();
             return !(_input1->evaluate() && _input2->evaluate());
         }
 
-        bool NOR::evaluate() const
+        bool NOR::_evaluate()
         {
-            _check_inputs();
             return !(_input1->evaluate() || _input2->evaluate());
         }
 
-        bool XNOR::evaluate() const
+        bool XNOR::_evaluate()
         {
-            _check_inputs();
             return !(_input1->evaluate() ^ _input2->evaluate());
         }
 
-        bool NOT::evaluate() const
+        bool NOT::_evaluate()
         {
-            _check_input();
             return !_input->evaluate();
         }
     }
