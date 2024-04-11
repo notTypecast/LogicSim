@@ -1,29 +1,23 @@
 CC=g++
 CFLAGS=-O3 -I ./include
+ALL_SRCS=$(wildcard src/*.cpp)
+ALL_OBJS=$(patsubst src/%.cpp,bin/%.o, $(ALL_SRCS))
+ALL_TESTS=$(wildcard tests/*.cpp)
+ALL_TESTS_BIN=$(patsubst tests/%.cpp,bin/%, $(ALL_TESTS))
 
-main: main.cpp bin/component.o bin/gates.o bin/inputs.o bin/outputs.o bin/memory.o bin/simulator.o
-	$(CC) $(CFLAGS) -o bin/main main.cpp bin/component.o bin/gates.o bin/inputs.o bin/outputs.o bin/simulator.o bin/memory.o
+build: main.cpp $(ALL_OBJS)
+	$(CC) $(CFLAGS) -o bin/main main.cpp $(ALL_OBJS)
 
 run: bin/main
 	./bin/main
 
-bin/component.o: src/component.cpp include/component.hpp
-	$(CC) $(CFLAGS) -c -o bin/component.o src/component.cpp
+build-tests: $(ALL_TESTS_BIN)
 
-bin/gates.o: src/gates.cpp include/gates.hpp
-	$(CC) $(CFLAGS) -c -o bin/gates.o src/gates.cpp
+$(ALL_TESTS_BIN): bin/%: tests/%.cpp $(ALL_OBJS)
+	$(CC) $(CFLAGS) -o $@ $< $(ALL_OBJS)
 
-bin/inputs.o: src/inputs.cpp include/inputs.hpp
-	$(CC) $(CFLAGS) -c -o bin/inputs.o src/inputs.cpp
-
-bin/outputs.o: src/outputs.cpp include/outputs.hpp
-	$(CC) $(CFLAGS) -c -o bin/outputs.o src/outputs.cpp
-
-bin/memory.o: src/memory.cpp include/memory.hpp
-	$(CC) $(CFLAGS) -c -o bin/memory.o src/memory.cpp
-
-bin/simulator.o: src/simulator.cpp include/simulator.hpp
-	$(CC) $(CFLAGS) -c -o bin/simulator.o src/simulator.cpp
+bin/%.o: src/%.cpp include/%.hpp
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
 	rm -f bin/*

@@ -1,6 +1,5 @@
 #include "component.hpp"
 #include "memory.hpp"
-#include <iostream>
 
 namespace logicsim
 {
