@@ -21,7 +21,7 @@ namespace logicsim
             template <typename T>
             Simulator(T &target)
             {
-                assert((std::is_base_of<Component, T>::value) && "Target must be a Circuit object");
+                assert((std::is_base_of<component::Component, T>::value) && "Target must be a Circuit object");
                 _targets.push_back(&target);
             }
 
@@ -30,7 +30,7 @@ namespace logicsim
             {
                 for (const auto &target : targets)
                 {
-                    assert((std::is_base_of<Component, T>::value) && "Targets must be Circuit objects");
+                    assert((std::is_base_of<component::Component, T>::value) && "Targets must be Circuit objects");
                     _targets.push_back(&target);
                 }
             }
@@ -40,7 +40,7 @@ namespace logicsim
             void check_circuit() const;
 
         protected:
-            std::vector<Component *> _targets;
+            std::vector<component::Component *> _targets;
             unsigned long _ticks = 0;
         };
     }

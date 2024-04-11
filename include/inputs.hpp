@@ -7,7 +7,7 @@ namespace logicsim
 {
     namespace input
     {
-        class Switch : public Component
+        class Switch : public component::Component
         {
         public:
             Switch(bool value);
@@ -16,10 +16,10 @@ namespace logicsim
 
         protected:
             bool _value;
-            bool _evaluate() override;
+            bool _evaluate(unsigned int = 0) override;
         };
 
-        class Oscillator : public TimeComponent
+        class Oscillator : public component::TimeComponent
         {
         public:
             Oscillator(unsigned int low_ticks = 1, unsigned int high_ticks = 1);
@@ -27,7 +27,7 @@ namespace logicsim
         protected:
             unsigned int _low_ticks;
             unsigned int _period;
-            bool _evaluate() override;
+            bool _evaluate(unsigned int = 0) override;
         };
     }
 }
