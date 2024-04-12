@@ -1,5 +1,5 @@
 #include <iostream>
-#include "simulator.hpp"
+#include "circuit.hpp"
 #include "inputs.hpp"
 #include "outputs.hpp"
 #include "memory.hpp"
@@ -14,15 +14,21 @@ int main()
 
     logicsim::output::BaseOutput out(tflipflop);
 
-    logicsim::sim::Simulator sim(out);
+    logicsim::circuit::Circuit circuit;
+    circuit.add_component(sw1);
+    circuit.add_component(osc);
+    circuit.add_component(tflipflop);
+    circuit.add_active_component(out);
 
-    sim.check_circuit();
+    circuit.check();
 
     for (int i = 0; i < 10; ++i)
     {
-        sim.tick();
+        circuit.tick();
         std::cout << "Tick " << i << ": " << out.evaluate() << ", " << osc.evaluate() << std::endl;
     }
+
+    circuit.write("flip_flop");
 
     return 0;
 }

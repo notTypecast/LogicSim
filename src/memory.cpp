@@ -6,150 +6,159 @@ namespace logicsim
     namespace memory
     {
         // MemoryComponent
-        MemoryComponent::MemoryComponent(component::Component &clk, unsigned int clk_out) : _clk(&clk), _clk_out(clk_out)
+        MemoryComponent::MemoryComponent(unsigned int n) : NInputComponent(n + 1)
         {
+            _clk = &_inputs[0];
+            _clk_out = &_inputs_out[0];
         }
 
-        void MemoryComponent::_check_inputs() const
+        void MemoryComponent::set_clk(component::Component &clk, unsigned int clk_out)
         {
-            if (!_clk)
-            {
-                throw component::NULLInput();
-            }
-            _clk->check();
+            set_input(0, clk, clk_out);
         }
 
-        void MemoryComponent::_clear_inputs()
+        void MemoryComponent::reset()
         {
-            _clk->clear();
+            _Q = false;
         }
 
         // SRMemoryComponent
-        SRMemoryComponent::SRMemoryComponent(component::Component &clk, component::Component &S, component::Component &R, unsigned int clk_out, unsigned int S_out, unsigned int R_out) : MemoryComponent(clk, clk_out), _S(&S), _R(&R), _S_out(S_out), _R_out(R_out)
+        SRMemoryComponent::SRMemoryComponent() : MemoryComponent(2) {
+            _S = &_inputs[1];
+            _S_out = &_inputs_out[1];
+            _R = &_inputs[2];
+            _R_out = &_inputs_out[2];
+        }
+
+        SRMemoryComponent::SRMemoryComponent(component::Component &clk, component::Component &S, component::Component &R, unsigned int clk_out, unsigned int S_out, unsigned int R_out) : SRMemoryComponent()
         {
+            set_clk(clk, clk_out);
+            set_input(1, S, S_out);
+            set_input(2, R, R_out);
         }
 
         bool SRMemoryComponent::_evaluate(unsigned int out)
         {
             if (_clk_edge())
             {
-                _Q = _S->evaluate(_S_out) || (_Q && !_R->evaluate(_R_out));
+                _Q = (*_S)->evaluate(*_S_out) || (_Q && !(*_R)->evaluate(*_R_out));
             }
 
             return out ^ _Q;
         }
 
-        void SRMemoryComponent::_check_inputs() const
-        {
-            MemoryComponent::_check_inputs();
-            if (!_S || !_R)
-            {
-                throw component::NULLInput();
-            }
-            _S->check();
-            _R->check();
-        }
-
-        void SRMemoryComponent::_clear_inputs()
-        {
-            MemoryComponent::_clear_inputs();
-            _S->clear();
-            _R->clear();
-        }
-
         // JKMemoryComponent
-        JKMemoryComponent::JKMemoryComponent(component::Component &clk, component::Component &J, component::Component &K, unsigned int clk_out, unsigned int J_out, unsigned int K_out) : MemoryComponent(clk, clk_out), _J(&J), _K(&K), _J_out(J_out), _K_out(K_out)
+        JKMemoryComponent::JKMemoryComponent() : MemoryComponent(2)
         {
+            _J = &_inputs[1];
+            _J_out = &_inputs_out[1];
+            _K = &_inputs[2];
+            _K_out = &_inputs_out[2];
+        }
+
+        JKMemoryComponent::JKMemoryComponent(component::Component &clk, component::Component &J, component::Component &K, unsigned int clk_out, unsigned int J_out, unsigned int K_out) : JKMemoryComponent()
+        {
+            set_clk(clk, clk_out);
+            set_input(1, J, J_out);
+            set_input(2, K, K_out);
         }
 
         bool JKMemoryComponent::_evaluate(unsigned int out)
         {
             if (_clk_edge())
             {
-                _Q = !_K->evaluate(_K_out) && _Q || _J->evaluate(_J_out) && !_Q;
+                _Q = !(*_K)->evaluate(*_K_out) && _Q || (*_J)->evaluate(*_J_out) && !_Q;
             }
 
             return out ^ _Q;
         }
 
-        void JKMemoryComponent::_check_inputs() const
-        {
-            MemoryComponent::_check_inputs();
-            if (!_J || !_K)
-            {
-                throw component::NULLInput();
-            }
-            _J->check();
-            _K->check();
-        }
-
-        void JKMemoryComponent::_clear_inputs()
-        {
-            MemoryComponent::_clear_inputs();
-            _J->clear();
-            _K->clear();
-        }
-
         // DMemoryComponent
-        DMemoryComponent::DMemoryComponent(component::Component &clk, component::Component &D, unsigned int clk_out, unsigned int D_out) : MemoryComponent(clk, clk_out), _D(&D), _D_out(D_out)
+        DMemoryComponent::DMemoryComponent() : MemoryComponent(1)
         {
+            _D = &_inputs[1];
+            _D_out = &_inputs_out[1];
+        }
+
+        DMemoryComponent::DMemoryComponent(component::Component &clk, component::Component &D, unsigned int clk_out, unsigned int D_out) : DMemoryComponent()
+        {
+            set_clk(clk, clk_out);
+            set_input(1, D, D_out);
         }
 
         bool DMemoryComponent::_evaluate(unsigned int out)
         {
             if (_clk_edge())
             {
-                _Q = _D->evaluate(_D_out);
+                _Q = (*_D)->evaluate(*_D_out);
             }
 
             return out ^ _Q;
         }
 
-        void DMemoryComponent::_check_inputs() const
-        {
-            MemoryComponent::_check_inputs();
-            if (!_D)
-            {
-                throw component::NULLInput();
-            }
-            _D->check();
-        }
-
-        void DMemoryComponent::_clear_inputs()
-        {
-            MemoryComponent::_clear_inputs();
-            _D->clear();
-        }
-
         // TMemoryComponent
-        TMemoryComponent::TMemoryComponent(component::Component &clk, component::Component &T, unsigned int clk_out, unsigned int T_out) : MemoryComponent(clk, clk_out), _T(&T), _T_out(T_out)
+        TMemoryComponent::TMemoryComponent() : MemoryComponent(1)
         {
+            _T = &_inputs[1];
+            _T_out = &_inputs_out[1];
+        }
+
+        TMemoryComponent::TMemoryComponent(component::Component &clk, component::Component &T, unsigned int clk_out, unsigned int T_out) : TMemoryComponent()
+        {
+            set_clk(clk, clk_out);
+            set_input(1, T, T_out);
         }
 
         bool TMemoryComponent::_evaluate(unsigned int out)
         {
             if (_clk_edge())
             {
-                _Q = _T->evaluate(_T_out) ^ _Q;
+                _Q = (*_T)->evaluate(*_T_out) ^ _Q;
             }
 
             return out ^ _Q;
         }
 
-        void TMemoryComponent::_check_inputs() const
+        // Component Types for implementations
+
+        std::string SRLatch::ctype() const
         {
-            MemoryComponent::_check_inputs();
-            if (!_T)
-            {
-                throw component::NULLInput();
-            }
-            _T->check();
+            return "SRLatch";
         }
 
-        void TMemoryComponent::_clear_inputs()
+        std::string JKLatch::ctype() const
         {
-            MemoryComponent::_clear_inputs();
-            _T->clear();
+            return "JKLatch";
+        }
+
+        std::string DLatch::ctype() const
+        {
+            return "DLatch";
+        }
+
+        std::string TLatch::ctype() const
+        {
+            return "TLatch";
+        }
+
+        std::string SRFlipFlop::ctype() const
+        {
+            return "SRFlipFlop";
+        }
+
+        std::string JKFlipFlop::ctype() const
+        {
+            return "JKFlipFlop";
+        }
+
+        std::string DFlipFlop::ctype() const
+        {
+            return "DFlipFlop";
+        }
+
+        std::string TFlipFlop::ctype() const
+        {
+            return "TFlipFlop";
         }
     }
 }

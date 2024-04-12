@@ -10,6 +10,13 @@ namespace logicsim
         }
 
         // Component
+        unsigned int Component::_CURR_ID = 0;
+
+        Component::Component()
+        {
+            _id = _CURR_ID++;
+        }
+
         bool Component::evaluate(unsigned int out)
         {
             if (_cache.find(out) == _cache.end())
@@ -23,32 +30,35 @@ namespace logicsim
         {
             if (!_cache.empty())
             {
-                _clear_inputs();
                 _cache.clear();
             }
         }
 
         void Component::check() const
         {
-            _check_inputs();
+        }
+
+        void Component::reset()
+        {
+        }
+
+        unsigned int Component::id() const
+        {
+            return _id;
+        }
+
+        std::vector<std::pair<unsigned int, unsigned int>> Component::input_ids() const
+        {
+            return {};
+        }
+
+        std::string Component::param_string() const
+        {
+            return "";
         }
 
         // NInputComponent
-        NInputComponent::NInputComponent(unsigned int n) : _n(n), _inputs(n), _inputs_out(n) {}
-
-        NInputComponent::NInputComponent(std::vector<Component> &inputs, std::vector<unsigned int> &inputs_out) : _n(inputs.size())
-        {
-            set_inputs(inputs, inputs_out);
-        }
-
-        void NInputComponent::set_inputs(std::vector<Component> &inputs, std::vector<unsigned int> &inputs_out)
-        {
-            assert(inputs.size() == inputs_out.size());
-            for (size_t i = 0; i < _n; ++i)
-            {
-                set_input(i, inputs[i], inputs_out[i]);
-            }
-        }
+        NInputComponent::NInputComponent(unsigned int n) : _n(n), _inputs(n, nullptr), _inputs_out(n) {}
 
         void NInputComponent::set_input(size_t index, Component &input, unsigned int out)
         {
@@ -57,7 +67,7 @@ namespace logicsim
             _inputs_out[index] = out;
         }
 
-        void NInputComponent::_check_inputs() const
+        void NInputComponent::check() const
         {
             for (auto &input : _inputs)
             {
@@ -69,12 +79,35 @@ namespace logicsim
             }
         }
 
-        void NInputComponent::_clear_inputs()
+        void NInputComponent::clear()
         {
+            Component::clear();
             for (auto &input : _inputs)
             {
                 input->clear();
             }
+        }
+
+        void NInputComponent::reset()
+        {
+            for (auto &input : _inputs)
+            {
+                input->reset();
+            }
+        }
+
+        std::vector<std::pair<unsigned int, unsigned int>> NInputComponent::input_ids() const
+        {
+            std::vector<std::pair<unsigned int, unsigned int>> ids(_n, {std::numeric_limits<unsigned int>::max(), std::numeric_limits<unsigned int>::max()});
+            for (size_t i = 0; i < _n; ++i)
+            {
+                if (_inputs[i])
+                {
+                    ids[i] = {_inputs[i]->id(), _inputs_out[i]};
+                }
+            }
+
+            return ids;
         }
 
         // TimeComponent

@@ -10,6 +10,11 @@ namespace logicsim
             return _inputs[0]->evaluate(_inputs_out[0]);
         }
 
+        std::string BaseOutput::ctype() const
+        {
+            return "OUTPUT";
+        }
+
         // _5in_7SegmentDisplay
         _5in_7SegmentDisplay::_5in_7SegmentDisplay() : NInputComponent(5) {}
 
@@ -25,6 +30,12 @@ namespace logicsim
             set_input(2, input3, input3_out);
             set_input(3, input4, input4_out);
             set_input(4, input5, input5_out);
+        }
+
+        void _5in_7SegmentDisplay::clear()
+        {
+            NInputComponent::clear();
+            _cached = false;
         }
 
         bool _5in_7SegmentDisplay::_evaluate(unsigned int out)
@@ -60,10 +71,9 @@ namespace logicsim
             }
         }
 
-        void _5in_7SegmentDisplay::_clear_inputs()
+        std::string _5in_7SegmentDisplay::ctype() const
         {
-            NInputComponent::_clear_inputs();
-            _cached = false;
+            return "5IN_7SEGMENT";
         }
 
         // _8in_7SegmentDisplay
@@ -86,6 +96,12 @@ namespace logicsim
             set_input(7, input8, input8_out);
         }
 
+        void _8in_7SegmentDisplay::clear()
+        {
+            NInputComponent::clear();
+            _cached = false;
+        }
+
         bool _8in_7SegmentDisplay::_evaluate(unsigned int out)
         {
             if (!_cached)
@@ -99,10 +115,9 @@ namespace logicsim
             return out < 8 ? _input_cache[out] : _input_cache[0];
         }
 
-        void _8in_7SegmentDisplay::_clear_inputs()
+        std::string _8in_7SegmentDisplay::ctype() const
         {
-            NInputComponent::_clear_inputs();
-            _cached = false;
+            return "8IN_7SEGMENT";
         }
     }
 }

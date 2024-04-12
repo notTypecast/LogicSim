@@ -10,15 +10,35 @@ namespace logicsim
             _value = value;
         }
 
+        Constant::Constant(const std::string &param_string)
+        {
+            _value = std::stoi(param_string);
+        }
+
         bool Constant::_evaluate(unsigned int)
         {
             return _value;
+        }
+
+        std::string Constant::ctype() const
+        {
+            return "CONSTANT";
+        }
+
+        std::string Constant::param_string() const
+        {
+            return std::to_string(_value);
         }
 
         // Switch
         Switch::Switch(bool value)
         {
             _value = value;
+        }
+
+        Switch::Switch(const std::string &param_string)
+        {
+            _value = std::stoi(param_string);
         }
 
         bool Switch::_evaluate(unsigned int)
@@ -31,15 +51,46 @@ namespace logicsim
             _value = !_value;
         }
 
+        std::string Switch::ctype() const
+        {
+            return "SWITCH";
+        }
+
+        std::string Switch::param_string() const
+        {
+            return std::to_string(_value);
+        }
+
         // Oscillator
         Oscillator::Oscillator(unsigned int low_ticks, unsigned int high_ticks) : _low_ticks(low_ticks), _period(low_ticks + high_ticks)
         {
+        }
+
+        Oscillator::Oscillator(const std::string &param_string)
+        {
+            _low_ticks = std::stoi(param_string.substr(0, param_string.find(',')));
+            _period = std::stoi(param_string.substr(param_string.find(',') + 1));
+        }
+
+        void Oscillator::reset()
+        {
+            _ticks = 0;
         }
 
         bool Oscillator::_evaluate(unsigned int)
         {
             _ticks %= _period;
             return _ticks >= _low_ticks;
+        }
+
+        std::string Oscillator::ctype() const
+        {
+            return "OSCILLATOR";
+        }
+
+        std::string Oscillator::param_string() const
+        {
+            return std::to_string(_low_ticks) + "," + std::to_string(_period);
         }
 
         // Keypad
@@ -59,6 +110,11 @@ namespace logicsim
                 out = 0;
             }
             return (_key >> out) & 1;
+        }
+
+        std::string Keypad::ctype() const
+        {
+            return "KEYPAD";
         }
     }
 }

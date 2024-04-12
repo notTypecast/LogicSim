@@ -1,11 +1,13 @@
 #ifndef COMPONENT_HPP
 #define COMPONENT_HPP
 
+#include <string>
 #include <vector>
 #include <unordered_map>
 #include <cassert>
 #include <type_traits>
 #include <exception>
+#include <limits>
 
 namespace logicsim
 {
@@ -20,35 +22,44 @@ namespace logicsim
         class Component
         {
         public:
+            Component();
+
             virtual bool evaluate(unsigned int out = 0);
-            void clear(); // recursively checks if inputs are set
-            void check() const; // recursively clears cached state of input components
+            virtual void check() const; // recursively checks input components
+            virtual void clear();       // recursively clears cached state of input components
+            virtual void reset();       // recursively resets component state
+
+            // Methods for saving/loading circuits
+            unsigned int id() const;
+            virtual std::string ctype() const = 0;
+            // map: input index -> (input component id, output index on input component)
+            virtual std::vector<std::pair<unsigned int, unsigned int>> input_ids() const;
+            virtual std::string param_string() const;
 
         protected:
+            static unsigned int _CURR_ID;
+            unsigned int _id;
             std::unordered_map<unsigned int, bool> _cache;
             virtual bool _evaluate(unsigned int out = 0) = 0;
-
-            // must be overriden if component has inputs
-            virtual void _check_inputs() const {}; // implementation must throw NULLInput if input is not set, else call check() on input components
-            virtual void _clear_inputs(){}; // implementation must call clear() on input components
         };
 
         class NInputComponent : public Component
         {
         public:
             NInputComponent(unsigned int n);
-            NInputComponent(std::vector<Component> &inputs, std::vector<unsigned int> &inputs_out);
 
-            void set_inputs(std::vector<Component> &inputs, std::vector<unsigned int> &inputs_out);
             void set_input(size_t index, Component &input, unsigned int out = 0);
+
+            virtual std::vector<std::pair<unsigned int, unsigned int>> input_ids() const override;
+
+            void check() const override;
+            void clear() override;
+            void reset() override;
 
         protected:
             unsigned int _n;
             std::vector<Component *> _inputs;
             std::vector<unsigned int> _inputs_out;
-
-            void _check_inputs() const override;
-            void _clear_inputs() override;
         };
 
 #define DEFINE_1_INPUT_COMPONENT(name)                                    \
@@ -60,6 +71,7 @@ namespace logicsim
         {                                                                 \
             set_input(0, input, out);                                     \
         }                                                                 \
+        std::string ctype() const override;                               \
                                                                           \
     protected:                                                            \
         bool _evaluate(unsigned int = 0) override;                        \
@@ -75,6 +87,7 @@ namespace logicsim
             set_input(0, input1, out1);                                                                               \
             set_input(1, input2, out2);                                                                               \
         }                                                                                                             \
+        std::string ctype() const override;                                                                           \
                                                                                                                       \
     protected:                                                                                                        \
         bool _evaluate(unsigned int = 0) override;                                                                    \

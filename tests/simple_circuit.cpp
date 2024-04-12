@@ -1,5 +1,5 @@
 #include <iostream>
-#include "simulator.hpp"
+#include "circuit.hpp"
 #include "gates.hpp"
 #include "inputs.hpp"
 #include "outputs.hpp"
@@ -14,15 +14,25 @@ int main()
     logicsim::gate::XOR xor1(or1, and2);
     logicsim::output::BaseOutput out(xor1);
 
-    logicsim::sim::Simulator sim(out);
-
-    sim.check_circuit();
+    logicsim::circuit::Circuit circuit;
+    circuit.add_component(sw1);
+    circuit.add_component(sw2);
+    circuit.add_component(sw3);
+    circuit.add_component(osc);
+    circuit.add_component(or1);
+    circuit.add_component(not1);
+    circuit.add_component(and2);
+    circuit.add_component(xor1);
+    circuit.add_active_component(out);
+    circuit.check();
 
     for (int i = 0; i < 10; ++i)
     {
-        sim.tick();
+        circuit.tick();
         std::cout << "Tick " << i << ": " << out.evaluate() << std::endl;
     }
+
+    circuit.write("simple_circuit");
 
     return 0;
 }

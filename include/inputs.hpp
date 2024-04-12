@@ -11,6 +11,10 @@ namespace logicsim
         {
         public:
             Constant(bool value);
+            Constant(const std::string &param_string);
+
+            std::string ctype() const override;
+            std::string param_string() const override;
 
         protected:
             bool _value;
@@ -21,8 +25,12 @@ namespace logicsim
         {
         public:
             Switch(bool value);
+            Switch(const std::string &param_string);
 
             void toggle();
+
+            std::string ctype() const override;
+            std::string param_string() const override;
 
         protected:
             bool _value;
@@ -33,6 +41,12 @@ namespace logicsim
         {
         public:
             Oscillator(unsigned int low_ticks = 1, unsigned int high_ticks = 1);
+            Oscillator(const std::string &param_string);
+
+            std::string ctype() const override;
+            std::string param_string() const override;
+
+            void reset() override;
 
         protected:
             unsigned int _low_ticks;
@@ -46,6 +60,8 @@ namespace logicsim
             Keypad();
 
             void set_key(unsigned int key);
+
+            std::string ctype() const override;
 
         protected:
             unsigned int _key;

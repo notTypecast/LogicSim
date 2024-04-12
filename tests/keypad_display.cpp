@@ -1,5 +1,5 @@
 #include <iostream>
-#include "simulator.hpp"
+#include "circuit.hpp"
 #include "inputs.hpp"
 #include "outputs.hpp"
 
@@ -11,13 +11,16 @@ int main()
 
     display.set_inputs(t, keypad, keypad, keypad, keypad, 0, 0, 1, 2, 3);
 
-    logicsim::sim::Simulator sim(display);
-    sim.check_circuit();
+    logicsim::circuit::Circuit circuit;
+    circuit.add_component(t);
+    circuit.add_component(keypad);
+    circuit.add_active_component(display);
+    circuit.check();
 
     for (int i = 0; i < 16; ++i)
     {
         keypad.set_key(i);
-        sim.tick();
+        circuit.tick();
         std::cout << "Keypad: ";
         for (int j = 3; j >= 0; --j)
         {
@@ -33,6 +36,7 @@ int main()
         std::cout << std::endl;
     }
 
+    circuit.write("keypad_display");
 
     return 0;
 }

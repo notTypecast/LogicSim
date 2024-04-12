@@ -1,5 +1,5 @@
 #include <iostream>
-#include "simulator.hpp"
+#include "circuit.hpp"
 #include "inputs.hpp"
 #include "outputs.hpp"
 
