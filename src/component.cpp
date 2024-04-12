@@ -4,7 +4,7 @@ namespace logicsim
 {
     namespace component
     {
-        const char *NULLInput::what() const noexcept
+        const char *null_input::what() const noexcept
         {
             return "NULL input";
         }
@@ -42,6 +42,16 @@ namespace logicsim
         {
         }
 
+        unsigned int Component::n_inputs() const
+        {
+            return 0;
+        }
+
+        unsigned int Component::n_outputs() const
+        {
+            return 1;
+        }
+
         unsigned int Component::id() const
         {
             return _id;
@@ -55,6 +65,10 @@ namespace logicsim
         std::string Component::param_string() const
         {
             return "";
+        }
+
+        void Component::set_params(const std::string &param_string)
+        {
         }
 
         // NInputComponent
@@ -73,7 +87,7 @@ namespace logicsim
             {
                 if (!input)
                 {
-                    throw NULLInput();
+                    throw null_input();
                 }
                 input->check();
             }
@@ -94,6 +108,11 @@ namespace logicsim
             {
                 input->reset();
             }
+        }
+
+        unsigned int NInputComponent::n_inputs() const
+        {
+            return _n;
         }
 
         std::vector<std::pair<unsigned int, unsigned int>> NInputComponent::input_ids() const

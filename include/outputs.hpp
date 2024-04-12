@@ -7,9 +7,27 @@ namespace logicsim
 {
     namespace output
     {
-        DEFINE_1_INPUT_COMPONENT(BaseOutput)
+        class Output : public component::NInputComponent
+        {
+        public:
+            Output(unsigned int n = 1);
 
-        class _5in_7SegmentDisplay : public component::NInputComponent
+            unsigned int n_outputs() const override;
+        };
+
+        class BaseOutput : public Output
+        {
+        public:
+            BaseOutput();
+            BaseOutput(Component &input, unsigned int out = 0);
+
+            std::string ctype() const override;
+
+        protected:
+            bool _evaluate(unsigned int = 0) override;
+        };
+
+        class _5in_7SegmentDisplay : public Output
         {
         public:
             _5in_7SegmentDisplay();
@@ -26,7 +44,7 @@ namespace logicsim
             bool _evaluate(unsigned int out = 0) override;
         };
 
-        class _8in_7SegmentDisplay : public component::NInputComponent
+        class _8in_7SegmentDisplay : public Output
         {
         public:
             _8in_7SegmentDisplay();

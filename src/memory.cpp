@@ -22,8 +22,14 @@ namespace logicsim
             _Q = false;
         }
 
+        unsigned int MemoryComponent::n_outputs() const
+        {
+            return 2;
+        }
+
         // SRMemoryComponent
-        SRMemoryComponent::SRMemoryComponent() : MemoryComponent(2) {
+        SRMemoryComponent::SRMemoryComponent() : MemoryComponent(2)
+        {
             _S = &_inputs[1];
             _S_out = &_inputs_out[1];
             _R = &_inputs[2];
@@ -123,42 +129,42 @@ namespace logicsim
 
         std::string SRLatch::ctype() const
         {
-            return "SRLatch";
+            return "SRLATCH";
         }
 
         std::string JKLatch::ctype() const
         {
-            return "JKLatch";
+            return "JKLATCH";
         }
 
         std::string DLatch::ctype() const
         {
-            return "DLatch";
+            return "DLATCH";
         }
 
         std::string TLatch::ctype() const
         {
-            return "TLatch";
+            return "TLATCH";
         }
 
         std::string SRFlipFlop::ctype() const
         {
-            return "SRFlipFlop";
+            return "SRFLIPFLOP";
         }
 
         std::string JKFlipFlop::ctype() const
         {
-            return "JKFlipFlop";
+            return "JKFLIPFLOP";
         }
 
         std::string DFlipFlop::ctype() const
         {
-            return "DFlipFlop";
+            return "DFLIPFLOP";
         }
 
         std::string TFlipFlop::ctype() const
         {
-            return "TFlipFlop";
+            return "TFLIPFLOP";
         }
     }
 }

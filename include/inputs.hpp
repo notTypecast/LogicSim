@@ -10,47 +10,50 @@ namespace logicsim
         class Constant : public component::Component
         {
         public:
+            Constant();
             Constant(bool value);
-            Constant(const std::string &param_string);
 
             std::string ctype() const override;
             std::string param_string() const override;
+            void set_params(const std::string &param_string) override;
 
         protected:
-            bool _value;
+            bool _value = false;
             bool _evaluate(unsigned int = 0) override;
         };
 
         class Switch : public component::Component
         {
         public:
+            Switch();
             Switch(bool value);
-            Switch(const std::string &param_string);
 
             void toggle();
 
             std::string ctype() const override;
             std::string param_string() const override;
+            void set_params(const std::string &param_string) override;
 
         protected:
-            bool _value;
+            bool _value = false;
             bool _evaluate(unsigned int = 0) override;
         };
 
         class Oscillator : public component::TimeComponent
         {
         public:
-            Oscillator(unsigned int low_ticks = 1, unsigned int high_ticks = 1);
-            Oscillator(const std::string &param_string);
+            Oscillator();
+            Oscillator(unsigned int low_ticks, unsigned int high_ticks);
 
             std::string ctype() const override;
             std::string param_string() const override;
+            void set_params(const std::string &param_string) override;
 
             void reset() override;
 
         protected:
-            unsigned int _low_ticks;
-            unsigned int _period;
+            unsigned int _low_ticks = 10;
+            unsigned int _period = 10;
             bool _evaluate(unsigned int = 0) override;
         };
 
@@ -60,6 +63,8 @@ namespace logicsim
             Keypad();
 
             void set_key(unsigned int key);
+
+            unsigned int n_outputs() const override;
 
             std::string ctype() const override;
 

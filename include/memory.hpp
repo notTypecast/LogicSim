@@ -16,6 +16,8 @@ namespace logicsim
 
             virtual void reset() override;
 
+            unsigned int n_outputs() const override;
+
         protected:
             component::Component **_clk;
             unsigned int *_clk_out;
@@ -81,13 +83,14 @@ namespace logicsim
     class name : public base                                                                                                                                         \
     {                                                                                                                                                                \
     public:                                                                                                                                                          \
+        name() {}                                                                                                                                                    \
         name(component::Component &clk, component::Component &input, unsigned int clk_out = 0, unsigned int input_out = 0) : base(clk, input, clk_out, input_out) {} \
         std::string ctype() const override;                                                                                                                          \
                                                                                                                                                                      \
     protected:                                                                                                                                                       \
         bool _clk_edge() override                                                                                                                                    \
         {                                                                                                                                                            \
-            return (*_clk)->evaluate(*_clk_out);                                                                                                                        \
+            return (*_clk)->evaluate(*_clk_out);                                                                                                                     \
         }                                                                                                                                                            \
     };
 
@@ -95,13 +98,14 @@ namespace logicsim
     class name : public base                                                                                                                                                                                                                            \
     {                                                                                                                                                                                                                                                   \
     public:                                                                                                                                                                                                                                             \
+        name() {}                                                                                                                                                                                                                                       \
         name(component::Component &clk, component::Component &input1, component::Component &input2, unsigned int clk_out = 0, unsigned int input1_out = 0, unsigned int input2_out = 0) : base(clk, input1, input2, clk_out, input1_out, input2_out) {} \
         std::string ctype() const override;                                                                                                                                                                                                             \
                                                                                                                                                                                                                                                         \
     protected:                                                                                                                                                                                                                                          \
         bool _clk_edge() override                                                                                                                                                                                                                       \
         {                                                                                                                                                                                                                                               \
-            return (*_clk)->evaluate(*_clk_out);                                                                                                                                                                                                           \
+            return (*_clk)->evaluate(*_clk_out);                                                                                                                                                                                                        \
         }                                                                                                                                                                                                                                               \
     };
 
@@ -109,6 +113,7 @@ namespace logicsim
     class name : public base                                                                                                                                         \
     {                                                                                                                                                                \
     public:                                                                                                                                                          \
+        name() {}                                                                                                                                                    \
         name(component::Component &clk, component::Component &input, unsigned int clk_out = 0, unsigned int input_out = 0) : base(clk, input, clk_out, input_out) {} \
         std::string ctype() const override;                                                                                                                          \
                                                                                                                                                                      \
@@ -117,7 +122,7 @@ namespace logicsim
         bool _clk_edge() override                                                                                                                                    \
         {                                                                                                                                                            \
             bool prev_clk = _prev_clk;                                                                                                                               \
-            _prev_clk = (*_clk)->evaluate(*_clk_out);                                                                                                                   \
+            _prev_clk = (*_clk)->evaluate(*_clk_out);                                                                                                                \
             return !prev_clk && _prev_clk;                                                                                                                           \
         }                                                                                                                                                            \
     };
@@ -126,6 +131,7 @@ namespace logicsim
     class name : public base                                                                                                                                                                                                                            \
     {                                                                                                                                                                                                                                                   \
     public:                                                                                                                                                                                                                                             \
+        name() {}                                                                                                                                                                                                                                       \
         name(component::Component &clk, component::Component &input1, component::Component &input2, unsigned int clk_out = 0, unsigned int input1_out = 0, unsigned int input2_out = 0) : base(clk, input1, input2, clk_out, input1_out, input2_out) {} \
         std::string ctype() const override;                                                                                                                                                                                                             \
                                                                                                                                                                                                                                                         \
@@ -134,7 +140,7 @@ namespace logicsim
         bool _clk_edge() override                                                                                                                                                                                                                       \
         {                                                                                                                                                                                                                                               \
             bool prev_clk = _prev_clk;                                                                                                                                                                                                                  \
-            _prev_clk = (*_clk)->evaluate(*_clk_out);                                                                                                                                                                                                      \
+            _prev_clk = (*_clk)->evaluate(*_clk_out);                                                                                                                                                                                                   \
             return !prev_clk && _prev_clk;                                                                                                                                                                                                              \
         }                                                                                                                                                                                                                                               \
     };

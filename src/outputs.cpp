@@ -4,7 +4,22 @@ namespace logicsim
 {
     namespace output
     {
+        // Output
+        Output::Output(unsigned int n) : NInputComponent(n) {}
+
+        unsigned int Output::n_outputs() const
+        {
+            return 0;
+        }
+
         // BaseOutput
+        BaseOutput::BaseOutput() : Output(1) {}
+
+        BaseOutput::BaseOutput(component::Component &input, unsigned int input_out) : Output(1)
+        {
+            set_input(0, input, input_out);
+        }
+
         bool BaseOutput::_evaluate(unsigned int)
         {
             return _inputs[0]->evaluate(_inputs_out[0]);
@@ -16,9 +31,9 @@ namespace logicsim
         }
 
         // _5in_7SegmentDisplay
-        _5in_7SegmentDisplay::_5in_7SegmentDisplay() : NInputComponent(5) {}
+        _5in_7SegmentDisplay::_5in_7SegmentDisplay() : Output(5) {}
 
-        _5in_7SegmentDisplay::_5in_7SegmentDisplay(component::Component &input1, component::Component &input2, component::Component &input3, component::Component &input4, component::Component &input5, unsigned int input1_out, unsigned int input2_out, unsigned int input3_out, unsigned int input4_out, unsigned int input5_out) : NInputComponent(5)
+        _5in_7SegmentDisplay::_5in_7SegmentDisplay(component::Component &input1, component::Component &input2, component::Component &input3, component::Component &input4, component::Component &input5, unsigned int input1_out, unsigned int input2_out, unsigned int input3_out, unsigned int input4_out, unsigned int input5_out) : Output(5)
         {
             set_inputs(input1, input2, input3, input4, input5, input1_out, input2_out, input3_out, input4_out, input5_out);
         }
@@ -77,9 +92,9 @@ namespace logicsim
         }
 
         // _8in_7SegmentDisplay
-        _8in_7SegmentDisplay::_8in_7SegmentDisplay() : NInputComponent(8) {}
+        _8in_7SegmentDisplay::_8in_7SegmentDisplay() : Output(8) {}
 
-        _8in_7SegmentDisplay::_8in_7SegmentDisplay(component::Component &input1, component::Component &input2, component::Component &input3, component::Component &input4, component::Component &input5, component::Component &input6, component::Component &input7, component::Component &input8, unsigned int input1_out, unsigned int input2_out, unsigned int input3_out, unsigned int input4_out, unsigned int input5_out, unsigned int input6_out, unsigned int input7_out, unsigned int input8_out) : NInputComponent(8)
+        _8in_7SegmentDisplay::_8in_7SegmentDisplay(component::Component &input1, component::Component &input2, component::Component &input3, component::Component &input4, component::Component &input5, component::Component &input6, component::Component &input7, component::Component &input8, unsigned int input1_out, unsigned int input2_out, unsigned int input3_out, unsigned int input4_out, unsigned int input5_out, unsigned int input6_out, unsigned int input7_out, unsigned int input8_out) : Output(8)
         {
             set_inputs(input1, input2, input3, input4, input5, input6, input7, input8, input1_out, input2_out, input3_out, input4_out, input5_out, input6_out, input7_out, input8_out);
         }

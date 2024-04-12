@@ -17,7 +17,7 @@ int main()
     logicsim::circuit::Circuit circuit;
     circuit.add_component(sw1);
     circuit.add_component(nand);
-    circuit.add_active_component(display);
+    circuit.add_component(display);
 
     circuit.write("incomplete");
 

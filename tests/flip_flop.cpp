@@ -4,7 +4,6 @@
 #include "outputs.hpp"
 #include "memory.hpp"
 
-
 int main()
 {
     logicsim::input::Switch sw1(true);
@@ -18,7 +17,7 @@ int main()
     circuit.add_component(sw1);
     circuit.add_component(osc);
     circuit.add_component(tflipflop);
-    circuit.add_active_component(out);
+    circuit.add_component(out);
 
     circuit.check();
 

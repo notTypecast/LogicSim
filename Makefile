@@ -16,6 +16,9 @@ build-tests: $(ALL_TESTS_BIN)
 $(ALL_TESTS_BIN): bin/%: tests/%.cpp $(ALL_OBJS)
 	$(CC) $(CFLAGS) -o $@ $< $(ALL_OBJS)
 
+bin/circuit.o: src/circuit.cpp include/circuit.hpp include/mapped_data.hpp
+	$(CC) $(CFLAGS) -c -o $@ $<
+
 bin/%.o: src/%.cpp include/%.hpp
 	$(CC) $(CFLAGS) -c -o $@ $<
 

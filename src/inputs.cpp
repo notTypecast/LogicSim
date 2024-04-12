@@ -5,14 +5,13 @@ namespace logicsim
     namespace input
     {
         // Constant
+        Constant::Constant()
+        {
+        }
+
         Constant::Constant(bool value)
         {
             _value = value;
-        }
-
-        Constant::Constant(const std::string &param_string)
-        {
-            _value = std::stoi(param_string);
         }
 
         bool Constant::_evaluate(unsigned int)
@@ -30,15 +29,19 @@ namespace logicsim
             return std::to_string(_value);
         }
 
+        void Constant::set_params(const std::string &param_string)
+        {
+            _value = std::stoi(param_string);
+        }
+
         // Switch
+        Switch::Switch()
+        {
+        }
+
         Switch::Switch(bool value)
         {
             _value = value;
-        }
-
-        Switch::Switch(const std::string &param_string)
-        {
-            _value = std::stoi(param_string);
         }
 
         bool Switch::_evaluate(unsigned int)
@@ -61,15 +64,18 @@ namespace logicsim
             return std::to_string(_value);
         }
 
+        void Switch::set_params(const std::string &param_string)
+        {
+            _value = std::stoi(param_string);
+        }
+
         // Oscillator
-        Oscillator::Oscillator(unsigned int low_ticks, unsigned int high_ticks) : _low_ticks(low_ticks), _period(low_ticks + high_ticks)
+        Oscillator::Oscillator()
         {
         }
 
-        Oscillator::Oscillator(const std::string &param_string)
+        Oscillator::Oscillator(unsigned int low_ticks, unsigned int high_ticks) : _low_ticks(low_ticks), _period(low_ticks + high_ticks)
         {
-            _low_ticks = std::stoi(param_string.substr(0, param_string.find(',')));
-            _period = std::stoi(param_string.substr(param_string.find(',') + 1));
         }
 
         void Oscillator::reset()
@@ -93,6 +99,12 @@ namespace logicsim
             return std::to_string(_low_ticks) + "," + std::to_string(_period);
         }
 
+        void Oscillator::set_params(const std::string &param_string)
+        {
+            _low_ticks = std::stoi(param_string.substr(0, param_string.find(',')));
+            _period = std::stoi(param_string.substr(param_string.find(',') + 1));
+        }
+
         // Keypad
         Keypad::Keypad() : _key(0)
         {
@@ -105,7 +117,7 @@ namespace logicsim
 
         bool Keypad::_evaluate(unsigned int out)
         {
-            if (out >= 4)
+            if (out >= n_outputs())
             {
                 out = 0;
             }
@@ -115,6 +127,11 @@ namespace logicsim
         std::string Keypad::ctype() const
         {
             return "KEYPAD";
+        }
+
+        unsigned int Keypad::n_outputs() const
+        {
+            return 4;
         }
     }
 }

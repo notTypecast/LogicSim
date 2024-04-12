@@ -13,7 +13,7 @@ namespace logicsim
 {
     namespace component
     {
-        class NULLInput : public std::exception
+        class null_input : public std::exception
         {
         public:
             const char *what() const noexcept override;
@@ -29,12 +29,16 @@ namespace logicsim
             virtual void clear();       // recursively clears cached state of input components
             virtual void reset();       // recursively resets component state
 
+            virtual unsigned int n_inputs() const;
+            virtual unsigned int n_outputs() const;
+
             // Methods for saving/loading circuits
             unsigned int id() const;
             virtual std::string ctype() const = 0;
             // map: input index -> (input component id, output index on input component)
             virtual std::vector<std::pair<unsigned int, unsigned int>> input_ids() const;
             virtual std::string param_string() const;
+            virtual void set_params(const std::string &param_string);
 
         protected:
             static unsigned int _CURR_ID;
@@ -55,6 +59,8 @@ namespace logicsim
             void check() const override;
             void clear() override;
             void reset() override;
+
+            unsigned int n_inputs() const override;
 
         protected:
             unsigned int _n;

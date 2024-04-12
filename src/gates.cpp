@@ -59,6 +59,11 @@ namespace logicsim
             return !(_inputs[0]->evaluate(_inputs_out[0]) ^ _inputs[1]->evaluate(_inputs_out[1]));
         }
 
+        std::string XNOR::ctype() const
+        {
+            return "XNOR";
+        }
+
         bool NOT::_evaluate(unsigned int)
         {
             return !_inputs[0]->evaluate(_inputs_out[0]);

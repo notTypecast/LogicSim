@@ -14,7 +14,7 @@ int main()
     logicsim::circuit::Circuit circuit;
     circuit.add_component(t);
     circuit.add_component(keypad);
-    circuit.add_active_component(display);
+    circuit.add_component(display);
     circuit.check();
 
     for (int i = 0; i < 16; ++i)

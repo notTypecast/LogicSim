@@ -23,7 +23,7 @@ int main()
     circuit.add_component(not1);
     circuit.add_component(and2);
     circuit.add_component(xor1);
-    circuit.add_active_component(out);
+    circuit.add_component(out);
     circuit.check();
 
     for (int i = 0; i < 10; ++i)
