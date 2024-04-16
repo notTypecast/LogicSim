@@ -6,15 +6,15 @@
 
 int main()
 {
-    logicsim::input::Switch sw1(false), sw2(true), sw3(false);
-    logicsim::input::Oscillator osc(2, 2);
-    logicsim::gate::OR or1(sw1, sw2);
-    logicsim::gate::NOT not1(sw3);
-    logicsim::gate::AND and2(not1, osc);
-    logicsim::gate::XOR xor1(or1, and2);
-    logicsim::output::BaseOutput out(xor1);
+    logicsim::model::input::Switch sw1(false), sw2(true), sw3(false);
+    logicsim::model::input::Oscillator osc(2, 2);
+    logicsim::model::gate::OR or1(sw1, sw2);
+    logicsim::model::gate::NOT not1(sw3);
+    logicsim::model::gate::AND and2(not1, osc);
+    logicsim::model::gate::XOR xor1(or1, and2);
+    logicsim::model::output::BaseOutput out(xor1);
 
-    logicsim::circuit::Circuit circuit;
+    logicsim::model::circuit::Circuit circuit;
     circuit.add_component(sw1);
     circuit.add_component(sw2);
     circuit.add_component(sw3);

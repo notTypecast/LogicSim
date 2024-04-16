@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>873</width>
+    <height>501</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="logicsim::gui::DesignArea" name="designArea">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>-10</y>
+      <width>771</width>
+      <height>431</height>
+     </rect>
+    </property>
+    <property name="widgetResizable">
+     <bool>true</bool>
+    </property>
+    <widget class="QWidget" name="scrollAreaWidgetContents">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>769</width>
+       <height>429</height>
+      </rect>
+     </property>
+    </widget>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>873</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionNew"/>
+    <addaction name="actionOpen"/>
+    <addaction name="actionClose"/>
+    <addaction name="actionSave"/>
+    <addaction name="actionSave_As"/>
+   </widget>
+   <widget class="QMenu" name="menuComponents">
+    <property name="title">
+     <string>Components</string>
+    </property>
+    <widget class="QMenu" name="menuGates">
+     <property name="title">
+      <string>Gates</string>
+     </property>
+     <addaction name="actionNOT"/>
+     <addaction name="actionAND"/>
+     <addaction name="actionOR"/>
+     <addaction name="actionXOR"/>
+     <addaction name="actionNAND"/>
+     <addaction name="actionNOR"/>
+     <addaction name="actionXNOR"/>
+    </widget>
+    <widget class="QMenu" name="menuInputs">
+     <property name="title">
+      <string>Inputs</string>
+     </property>
+     <addaction name="actionConstant"/>
+     <addaction name="actionSwitch"/>
+     <addaction name="actionOscillator"/>
+     <addaction name="actionKeypad"/>
+    </widget>
+    <widget class="QMenu" name="menuOutputs">
+     <property name="title">
+      <string>Outputs</string>
+     </property>
+     <addaction name="actionLED"/>
+     <addaction name="action7_Segment_Display_5_input"/>
+     <addaction name="action7_Segment_Display_8_input"/>
+    </widget>
+    <widget class="QMenu" name="menuMemory">
+     <property name="title">
+      <string>Memory</string>
+     </property>
+     <addaction name="actionSR_Latch"/>
+     <addaction name="actionJK_Latch"/>
+     <addaction name="actionT_Latch"/>
+     <addaction name="actionD_Latch"/>
+     <addaction name="separator"/>
+     <addaction name="actionSR_Flip_Flop"/>
+     <addaction name="actionJK_Flip_Flop"/>
+     <addaction name="actionT_Flip_Flop"/>
+     <addaction name="actionD_Flip_Flop"/>
+    </widget>
+    <addaction name="menuGates"/>
+    <addaction name="menuInputs"/>
+    <addaction name="menuOutputs"/>
+    <addaction name="menuMemory"/>
+   </widget>
+   <widget class="QMenu" name="menuTools">
+    <property name="title">
+     <string>Tools</string>
+    </property>
+    <addaction name="actionSelect"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuTools"/>
+   <addaction name="menuComponents"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionNew">
+   <property name="text">
+    <string>New</string>
+   </property>
+  </action>
+  <action name="actionOpen">
+   <property name="text">
+    <string>Open</string>
+   </property>
+  </action>
+  <action name="actionClose">
+   <property name="text">
+    <string>Close</string>
+   </property>
+  </action>
+  <action name="actionSave">
+   <property name="text">
+    <string>Save</string>
+   </property>
+  </action>
+  <action name="actionSave_As">
+   <property name="text">
+    <string>Save As</string>
+   </property>
+  </action>
+  <action name="actionNOT">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>NOT</string>
+   </property>
+  </action>
+  <action name="actionAND">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>AND</string>
+   </property>
+  </action>
+  <action name="actionOR">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>OR</string>
+   </property>
+  </action>
+  <action name="actionXOR">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>XOR</string>
+   </property>
+  </action>
+  <action name="actionNAND">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>NAND</string>
+   </property>
+  </action>
+  <action name="actionNOR">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>NOR</string>
+   </property>
+  </action>
+  <action name="actionXNOR">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>XNOR</string>
+   </property>
+  </action>
+  <action name="actionConstant">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Constant</string>
+   </property>
+  </action>
+  <action name="actionSwitch">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Switch</string>
+   </property>
+  </action>
+  <action name="actionOscillator">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Oscillator</string>
+   </property>
+  </action>
+  <action name="actionLED">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>LED</string>
+   </property>
+  </action>
+  <action name="action7_Segment_Display_5_input">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>7 Segment Display (5 input)</string>
+   </property>
+  </action>
+  <action name="action7_Segment_Display_8_input">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>7 Segment Display (8 input)</string>
+   </property>
+  </action>
+  <action name="actionSR_Latch">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>SR Latch</string>
+   </property>
+  </action>
+  <action name="actionJK_Latch">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>JK Latch</string>
+   </property>
+  </action>
+  <action name="actionT_Latch">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>T Latch</string>
+   </property>
+  </action>
+  <action name="actionD_Latch">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>D Latch</string>
+   </property>
+  </action>
+  <action name="actionSR_Flip_Flop">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>SR Flip Flop</string>
+   </property>
+  </action>
+  <action name="actionJK_Flip_Flop">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>JK Flip Flop</string>
+   </property>
+  </action>
+  <action name="actionT_Flip_Flop">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>T Flip Flop</string>
+   </property>
+  </action>
+  <action name="actionD_Flip_Flop">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>D Flip Flop</string>
+   </property>
+  </action>
+  <action name="actionKeypad">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Keypad</string>
+   </property>
+  </action>
+  <action name="actionSelect">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Select</string>
+   </property>
+  </action>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>logicsim::gui::DesignArea</class>
+   <extends>QScrollArea</extends>
+   <header>include/gui/design_area.hpp</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

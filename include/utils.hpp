@@ -1,5 +1,5 @@
-#ifndef UTILS_HPP
-#define UTILS_HPP
+#ifndef LOGICSIM_MODEL_UTILS_HPP
+#define LOGICSIM_MODEL_UTILS_HPP
 
 #include <string>
 

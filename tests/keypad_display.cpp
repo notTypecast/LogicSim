@@ -5,13 +5,13 @@
 
 int main()
 {
-    logicsim::input::Constant t(true);
-    logicsim::input::Keypad keypad;
-    logicsim::output::_5in_7SegmentDisplay display;
+    logicsim::model::input::Constant t(true);
+    logicsim::model::input::Keypad keypad;
+    logicsim::model::output::_5in_7SegmentDisplay display;
 
     display.set_inputs(t, keypad, keypad, keypad, keypad, 0, 0, 1, 2, 3);
 
-    logicsim::circuit::Circuit circuit;
+    logicsim::model::circuit::Circuit circuit;
     circuit.add_component(t);
     circuit.add_component(keypad);
     circuit.add_component(display);
