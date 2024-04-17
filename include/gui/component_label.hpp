@@ -14,6 +14,9 @@ namespace logicsim
         public:
             explicit ComponentLabel(QWidget *parent = nullptr);
 
+            void setBorder(QLabel *border);
+            QLabel *border() const;
+
             void mouseMoveEvent(QMouseEvent *ev);
             void mousePressEvent(QMouseEvent *ev);
             void mouseReleaseEvent(QMouseEvent *ev);
@@ -21,13 +24,16 @@ namespace logicsim
         protected:
             int _press_x, _press_y;
             bool _select_mode = true;
+            QLabel *_border = nullptr;
 
         signals:
-            void selected(ComponentLabel *component);
-            void moved(ComponentLabel *component, int x, int y);
+            void selected(ComponentLabel *component, bool ctrl);
+            void selected_nocheck(ComponentLabel *component);
+            void moved(int x, int y);
 
         protected slots:
             void selectMode(bool enabled);
+            void checkRangeQuery(int min_x, int min_y, int max_x, int max_y);
 
         };
     }

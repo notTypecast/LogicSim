@@ -5,7 +5,7 @@ QT = core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-CONFIG += c++11
+CONFIG += c++17
 
 INCLUDEPATH += ./include/
 
@@ -20,7 +20,8 @@ SOURCES += \
     src/utils.cpp \
     src/gui/main_window.cpp \
     src/gui/design_area.cpp \
-    src/gui/component_label.cpp
+    src/gui/component_label.cpp \
+    src/gui/resource_loader.cpp
 
 HEADERS += \
     include/model/circuit.hpp \
@@ -33,7 +34,8 @@ HEADERS += \
     include/utils.hpp \
     include/gui/main_window.hpp \
     include/gui/design_area.hpp \
-    include/gui/component_label.hpp
+    include/gui/component_label.hpp \
+    include/gui/resource_loader.hpp
 
 DISTFILES += \
     saves/flip_flop.lsc \

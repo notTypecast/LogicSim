@@ -5,7 +5,10 @@
 #include <QScrollArea>
 #include <QMouseEvent>
 
-#include "gui/main_window.hpp"
+#include <vector>
+#include <algorithm>
+
+#include "gui/resource_loader.hpp"
 #include "gui/component_label.hpp"
 
 namespace logicsim
@@ -20,26 +23,32 @@ namespace logicsim
 
             void mousePressEvent(QMouseEvent *ev);
             void mouseReleaseEvent(QMouseEvent *ev);
+            void mouseMoveEvent(QMouseEvent *ev);
 
         protected:
-            void _unselect();
+            void _unselectAll();
 
-            TOOL _selected_tool;
+            TOOL _selected_tool = TOOL::SELECT;
             COMPONENT _insert_component;
 
-            ComponentLabel *_selected_component;
-            QPixmap _border_img;
-            QLabel *_selected_border = nullptr;
+            // vector of selected components: (Component, border) pairs
+            std::vector<ComponentLabel *> _selected_components;
+            bool _just_inserted = false;
+
+            int _select_x, _select_y;
+            QLabel *_selection_border[4] = {nullptr};
 
         protected slots:
             void setSelectMode();
             void setInsertMode();
 
-            void setSelected(ComponentLabel *component);
-            void moveComponent(ComponentLabel *component, int, int);
+            void addSelected(ComponentLabel *component, bool ctrl = false);
+            void addSelected_nocheck(ComponentLabel *component);
+            void moveSelectedComponents(int, int);
 
         signals:
             void selectMode(bool enabled);
+            void rangeQuery(int x_min, int y_min, int x_max, int y_max);
         };
     }
 }

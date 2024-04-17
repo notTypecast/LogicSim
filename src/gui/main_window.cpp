@@ -7,6 +7,8 @@ namespace logicsim
     {
         MainWindow::MainWindow(QWidget *parent) : QMainWindow{parent}, _ui(new Ui::MainWindow)
         {
+            resources::load();
+
             _ui->setupUi(this);
 
             QActionGroup *tool_group = new QActionGroup(this);
@@ -53,6 +55,7 @@ namespace logicsim
 
         MainWindow::~MainWindow()
         {
+            resources::deallocate();
             delete _ui;
         }
 
