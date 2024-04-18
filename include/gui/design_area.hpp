@@ -33,22 +33,33 @@ namespace logicsim
 
             // vector of selected components: (Component, border) pairs
             std::vector<ComponentLabel *> _selected_components;
-            bool _just_inserted = false;
 
             int _select_x, _select_y;
             QLabel *_selection_border[4] = {nullptr};
 
+            Wire *_wire = nullptr;
+            int _wire_snap_x, _wire_snap_y;
+
         protected slots:
             void setSelectMode();
             void setInsertMode();
+            void setWireMode();
 
             void addSelected(ComponentLabel *component, bool ctrl = false);
             void addSelected_nocheck(ComponentLabel *component);
             void moveSelectedComponents(int, int);
 
+            void getWireSource(ComponentLabel *component, int x, int y);
+            void moveWireDest(int x, int y);
+            void getWireSnapPos(int x, int y);
+            void setWireDest(int x, int y);
+            void positionOverlaps(ComponentLabel *component, int x, int y);
+
         signals:
-            void selectMode(bool enabled);
+            void setMode(TOOL tool);
             void rangeQuery(int x_min, int y_min, int x_max, int y_max);
+            void wireSnap(int x, int y);
+            void checkPosition(int x, int y);
         };
     }
 }

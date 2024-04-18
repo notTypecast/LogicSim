@@ -1,6 +1,7 @@
 #ifndef LOGICSIM_GUI_RESOURCE_LOADER_HPP
 #define LOGICSIM_GUI_RESOURCE_LOADER_HPP
 
+#include <QLabel>
 #include <QPixmap>
 
 #include <unordered_map>
@@ -53,6 +54,8 @@ namespace logicsim
             inline QPixmap *hselline, *vselline;
             inline QPixmap *hwire, *vwire;
 
+            inline std::unordered_map<COMPONENT, std::pair<std::vector<std::pair<double, double>>, std::vector<std::pair<double, double>>>> comp_io_rel_pos;
+
             enum LINE_TYPE
             {
                 HORIZONTAL,
@@ -60,8 +63,10 @@ namespace logicsim
             };
 
             const int LINE_THICKNESS = 1;
+            const int WIRE_THICKNESS = 2;
 
             QPixmap getLine(LINE_TYPE line_type, int size);
+            QPixmap getWire(LINE_TYPE line_type, int size);
             void load();
             void deallocate();
         }

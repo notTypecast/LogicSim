@@ -21,7 +21,8 @@ SOURCES += \
     src/gui/main_window.cpp \
     src/gui/design_area.cpp \
     src/gui/component_label.cpp \
-    src/gui/resource_loader.cpp
+    src/gui/resource_loader.cpp \
+    src/gui/wire.cpp
 
 HEADERS += \
     include/model/circuit.hpp \
@@ -35,7 +36,8 @@ HEADERS += \
     include/gui/main_window.hpp \
     include/gui/design_area.hpp \
     include/gui/component_label.hpp \
-    include/gui/resource_loader.hpp
+    include/gui/resource_loader.hpp \
+    include/gui/wire.hpp
 
 DISTFILES += \
     saves/flip_flop.lsc \

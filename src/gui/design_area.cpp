@@ -31,19 +31,25 @@ namespace logicsim
 
             case INSERT:
                 ComponentLabel *label = new ComponentLabel(widget());
-                label->setPixmap(resources::comp_images.at(_insert_component));
+                label->setCompType(_insert_component);
 
                 QObject::connect(label, SIGNAL (selected(ComponentLabel *, bool)), this, SLOT (addSelected(ComponentLabel *, bool)));
                 QObject::connect(label, SIGNAL (moved(int, int)), this, SLOT (moveSelectedComponents(int, int)));
-                QObject::connect(this, SIGNAL (selectMode(bool)), label, SLOT (selectMode(bool)));
+                QObject::connect(this, SIGNAL (setMode(TOOL)), label, SLOT (changeMode(TOOL)));
                 QObject::connect(this, SIGNAL (rangeQuery(int, int, int, int)), label, SLOT (checkRangeQuery(int, int, int, int)));
                 QObject::connect(label, SIGNAL (selected_nocheck(ComponentLabel *)), this, SLOT (addSelected_nocheck(ComponentLabel *)));
+                QObject::connect(label, SIGNAL (wireSource(ComponentLabel *, int, int)), this, SLOT (getWireSource(ComponentLabel *, int, int)));
+                QObject::connect(label, SIGNAL (wireMoved(int, int)), this, SLOT (moveWireDest(int, int)));
+                QObject::connect(this, SIGNAL (wireSnap(int, int)), label, SLOT (wireSnap(int, int)));
+                QObject::connect(label, SIGNAL (wireSnapFound(int, int)), this, SLOT (getWireSnapPos(int, int)));
+                QObject::connect(label, SIGNAL (wireReleased(int, int)), this, SLOT (setWireDest(int, int)));
+                QObject::connect(this, SIGNAL (checkPosition(int, int)), label, SLOT (checkPosition(int, int)));
+                QObject::connect(label, SIGNAL (positionOverlaps(ComponentLabel *, int, int)), this, SLOT (positionOverlaps(ComponentLabel *, int, int)));
 
                 label->move(ev->x(), ev->y());
                 label->show();
 
                 addSelected(label);
-                _just_inserted = true;
                 break;
             }
         }
@@ -67,7 +73,6 @@ namespace logicsim
 
             case INSERT:
                 _unselectAll();
-                _just_inserted = false;
                 break;
             default:
                 break;
@@ -110,21 +115,12 @@ namespace logicsim
             }
 
             case INSERT:
-                if (_just_inserted)
-                {
-                    _selected_components[0]->move(ev->x(), ev->y());
-                    _selected_components[0]->border()->move(_selected_components[0]->x(), _selected_components[0]->y());
-                }
+                _selected_components[0]->move(ev->x(), ev->y());
+                _selected_components[0]->border()->move(_selected_components[0]->x(), _selected_components[0]->y());
                 break;
             default:
                 break;
             }
-        }
-
-        void DesignArea::setSelectMode()
-        {
-            _selected_tool = TOOL::SELECT;
-            emit selectMode(true);
         }
 
         void DesignArea::addSelected(ComponentLabel *component, bool ctrl)
@@ -182,14 +178,77 @@ namespace logicsim
             {
                 component->move(x + component->x(), y + component->y());
                 component->border()->move(component->x(), component->y());
+                component->moveWires();
             }
+        }
+
+        void DesignArea::getWireSource(ComponentLabel *component, int x, int y)
+        {
+            _wire = new Wire(widget());
+            _wire->setComponent1(component, x, y);
+        }
+
+        void DesignArea::moveWireDest(int x, int y)
+        {
+            _wire_snap_x = -1;
+            x += _wire->getComponent1x();
+            y += _wire->getComponent1y();
+            emit wireSnap(x, y);
+            if (_wire_snap_x == -1)
+            {
+                _wire->repositionDest(x, y);
+            }
+            else
+            {
+                _wire->repositionDest(_wire_snap_x, _wire_snap_y);
+            }
+        }
+
+        void DesignArea::getWireSnapPos(int x, int y)
+        {
+            _wire_snap_x = x;
+            _wire_snap_y = y;
+        }
+
+        void DesignArea::setWireDest(int x, int y)
+        {
+            emit checkPosition(x + _wire->getComponent1x(), y + _wire->getComponent1y());
+            if (!_wire->finalized())
+            {
+                delete _wire;
+            }
+        }
+
+        void DesignArea::positionOverlaps(ComponentLabel *component, int x, int y)
+        {
+            if (_wire->finalized())
+            {
+                return;
+            }
+            _wire->setComponent2(component, x - component->x(), y - component->y());
+            if (!_wire->saveInComponents())
+            {
+                _wire->clearComponent2();
+            }
+        }
+
+        void DesignArea::setSelectMode()
+        {
+            _selected_tool = TOOL::SELECT;
+            emit setMode(_selected_tool);
         }
 
         void DesignArea::setInsertMode()
         {
             _selected_tool = TOOL::INSERT;
-            emit selectMode(false);
+            emit setMode(_selected_tool);
             _insert_component = static_cast<COMPONENT>(QObject::sender()->property("component-type").value<int>());
+        }
+
+        void DesignArea::setWireMode()
+        {
+            _selected_tool = TOOL::WIRE;
+            emit setMode(_selected_tool);
         }
     }
 }

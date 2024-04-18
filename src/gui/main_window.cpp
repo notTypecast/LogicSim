@@ -14,10 +14,11 @@ namespace logicsim
             QActionGroup *tool_group = new QActionGroup(this);
 
             tool_group->addAction(_ui->actionSelect);
-
             _ui->actionSelect->setChecked(true);
-
             QObject::connect(_ui->actionSelect, SIGNAL (triggered()), _ui->designArea, SLOT (setSelectMode()));
+
+            tool_group->addAction(_ui->actionWire);
+            QObject::connect(_ui->actionWire, SIGNAL (triggered()), _ui->designArea, SLOT (setWireMode()));
 
             QAction *insert_actions[] = {
                 _ui->actionNOT,
