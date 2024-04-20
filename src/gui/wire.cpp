@@ -25,14 +25,14 @@ namespace logicsim
             delete _hwire2;
         }
 
-        void Wire::setComponent1(ComponentLabel *component, int x, int y)
+        bool Wire::setComponent1(ComponentLabel *component, int dx, int dy)
         {
-            _setComponent(0, component, x, y);
+            return _setComponent(0, component, dx, dy);
         }
 
-        void Wire::setComponent2(ComponentLabel *component, int x, int y)
+        bool Wire::setComponent2(ComponentLabel *component, int dx, int dy)
         {
-            _setComponent(1, component, x, y);
+            return _setComponent(1, component, dx, dy);
         }
 
         void Wire::clearComponent2()
@@ -40,13 +40,13 @@ namespace logicsim
             _conns[1].component = nullptr;
         }
 
-        void Wire::repositionDest(int dest_x, int dest_y)
+        void Wire::repositionDest(int dest_dx, int dest_dy)
         {
             int src_x = _conns[0].x;
             int src_y = _conns[0].y;
 
-            int hwire_size = std::abs(src_x - dest_x) / 2;
-            int vwire_size = std::abs(src_y - dest_y) + resources::WIRE_THICKNESS;
+            int hwire_size = std::abs(src_x - dest_dx) / 2;
+            int vwire_size = std::abs(src_y - dest_dy) + resources::WIRE_THICKNESS;
 
             _hwire1->resize(hwire_size, resources::WIRE_THICKNESS);
             _hwire2->resize(hwire_size, resources::WIRE_THICKNESS);
@@ -58,23 +58,23 @@ namespace logicsim
             _hwire2->setPixmap(hwire);
             _vwire->setPixmap(resources::getWire(resources::LINE_TYPE::VERTICAL, vwire_size));
 
-            if (src_x > dest_x)
+            if (src_x > dest_dx)
             {
-                std::swap(src_x, dest_x);
-                std::swap(src_y, dest_y);
+                std::swap(src_x, dest_dx);
+                std::swap(src_y, dest_dy);
             }
 
-            int min_y = std::min(src_y, dest_y);
+            int min_y = std::min(src_y, dest_dy);
             int mid_x = src_x + hwire_size;
 
             _hwire1->move(src_x, src_y);
             _vwire->move(mid_x, min_y);
-            _hwire2->move(mid_x, dest_y);
+            _hwire2->move(mid_x, dest_dy);
         }
 
         bool Wire::saveInComponents()
         {
-            if (!(_conns[0].is_input ^ _conns[1].is_input))
+            if (!(_conns[0].is_input ^ _conns[1].is_input) || _conns[0].component == _conns[1].component)
             {
                 return false;
             }
@@ -84,7 +84,7 @@ namespace logicsim
             }
             if (!_conns[1].component->saveWire(this, _conns[1].is_input, _conns[1].idx))
             {
-                _conns[0].component->removeWire(_conns[0].is_input, _conns[0].idx);
+                _conns[0].component->removeWire(this, _conns[0].is_input, _conns[0].idx);
                 return false;
             }
 
@@ -93,9 +93,14 @@ namespace logicsim
 
         void Wire::reposition()
         {
-            _calculatePosition(0);
-            _calculatePosition(1);
+            _updatePosition(0);
+            _updatePosition(1);
             repositionDest(_conns[1].x, _conns[1].y);
+        }
+
+        ComponentLabel *Wire::component1() const
+        {
+            return _conns[0].component;
         }
 
         int Wire::getComponent1x() const
@@ -113,29 +118,70 @@ namespace logicsim
             return _conns[1].component != nullptr;
         }
 
-        void Wire::_setComponent(int idx, ComponentLabel *component, int x, int y)
+        void Wire::removeFromOppositeComponent(ComponentLabel *component)
         {
-            _conns[idx].component = component;
+            bool idx = _conns[0].component == component;
+            _conns[idx].component->removeWire(this, _conns[idx].is_input, _conns[idx].idx);
+        }
 
-            if (x >= component->width()/2)
+        bool Wire::_setComponent(int idx, ComponentLabel *component, int dx, int dy)
+        {
+            bool result = Wire::calculateWireTargetPos(component, dx, dy, _conns[idx].x, _conns[idx].y, _conns[idx].is_input, _conns[idx].idx);
+            if (result)
             {
-                _v[idx] = &resources::comp_io_rel_pos[component->comp_type()].second;
-                _conns[idx].is_input = false;
+                _conns[idx].component = component;
+            }
+
+            return result;
+        }
+
+        void Wire::_updatePosition(int idx)
+        {
+            int rel_x, rel_y;
+            std::tie(rel_x, rel_y) = resources::getComponentIORelativePos(_conns[idx].component, _conns[idx].is_input, _conns[idx].idx);
+            _conns[idx].x = rel_x + _conns[idx].component->x();
+            _conns[idx].y = rel_y + _conns[idx].component->y();
+        }
+
+        bool Wire::calculateWireTargetPos(ComponentLabel *component, int dx, int dy, int &x, int &y, bool &is_input, int &io_idx)
+        {
+            if (dx >= component->width()/2)
+            {
+                is_input = false;
             }
             else
             {
-                _v[idx] = &resources::comp_io_rel_pos[component->comp_type()].first;
-                _conns[idx].is_input = true;
+                is_input = true;
             }
 
-            _conns[idx].idx = y * _v[idx]->size() / component->height();
-            _calculatePosition(idx);
-        }
+            if (resources::getComponentIOPositionVector(component->comp_type(), is_input).empty())
+            {
+                return false;
+            }
 
-        void Wire::_calculatePosition(int idx)
-        {
-            _conns[idx].x = static_cast<int>((*_v[idx])[_conns[idx].idx].first * _conns[idx].component->width()) + _conns[idx].component->x();
-            _conns[idx].y = static_cast<int>((*_v[idx])[_conns[idx].idx].second * _conns[idx].component->height()) + _conns[idx].component->y();
+            int distance = std::numeric_limits<int>::max();
+            io_idx = 0;
+
+            int i = -1;
+            for (auto const & p : resources::getComponentIOPositionVector(component->comp_type(), is_input))
+            {
+                ++i;
+                int new_distance = std::abs(dy - p.second * component->height());
+                if (new_distance < distance)
+                {
+                    distance = new_distance;
+                    io_idx = i;
+                    continue;
+                }
+                break;
+            }
+
+            int rel_x, rel_y;
+            std::tie(rel_x, rel_y) = resources::getComponentIORelativePos(component, is_input, io_idx);
+            x = rel_x + component->x();
+            y = rel_y + component->y();
+
+            return true;
         }
     }
 }

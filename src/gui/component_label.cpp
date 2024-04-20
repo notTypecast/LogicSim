@@ -12,22 +12,34 @@ namespace logicsim
         {
             for (const auto &wire: _input_wires)
             {
-                delete wire;
+                if (wire != nullptr)
+                {
+                    wire->removeFromOppositeComponent(this);
+                    delete wire;
+                }
             }
 
-            for (const auto &wire: _output_wires)
+            for (const auto &output: _output_wires)
             {
-                delete wire;
+                for (const auto &wire: output)
+                {
+                    if (wire != nullptr)
+                    {
+                        wire->removeFromOppositeComponent(this);
+                        delete wire;
+                    }
+                }
             }
+
+            delete _border;
         }
 
         void ComponentLabel::setCompType(COMPONENT comp_type)
         {
             _comp_type = comp_type;
-            setPixmap(resources::comp_images.at(comp_type));
-            _n_inputs = resources::comp_io_rel_pos[comp_type].first.size();
-            _input_wires = std::vector<Wire *>(_n_inputs, nullptr);
-            _n_outputs = resources::comp_io_rel_pos[comp_type].second.size();
+            setPixmap(resources::comp_images.at(comp_type)[_resource_idx]);
+            _input_wires = std::vector<Wire *>(resources::comp_io_rel_pos[comp_type].first.size(), nullptr);
+            _output_wires = std::vector<std::vector<Wire *>>(resources::comp_io_rel_pos[comp_type].second.size(), std::vector<Wire *>());
         }
 
         COMPONENT ComponentLabel::comp_type() const
@@ -49,6 +61,11 @@ namespace logicsim
             return _border;
         }
 
+        void ComponentLabel::setResourceIdx(int idx)
+        {
+            _resource_idx = idx;
+        }
+
         bool ComponentLabel::saveWire(Wire *wire, bool is_input, int idx)
         {
             if (is_input)
@@ -61,13 +78,13 @@ namespace logicsim
             }
             else
             {
-                _output_wires.push_back(wire);
+                _output_wires[idx].push_back(wire);
             }
 
             return true;
         }
 
-        void ComponentLabel::removeWire(bool is_input, int idx)
+        void ComponentLabel::removeWire(Wire *wire, bool is_input, int idx)
         {
             if (is_input)
             {
@@ -75,7 +92,7 @@ namespace logicsim
             }
             else
             {
-                _output_wires[idx] = nullptr;
+                _output_wires[idx].erase(std::remove(_output_wires[idx].begin(), _output_wires[idx].end(), wire), _output_wires[idx].end());
             }
         }
 
@@ -90,9 +107,12 @@ namespace logicsim
                 wire->reposition();
             }
 
-            for (const auto &wire: _output_wires)
+            for (const auto &output: _output_wires)
             {
-                wire->reposition();
+                for (const auto &wire: output)
+                {
+                    wire->reposition();
+                }
             }
         }
 
@@ -165,8 +185,12 @@ namespace logicsim
             }
         }
 
-        void ComponentLabel::wireSnap(int x, int y)
+        void ComponentLabel::wireSnap(ComponentLabel *wire_source, int x, int y)
         {
+            if (this == wire_source)
+            {
+                return;
+            }
             int obj_x = this->x();
             int obj_y = this->y();
             if (!(obj_x <= x && obj_y <= y && x <= obj_x + width() && y <= obj_y + height()))
@@ -174,26 +198,17 @@ namespace logicsim
                 return;
             }
 
-            x -= obj_x;
-            y -= obj_y;
+            int dx = x - obj_x;
+            int dy = y - obj_y;
 
-            const std::vector<std::pair<double, double>> *v;
-            if (x >= width()/2)
-            {
-                v = &resources::comp_io_rel_pos[_comp_type].second;
-            }
-            else
-            {
-                v = &resources::comp_io_rel_pos[_comp_type].first;
-            }
+            int target_x, target_y;
+            bool is_input;
+            int io_idx;
 
-            size_t idx = y * v->size() / height();
-            if (idx == v->size())
+            if (!Wire::calculateWireTargetPos(this, dx, dy, target_x, target_y, is_input, io_idx))
             {
-                --idx;
+                return;
             }
-            int target_x = static_cast<int>((*v)[idx].first * width()) + obj_x;
-            int target_y = static_cast<int>((*v)[idx].second * height()) + obj_y;
 
             emit wireSnapFound(target_x, target_y);
         }

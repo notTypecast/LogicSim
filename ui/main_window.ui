@@ -515,7 +515,8 @@
      <property name="title">
       <string>Inputs</string>
      </property>
-     <addaction name="actionConstant"/>
+     <addaction name="actionConstant_0"/>
+     <addaction name="actionConstant_1"/>
      <addaction name="actionSwitch"/>
      <addaction name="actionOscillator"/>
      <addaction name="actionKeypad"/>
@@ -640,12 +641,12 @@
     <string>XNOR</string>
    </property>
   </action>
-  <action name="actionConstant">
+  <action name="actionConstant_0">
    <property name="checkable">
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Constant</string>
+    <string>Constant (0)</string>
    </property>
   </action>
   <action name="actionSwitch">
@@ -774,6 +775,11 @@
    </property>
    <property name="text">
     <string>Wire</string>
+   </property>
+  </action>
+  <action name="actionConstant_1">
+   <property name="text">
+    <string>Constant (1)</string>
    </property>
   </action>
  </widget>

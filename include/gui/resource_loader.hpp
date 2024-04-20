@@ -10,6 +10,8 @@ namespace logicsim
 {
     namespace gui
     {
+        class ComponentLabel;
+
         enum TOOL
         {
             SELECT,
@@ -48,7 +50,8 @@ namespace logicsim
         {
             inline QString IMG_PATH = "../LogicSim/res/";
 
-            inline std::unordered_map<COMPONENT, QPixmap> comp_images;
+            // images for each component
+            inline std::unordered_map<COMPONENT, std::vector<QPixmap>> comp_images;
 
             inline QPixmap *border;
             inline QPixmap *hselline, *vselline;
@@ -65,6 +68,10 @@ namespace logicsim
             const int LINE_THICKNESS = 1;
             const int WIRE_THICKNESS = 2;
 
+            const std::vector<std::pair<double, double>> &getComponentIOPositionVector(COMPONENT comp_type, bool is_input);
+            const std::pair<int, int> getComponentIORelativePos(ComponentLabel *component, bool is_input, int idx);
+
+            QPixmap getBorder(int width, int height);
             QPixmap getLine(LINE_TYPE line_type, int size);
             QPixmap getWire(LINE_TYPE line_type, int size);
             void load();
