@@ -6,7 +6,7 @@ namespace logicsim
     namespace gui
     {
         namespace resources
-        {
+        {        
             const std::vector<std::pair<double, double>> &getComponentIOPositionVector(COMPONENT comp_type, bool is_input)
             {
                 return is_input ? comp_io_rel_pos[comp_type].first : comp_io_rel_pos[comp_type].second;
@@ -102,7 +102,7 @@ namespace logicsim
                     {COMPONENT::NAND_GATE, {{{0.04, 0.26}, {0.04, 0.7}}, {{0.92, 0.48}}}},
                     {COMPONENT::NOR_GATE, {{{0.04, 0.2}, {0.04, 0.76}}, {{0.92, 0.48}}}},
                     {COMPONENT::XNOR_GATE, {{{0.04, 0.2}, {0.04, 0.76}}, {{0.92, 0.48}}}},
-                    {COMPONENT::CONSTANT, {{}, {}}}, // TODO: remake graphics for constant
+                    {COMPONENT::CONSTANT, {{}, {{0.84, 0.48}}}},
                     {COMPONENT::SWITCH, {{}, {{0.84, 0.48}}}},
                     {COMPONENT::OSCILLATOR, {{}, {{0.84, 0.48}}}},
                     {COMPONENT::KEYPAD, {{}, {{0.96, 0.55}, {0.96, 0.65}, {0.96, 0.75}, {0.96, 0.85}}}},
@@ -117,6 +117,12 @@ namespace logicsim
                     {COMPONENT::JKFLIPFLOP, {{{0.08, 0.22}, {0.08, 0.38}, {0.08, 0.76}}, {{0.88, 0.22}, {0.88, 0.76}}}},
                     {COMPONENT::TFLIPFLOP, {{{0.08, 0.22}, {0.08, 0.76}}, {{0.88, 0.22}, {0.88, 0.76}}}},
                     {COMPONENT::DFLIPFLOP, {{{0.08, 0.22}, {0.08, 0.76}}, {{0.88, 0.22}, {0.88, 0.76}}}},
+                };
+
+                components_with_properties = {
+                    COMPONENT::CONSTANT,
+                    COMPONENT::SWITCH,
+                    COMPONENT::OSCILLATOR
                 };
             }
 

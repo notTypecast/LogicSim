@@ -37,7 +37,6 @@ namespace logicsim
         void ComponentLabel::setCompType(COMPONENT comp_type)
         {
             _comp_type = comp_type;
-            setPixmap(resources::comp_images.at(comp_type)[_resource_idx]);
             _input_wires = std::vector<Wire *>(resources::comp_io_rel_pos[comp_type].first.size(), nullptr);
             _output_wires = std::vector<std::vector<Wire *>>(resources::comp_io_rel_pos[comp_type].second.size(), std::vector<Wire *>());
         }
@@ -61,9 +60,25 @@ namespace logicsim
             return _border;
         }
 
-        void ComponentLabel::setResourceIdx(int idx)
+        void ComponentLabel::setResourceByIdx(int idx)
         {
             _resource_idx = idx;
+            setPixmap(resources::comp_images.at(_comp_type)[_resource_idx]);
+        }
+
+        int ComponentLabel::resourceIdx() const
+        {
+            return _resource_idx;
+        }
+
+        void ComponentLabel::setParams(std::string param_string)
+        {
+            _param_string = param_string;
+        }
+
+        std::string ComponentLabel::paramString() const
+        {
+            return _param_string;
         }
 
         bool ComponentLabel::saveWire(Wire *wire, bool is_input, int idx)
@@ -165,6 +180,29 @@ namespace logicsim
                 ev->accept();
                 emit wireReleased(ev->x(), ev->y());
                 break;
+            default:
+                break;
+            }
+        }
+
+        void ComponentLabel::mouseDoubleClickEvent(QMouseEvent *ev)
+        {
+            switch (_current_tool)
+            {
+            case SELECT:
+                if (resources::components_with_properties.find(_comp_type) == resources::components_with_properties.end())
+                {
+                    break;
+                }
+            {
+                _properties_popup = new Properties(parentWidget());
+                _properties_popup->setup(this);
+
+                QRect main_geometry = (static_cast<QWidget *>(parentWidget()->parent()->parent()->parent()->parent()))->geometry();
+                _properties_popup->move(main_geometry.x() + x() + width(), main_geometry.y() + y());
+                _properties_popup->show();
+                break;
+            }
             default:
                 break;
             }

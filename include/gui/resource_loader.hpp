@@ -4,6 +4,7 @@
 #include <QLabel>
 #include <QPixmap>
 
+#include <unordered_set>
 #include <unordered_map>
 
 namespace logicsim
@@ -48,6 +49,8 @@ namespace logicsim
 
         namespace resources
         {
+            inline std::unordered_set<COMPONENT> components_with_properties;
+
             inline QString IMG_PATH = "../LogicSim/res/";
 
             // images for each component

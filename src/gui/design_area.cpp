@@ -43,8 +43,9 @@ namespace logicsim
 
             case INSERT:
                 ComponentLabel *label = new ComponentLabel(widget());
-                label->setResourceIdx(_insert_resource_idx);
                 label->setCompType(_insert_component);
+                label->setResourceByIdx(_insert_resource_idx);
+                label->setParams("2;3"); // TODO: set actual param string
 
                 QObject::connect(label, SIGNAL (selected(ComponentLabel *, bool)), this, SLOT (addSelected(ComponentLabel *, bool)));
                 QObject::connect(label, SIGNAL (moved(int, int)), this, SLOT (moveSelectedComponents(int, int)));

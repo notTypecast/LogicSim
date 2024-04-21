@@ -6,6 +6,7 @@
 
 #include "gui/resource_loader.hpp"
 #include "gui/wire.hpp"
+#include "gui/properties.hpp"
 
 
 namespace logicsim
@@ -25,7 +26,8 @@ namespace logicsim
             void setBorder(QLabel *border);
             QLabel *border() const;
 
-            void setResourceIdx(int idx);
+            int resourceIdx() const;
+            std::string paramString() const;
 
             // keep wire connected to this component
             // is_input: whether wire is input connection
@@ -38,9 +40,11 @@ namespace logicsim
             void mouseMoveEvent(QMouseEvent *ev);
             void mousePressEvent(QMouseEvent *ev);
             void mouseReleaseEvent(QMouseEvent *ev);
+            void mouseDoubleClickEvent(QMouseEvent *ev);
 
         protected:
             int _resource_idx = 0;
+            std::string _param_string;
             COMPONENT _comp_type;
             // input wires: 1 wire per input
             std::vector<Wire *> _input_wires;
@@ -52,6 +56,14 @@ namespace logicsim
             int _press_x, _press_y;
             TOOL _current_tool = TOOL::INSERT;
             QLabel *_border = nullptr;
+
+            Properties *_properties_popup = nullptr;
+
+        public slots:
+            // called on object creation
+            // triggered by properties popup
+            void setResourceByIdx(int idx);
+            void setParams(std::string params);
 
         protected slots:
             // triggered by changeMode of DesignArea
