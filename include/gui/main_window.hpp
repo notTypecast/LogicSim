@@ -18,12 +18,24 @@ namespace logicsim
     {
         class MainWindow : public QMainWindow
         {
+            Q_OBJECT
         public:
             explicit MainWindow(QWidget *parent = nullptr);
             ~MainWindow();
 
         protected:
             Ui::MainWindow *_ui;
+            QActionGroup *_tool_group;
+            std::vector<std::tuple<QAction *, COMPONENT, int>> _insert_actions;
+
+            void _setSimulationMenu(bool enabled);
+
+        protected slots:
+            void setSimulationMenu();
+            void setDesignMenu();
+
+            void enableContinue();
+            void enablePause();
         };
 
     }

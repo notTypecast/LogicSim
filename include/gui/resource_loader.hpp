@@ -7,6 +7,8 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <bitset>
+#include <sstream>
+#include <iomanip>
 
 #include "model/mapped_data.hpp"
 #include "model/component.hpp"
@@ -111,7 +113,7 @@ namespace logicsim
                 {63, 7},
                 {97, 8},
                 {127, 9},
-                {121, 10},
+                {123, 10},
                 {125, 11},
                 {31, 12},
                 {54, 13},
@@ -127,13 +129,22 @@ namespace logicsim
                 {191, 23},
                 {225, 24},
                 {255, 25},
-                {249, 26},
+                {251, 26},
                 {253, 27},
                 {159, 28},
                 {182, 29},
                 {207, 30},
                 {190, 31},
                 {188, 32},
+            };
+
+            // ranges apply to both rows and columns, because keypad is symmetric
+            inline std::vector<std::pair<double, double>> keypad_rel_pos_range =
+            {
+                {0.14, 0.29},
+                {0.33, 0.48},
+                {0.52, 0.67},
+                {0.71, 0.86}
             };
 
             inline std::unordered_map<COMPONENT, std::pair<std::vector<std::pair<double, double>>, std::vector<std::pair<double, double>>>> comp_io_rel_pos =

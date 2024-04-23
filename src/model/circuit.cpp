@@ -75,14 +75,29 @@ namespace logicsim
                         target->evaluate(i);
                     }
                 }
+                ++_total_ticks;
             }
 
             void Circuit::check() const
             {
-                for (auto &target : _active_components)
+                for (const auto &target : _active_components)
                 {
                     target->check();
                 }
+            }
+
+            void Circuit::reset()
+            {
+                for (auto &target : _active_components)
+                {
+                    target->reset();
+                }
+                _total_ticks = 0;
+            }
+
+            unsigned int Circuit::total_ticks() const
+            {
+                return _total_ticks;
             }
 
             bool Circuit::write(const std::string &filename) const

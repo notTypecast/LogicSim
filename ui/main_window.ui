@@ -562,7 +562,7 @@
     <addaction name="actionStart"/>
     <addaction name="actionStop"/>
     <addaction name="actionPause"/>
-    <addaction name="actionUnpause"/>
+    <addaction name="actionContinue"/>
     <addaction name="actionReset"/>
    </widget>
    <addaction name="menuFile"/>
@@ -814,7 +814,7 @@
     <string>Pause</string>
    </property>
   </action>
-  <action name="actionUnpause">
+  <action name="actionContinue">
    <property name="enabled">
     <bool>false</bool>
    </property>

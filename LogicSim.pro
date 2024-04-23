@@ -1,5 +1,5 @@
 TEMPLATE = app
-TARGET = hello_world
+TARGET = logicsim
 
 QT = core gui
 

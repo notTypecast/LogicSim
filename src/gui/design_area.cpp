@@ -141,6 +141,13 @@ namespace logicsim
             }
         }
 
+        void DesignArea::setStatusBar(QStatusBar *status_bar)
+        {
+            _status_bar = status_bar;
+            _ticks_label = new QLabel(_status_bar);
+            _status_bar->addPermanentWidget(_ticks_label);
+        }
+
         void DesignArea::addSelected(ComponentLabel *component, bool ctrl)
         {
             auto comp_iter = std::find(_selected_components.begin(), _selected_components.end(), component);
@@ -286,6 +293,7 @@ namespace logicsim
         void DesignArea::executeTick()
         {
             _circuit_model.tick();
+            _ticks_label->setText("Ticks: " + QString::number(_circuit_model.total_ticks()));
             emit evaluate();
         }
 
@@ -312,6 +320,11 @@ namespace logicsim
 
         void DesignArea::setSimulationMode()
         {
+            for (const auto &component : _selected_components)
+            {
+                component->border()->hide();
+            }
+
             try
             {
                 _circuit_model.check();
@@ -322,6 +335,7 @@ namespace logicsim
                 std::cout << "Invalid circuit" << std::endl;
                 return;
             }
+            _ticks_label->show();
 
             _selected_tool = TOOL::SIMULATE;
             emit setMode(_selected_tool);
@@ -330,6 +344,36 @@ namespace logicsim
             QObject::connect(_timer, SIGNAL (timeout()), this, SLOT (executeTick()));
             int ms = 1000 / _freq;
             _timer->start(ms ? ms : 1);
+        }
+
+        void DesignArea::stopSimulationMode()
+        {
+            delete _timer;
+            _circuit_model.reset();
+            _ticks_label->hide();
+
+            _selected_tool = TOOL::SELECT;
+            emit setMode(_selected_tool);
+
+            for (const auto &component : _selected_components)
+            {
+                component->border()->show();
+            }
+        }
+
+        void DesignArea::pauseSimulation()
+        {
+            _timer->stop();
+        }
+
+        void DesignArea::continueSimulation()
+        {
+            _timer->start();
+        }
+
+        void DesignArea::resetSimulation()
+        {
+            _circuit_model.reset();
         }
     }
 }

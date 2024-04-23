@@ -6,6 +6,7 @@
 #include <QMouseEvent>
 #include <QString>
 #include <QTimer>
+#include <QStatusBar>
 
 #include <vector>
 #include <unordered_set>
@@ -33,6 +34,8 @@ namespace logicsim
             void mouseMoveEvent(QMouseEvent *ev);
 
             void keyPressEvent(QKeyEvent *ev);
+
+            void setStatusBar(QStatusBar *status_bar);
 
         protected:
             // removes all components from selected
@@ -64,8 +67,11 @@ namespace logicsim
             // Circuit model
             model::circuit::Circuit _circuit_model;
 
-            int _freq = 100;
+            int _freq = 10;
             QTimer *_timer;
+
+            QStatusBar *_status_bar;
+            QLabel *_ticks_label;
 
             /* Signals and slots often transmit position information
              * Such information is referred to as global, if its frame of reference
@@ -83,6 +89,8 @@ namespace logicsim
             void setWireMode();
             // triggered by triggered of actionStart
             void setSimulationMode();
+            // triggered by triggered of actionStop
+            void stopSimulationMode();
 
             // Design Slots
 
@@ -112,6 +120,12 @@ namespace logicsim
             // Simulation
             // triggered by timer
             void executeTick();
+            // triggered by triggered of actionPause
+            void pauseSimulation();
+            // triggered by triggered of actionContinue
+            void continueSimulation();
+            // triggered by triggered of actionReset
+            void resetSimulation();
 
         signals:
             // emitted when the mode is changed

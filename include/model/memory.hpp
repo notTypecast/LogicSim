@@ -16,6 +16,7 @@ namespace logicsim
 
                 void set_clk(component::Component &clk, unsigned int clk_out = 0);
 
+                virtual void clear() override;
                 virtual void reset() override;
 
                 unsigned int n_outputs() const override;
@@ -24,6 +25,7 @@ namespace logicsim
                 component::Component **_clk;
                 unsigned int *_clk_out;
                 bool _Q = false;
+                bool _evaluated = false;
 
                 // whether the current clock state indicates input should be evaluated
                 virtual bool _clk_edge() = 0;

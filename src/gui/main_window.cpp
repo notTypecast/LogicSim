@@ -1,5 +1,6 @@
 #include "gui/main_window.hpp"
 #include "ui_main_window.h"
+#include <iostream>
 
 namespace logicsim
 {
@@ -11,115 +12,89 @@ namespace logicsim
 
             _ui->setupUi(this);
 
-            // group tools for exclusive selection
-            QActionGroup *tool_group = new QActionGroup(this);
+            _tool_group = new QActionGroup(this);
+
+            QObject::connect(_tool_group, &QActionGroup::triggered, [this, last_action = static_cast<QAction *>(_ui->actionSelect)](QAction* action) mutable
+            {
+                if (action == _ui->actionStart)
+                {
+                    if (last_action != nullptr)
+                    {
+                        last_action->setChecked(false);
+                        last_action = nullptr;
+                    }
+                }
+                else
+                {
+                    last_action = action;
+                }
+            });
+
+            _insert_actions =
+            {
+                {_ui->actionNOT, COMPONENT::NOT_GATE, -1},
+                {_ui->actionAND, COMPONENT::AND_GATE, -1},
+                {_ui->actionOR, COMPONENT::OR_GATE, -1},
+                {_ui->actionXOR, COMPONENT::XOR_GATE, -1},
+                {_ui->actionNAND, COMPONENT::NAND_GATE, -1},
+                {_ui->actionNOR, COMPONENT::NOR_GATE, -1},
+                {_ui->actionXNOR, COMPONENT::XNOR_GATE, -1},
+                {_ui->actionConstant_0, COMPONENT::CONSTANT, 0},
+                {_ui->actionConstant_1, COMPONENT::CONSTANT, 1},
+                {_ui->actionSwitch, COMPONENT::SWITCH, 0},
+                {_ui->actionOscillator, COMPONENT::OSCILLATOR, -1},
+                {_ui->actionKeypad, COMPONENT::KEYPAD, -1},
+                {_ui->actionLED, COMPONENT::LED, -1},
+                {_ui->action7_Segment_Display_5_input, COMPONENT::_7SEG_5IN, -1},
+                {_ui->action7_Segment_Display_8_input, COMPONENT::_7SEG_8IN, -1},
+                {_ui->actionSR_Latch, COMPONENT::SRLATCH, -1},
+                {_ui->actionJK_Latch, COMPONENT::JKLATCH, -1},
+                {_ui->actionT_Latch, COMPONENT::TLATCH, -1},
+                {_ui->actionD_Latch, COMPONENT::DLATCH, -1},
+                {_ui->actionSR_Flip_Flop, COMPONENT::SRFLIPFLOP, -1},
+                {_ui->actionJK_Flip_Flop, COMPONENT::JKFLIPFLOP, -1},
+                {_ui->actionT_Flip_Flop, COMPONENT::TFLIPFLOP, -1},
+                {_ui->actionD_Flip_Flop, COMPONENT::DFLIPFLOP, -1},
+            };
 
             // Design
-            tool_group->addAction(_ui->actionSelect);
+            _tool_group->addAction(_ui->actionSelect);
             _ui->actionSelect->setChecked(true);
             QObject::connect(_ui->actionSelect, SIGNAL (triggered()), _ui->designArea, SLOT (setSelectMode()));
 
-            tool_group->addAction(_ui->actionWire);
+            _tool_group->addAction(_ui->actionWire);
             QObject::connect(_ui->actionWire, SIGNAL (triggered()), _ui->designArea, SLOT (setWireMode()));
 
-            tool_group->addAction(_ui->actionNOT);
-            _ui->actionNOT->setProperty("component-type", static_cast<int>(COMPONENT::NOT_GATE));
-            QObject::connect(_ui->actionNOT, SIGNAL (triggered()), _ui->designArea, SLOT (setInsertMode()));
-
-            tool_group->addAction(_ui->actionAND);
-            _ui->actionAND->setProperty("component-type", static_cast<int>(COMPONENT::AND_GATE));
-            QObject::connect(_ui->actionAND, SIGNAL (triggered()), _ui->designArea, SLOT (setInsertMode()));
-
-            tool_group->addAction(_ui->actionOR);
-            _ui->actionOR->setProperty("component-type", static_cast<int>(COMPONENT::OR_GATE));
-            QObject::connect(_ui->actionOR, SIGNAL (triggered()), _ui->designArea, SLOT (setInsertMode()));
-
-            tool_group->addAction(_ui->actionXOR);
-            _ui->actionXOR->setProperty("component-type", static_cast<int>(COMPONENT::XOR_GATE));
-            QObject::connect(_ui->actionXOR, SIGNAL (triggered()), _ui->designArea, SLOT (setInsertMode()));
-
-            tool_group->addAction(_ui->actionNAND);
-            _ui->actionNAND->setProperty("component-type", static_cast<int>(COMPONENT::NAND_GATE));
-            QObject::connect(_ui->actionNAND, SIGNAL (triggered()), _ui->designArea, SLOT (setInsertMode()));
-
-            tool_group->addAction(_ui->actionNOR);
-            _ui->actionNOR->setProperty("component-type", static_cast<int>(COMPONENT::NOR_GATE));
-            QObject::connect(_ui->actionNOR, SIGNAL (triggered()), _ui->designArea, SLOT (setInsertMode()));
-
-            tool_group->addAction(_ui->actionXNOR);
-            _ui->actionXNOR->setProperty("component-type", static_cast<int>(COMPONENT::XNOR_GATE));
-            QObject::connect(_ui->actionXNOR, SIGNAL (triggered()), _ui->designArea, SLOT (setInsertMode()));
-
-            tool_group->addAction(_ui->actionConstant_0);
-            _ui->actionConstant_0->setProperty("component-type", static_cast<int>(COMPONENT::CONSTANT));
-            _ui->actionConstant_0->setProperty("resource-idx", 0);
-            QObject::connect(_ui->actionConstant_0, SIGNAL (triggered()), _ui->designArea, SLOT (setInsertMode()));
-
-            tool_group->addAction(_ui->actionConstant_1);
-            _ui->actionConstant_1->setProperty("component-type", static_cast<int>(COMPONENT::CONSTANT));
-            _ui->actionConstant_1->setProperty("resource-idx", 1);
-            QObject::connect(_ui->actionConstant_1, SIGNAL (triggered()), _ui->designArea, SLOT (setInsertMode()));
-
-            tool_group->addAction(_ui->actionSwitch);
-            _ui->actionSwitch->setProperty("component-type", static_cast<int>(COMPONENT::SWITCH));
-            _ui->actionSwitch->setProperty("resource-idx", 0);
-            QObject::connect(_ui->actionSwitch, SIGNAL (triggered()), _ui->designArea, SLOT (setInsertMode()));
-
-            tool_group->addAction(_ui->actionOscillator);
-            _ui->actionOscillator->setProperty("component-type", static_cast<int>(COMPONENT::OSCILLATOR));
-            QObject::connect(_ui->actionOscillator, SIGNAL (triggered()), _ui->designArea, SLOT (setInsertMode()));
-
-            tool_group->addAction(_ui->actionKeypad);
-            _ui->actionKeypad->setProperty("component-type", static_cast<int>(COMPONENT::KEYPAD));
-            QObject::connect(_ui->actionKeypad, SIGNAL (triggered()), _ui->designArea, SLOT (setInsertMode()));
-
-            tool_group->addAction(_ui->actionLED);
-            _ui->actionLED->setProperty("component-type", static_cast<int>(COMPONENT::LED));
-            QObject::connect(_ui->actionLED, SIGNAL (triggered()), _ui->designArea, SLOT (setInsertMode()));
-
-            tool_group->addAction(_ui->action7_Segment_Display_5_input);
-            _ui->action7_Segment_Display_5_input->setProperty("component-type", static_cast<int>(COMPONENT::_7SEG_5IN));
-            QObject::connect(_ui->action7_Segment_Display_5_input, SIGNAL (triggered()), _ui->designArea, SLOT (setInsertMode()));
-
-            tool_group->addAction(_ui->action7_Segment_Display_8_input);
-            _ui->action7_Segment_Display_8_input->setProperty("component-type", static_cast<int>(COMPONENT::_7SEG_8IN));
-            QObject::connect(_ui->action7_Segment_Display_8_input, SIGNAL (triggered()), _ui->designArea, SLOT (setInsertMode()));
-
-            tool_group->addAction(_ui->actionSR_Latch);
-            _ui->actionSR_Latch->setProperty("component-type", static_cast<int>(COMPONENT::SRLATCH));
-            QObject::connect(_ui->actionSR_Latch, SIGNAL (triggered()), _ui->designArea, SLOT (setInsertMode()));
-
-            tool_group->addAction(_ui->actionJK_Latch);
-            _ui->actionJK_Latch->setProperty("component-type", static_cast<int>(COMPONENT::JKLATCH));
-            QObject::connect(_ui->actionJK_Latch, SIGNAL (triggered()), _ui->designArea, SLOT (setInsertMode()));
-
-            tool_group->addAction(_ui->actionT_Latch);
-            _ui->actionT_Latch->setProperty("component-type", static_cast<int>(COMPONENT::TLATCH));
-            QObject::connect(_ui->actionT_Latch, SIGNAL (triggered()), _ui->designArea, SLOT (setInsertMode()));
-
-            tool_group->addAction(_ui->actionD_Latch);
-            _ui->actionD_Latch->setProperty("component-type", static_cast<int>(COMPONENT::DLATCH));
-            QObject::connect(_ui->actionD_Latch, SIGNAL (triggered()), _ui->designArea, SLOT (setInsertMode()));
-
-            tool_group->addAction(_ui->actionSR_Flip_Flop);
-            _ui->actionSR_Flip_Flop->setProperty("component-type", static_cast<int>(COMPONENT::SRFLIPFLOP));
-            QObject::connect(_ui->actionSR_Flip_Flop, SIGNAL (triggered()), _ui->designArea, SLOT (setInsertMode()));
-
-            tool_group->addAction(_ui->actionJK_Flip_Flop);
-            _ui->actionJK_Flip_Flop->setProperty("component-type", static_cast<int>(COMPONENT::JKFLIPFLOP));
-            QObject::connect(_ui->actionJK_Flip_Flop, SIGNAL (triggered()), _ui->designArea, SLOT (setInsertMode()));
-
-            tool_group->addAction(_ui->actionT_Flip_Flop);
-            _ui->actionT_Flip_Flop->setProperty("component-type", static_cast<int>(COMPONENT::TFLIPFLOP));
-            QObject::connect(_ui->actionT_Flip_Flop, SIGNAL (triggered()), _ui->designArea, SLOT (setInsertMode()));
-
-            tool_group->addAction(_ui->actionD_Flip_Flop);
-            _ui->actionD_Flip_Flop->setProperty("component-type", static_cast<int>(COMPONENT::DFLIPFLOP));
-            QObject::connect(_ui->actionD_Flip_Flop, SIGNAL (triggered()), _ui->designArea, SLOT (setInsertMode()));
+            for (const auto &triplet : _insert_actions)
+            {
+                QAction *action = std::get<0>(triplet);
+                _tool_group->addAction(action);
+                action->setProperty("component-type", static_cast<int>(std::get<1>(triplet)));
+                int res_idx = std::get<2>(triplet);
+                if (res_idx != -1)
+                {
+                    action->setProperty("resource-idx", res_idx);
+                }
+                QObject::connect(action, SIGNAL (triggered()), _ui->designArea, SLOT (setInsertMode()));
+            }
 
             // Simulation
-            // TODO: uncheck tool group action when selecting this
+            _tool_group->addAction(_ui->actionStart);
             QObject::connect(_ui->actionStart, SIGNAL (triggered()), _ui->designArea, SLOT (setSimulationMode()));
+            QObject::connect(_ui->actionStart, SIGNAL (triggered()), this, SLOT (setSimulationMenu()));
+
+            QObject::connect(_ui->actionStop, SIGNAL (triggered()), _ui->designArea, SLOT (stopSimulationMode()));
+            QObject::connect(_ui->actionStop, SIGNAL (triggered()), this, SLOT (setDesignMenu()));
+
+            QObject::connect(_ui->actionPause, SIGNAL (triggered()), _ui->designArea, SLOT (pauseSimulation()));
+            QObject::connect(_ui->actionPause, SIGNAL (triggered()), this, SLOT (enableContinue()));
+
+            QObject::connect(_ui->actionContinue, SIGNAL (triggered()), _ui->designArea, SLOT (continueSimulation()));
+            QObject::connect(_ui->actionContinue, SIGNAL (triggered()), this, SLOT (enablePause()));
+
+            QObject::connect(_ui->actionReset, SIGNAL (triggered()), _ui->designArea, SLOT (resetSimulation()));
+
+            _ui->designArea->setStatusBar(_ui->statusbar);
 
         }
 
@@ -129,5 +104,44 @@ namespace logicsim
             delete _ui;
         }
 
+        void MainWindow::setSimulationMenu()
+        {
+            _setSimulationMenu(true);
+        }
+
+        void MainWindow::setDesignMenu()
+        {
+            _setSimulationMenu(false);
+            _ui->actionSelect->setChecked(true);
+            emit _ui->actionSelect->triggered();
+        }
+
+        void MainWindow::_setSimulationMenu(bool enabled)
+        {
+            _ui->actionSelect->setEnabled(!enabled);
+            _ui->actionWire->setEnabled(!enabled);
+            for (const auto &triplet : _insert_actions)
+            {
+                std::get<0>(triplet)->setEnabled(!enabled);
+            }
+
+            _ui->actionStop->setEnabled(enabled);
+            _ui->actionPause->setEnabled(enabled);
+            _ui->actionReset->setEnabled(enabled);
+
+            _ui->actionStart->setEnabled(!enabled);
+        }
+
+        void MainWindow::enableContinue()
+        {
+            _ui->actionContinue->setEnabled(true);
+            _ui->actionPause->setEnabled(false);
+        }
+
+        void MainWindow::enablePause()
+        {
+            _ui->actionPause->setEnabled(true);
+            _ui->actionContinue->setEnabled(false);
+        }
     }
 }

@@ -62,6 +62,10 @@ namespace logicsim
 
             Properties *_properties_popup = nullptr;
 
+            // used before simulation start, to keep current parameters
+            std::string _base_params;
+            int _base_resource_idx;
+
             // Component Model
             model::component::Component *_component_model;
 

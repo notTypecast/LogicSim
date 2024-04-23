@@ -126,11 +126,12 @@ namespace logicsim
 
             bool Keypad::_evaluate(unsigned int out)
             {
-                if (out >= n_outputs())
+                unsigned int outputs = n_outputs();
+                if (out >= outputs)
                 {
                     out = 0;
                 }
-                return (_key >> out) & 1;
+                return (_key >> (outputs - 1 - out)) & 1;
             }
 
             std::string Keypad::ctype() const

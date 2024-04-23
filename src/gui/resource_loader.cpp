@@ -73,7 +73,6 @@ namespace logicsim
                     {COMPONENT::CONSTANT, {QPixmap(IMG_PATH + "CONSTANT0.png"), QPixmap(IMG_PATH + "CONSTANT1.png")}},
                     {COMPONENT::SWITCH, {QPixmap(IMG_PATH + "SWITCH0.png"), QPixmap(IMG_PATH + "SWITCH1.png")}},
                     {COMPONENT::OSCILLATOR, {QPixmap(IMG_PATH + "OSCILLATOR.png")}},
-                    {COMPONENT::KEYPAD, {QPixmap(IMG_PATH + "KEYPAD.png")}},
                     {COMPONENT::LED, {QPixmap(IMG_PATH + "LED0.png"), QPixmap(IMG_PATH + "LED1.png")}},
                     {COMPONENT::SRLATCH, {QPixmap(IMG_PATH + "SRLATCH.png")}},
                     {COMPONENT::JKLATCH, {QPixmap(IMG_PATH + "JKLATCH.png")}},
@@ -101,6 +100,15 @@ namespace logicsim
                     comp_images[COMPONENT::_7SEG_8IN][i] = QPixmap(IMG_PATH + "7SEG8IN_" + QString::fromStdString(std::bitset<8>(i).to_string()) + ".png");
                 }
 
+                comp_images[COMPONENT::KEYPAD] = std::vector<QPixmap>(17);
+                comp_images[COMPONENT::KEYPAD][0] = QPixmap(IMG_PATH + "KEYPAD.png");
+
+                for (int i = 1; i < 17; ++i)
+                {
+                    std::stringstream ss;
+                    ss << "KEYPAD" << std::hex << std::uppercase << i - 1 << ".png";
+                    comp_images[COMPONENT::KEYPAD][i] = QPixmap(IMG_PATH + QString::fromStdString(ss.str()));
+                }
 
                 border = new QPixmap(IMG_PATH + "border.png");
                 hselline = new QPixmap(IMG_PATH + "hselline.png");

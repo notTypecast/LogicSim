@@ -1,5 +1,5 @@
 #include "gui/component_label.hpp"
-
+#include <iostream>
 namespace logicsim
 {
     namespace gui
@@ -181,6 +181,52 @@ namespace logicsim
                 ev->accept();
                 emit wireSource(this, ev->x(), ev->y());
                 break;
+            case SIMULATE:
+                ev->accept();
+                switch (_comp_type)
+                {
+                case SWITCH:
+                    setResourceByIdx(!_resource_idx);
+                    _component_model->set_params(std::to_string(_resource_idx));
+                    break;
+                case KEYPAD:
+                {
+                    int row = -1, col = -1;
+                    int i = 0;
+                    for (const auto &p : resources::keypad_rel_pos_range)
+                    {
+                        if (width()*p.first <= ev->x() && ev->x() <= width()*p.second)
+                        {
+                            col = i;
+                        }
+                        ++i;
+                    }
+                    if (col == -1)
+                    {
+                        break;
+                    }
+                    i = 0;
+                    for (const auto &p : resources::keypad_rel_pos_range)
+                    {
+                        if (height()*p.first <= ev->y() && ev->y() <= height()*p.second)
+                        {
+                            row = i;
+                        }
+                        ++i;
+                    }
+                    if (row == -1)
+                    {
+                        break;
+                    }
+                    unsigned int key = 4*row + col;
+                    dynamic_cast<model::input::Keypad *>(_component_model)->set_key(key);
+                    setPixmap(resources::comp_images.at(_comp_type)[key + 1]);
+                    break;
+                }
+                default:
+                    break;
+                }
+
             default:
                 break;
             }
@@ -197,6 +243,17 @@ namespace logicsim
                 ev->accept();
                 emit wireReleased();
                 break;
+            case SIMULATE:
+                ev->accept();
+                switch (_comp_type)
+                {
+                case KEYPAD:
+                    setPixmap(resources::comp_images.at(_comp_type)[0]);
+                    break;
+                default:
+                    break;
+                }
+
             default:
                 break;
             }
@@ -220,6 +277,9 @@ namespace logicsim
                 _properties_popup->show();
                 break;
             }
+            case SIMULATE:
+                mousePressEvent(ev);
+                break;
             default:
                 break;
             }
@@ -227,7 +287,19 @@ namespace logicsim
 
         void ComponentLabel::changeMode(TOOL tool)
         {
+            if (_current_tool == TOOL::SIMULATE && tool != TOOL::SIMULATE)
+            {
+                _component_model->set_params(_base_params);
+                setResourceByIdx(_base_resource_idx);
+            }
+
             _current_tool = tool;
+
+            if (_current_tool == TOOL::SIMULATE)
+            {
+                _base_params = _component_model->param_string();
+                _base_resource_idx = _resource_idx;
+            }
         }
 
         void ComponentLabel::checkRangeQuery(int min_x, int min_y, int max_x, int max_y)

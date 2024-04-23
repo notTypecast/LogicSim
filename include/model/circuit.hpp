@@ -33,6 +33,9 @@ namespace logicsim
 
                 void tick();
                 void check() const;
+                void reset();
+
+                unsigned int total_ticks() const;
 
                 // Write circuit to file
                 // Only writes components that have been added to the circuit
@@ -42,7 +45,8 @@ namespace logicsim
                 // Read circuit from file
                 void read(const std::string &filename);
 
-            private:
+            protected:
+                unsigned int _total_ticks = 0;
                 std::vector<component::Component *> _components;
                 std::vector<component::Component *> _active_components;
                 std::unordered_set<unsigned int> _component_ids;

@@ -19,6 +19,12 @@ namespace logicsim
                 set_input(_inputs.size() - 1, clk, clk_out);
             }
 
+            void MemoryComponent::clear()
+            {
+                NInputComponent::clear();
+                _evaluated = false;
+            }
+
             void MemoryComponent::reset()
             {
                 _Q = false;
@@ -47,9 +53,10 @@ namespace logicsim
 
             bool SRMemoryComponent::_evaluate(unsigned int out)
             {
-                if (_clk_edge())
+                if (_clk_edge() && !_evaluated)
                 {
                     _Q = (*_S)->evaluate(*_S_out) || (_Q && !(*_R)->evaluate(*_R_out));
+                    _evaluated = true;
                 }
 
                 return out ^ _Q;
@@ -73,9 +80,10 @@ namespace logicsim
 
             bool JKMemoryComponent::_evaluate(unsigned int out)
             {
-                if (_clk_edge())
+                if (_clk_edge() && !_evaluated)
                 {
                     _Q = !(*_K)->evaluate(*_K_out) && _Q || (*_J)->evaluate(*_J_out) && !_Q;
+                    _evaluated = true;
                 }
 
                 return out ^ _Q;
@@ -96,9 +104,10 @@ namespace logicsim
 
             bool DMemoryComponent::_evaluate(unsigned int out)
             {
-                if (_clk_edge())
+                if (_clk_edge() && !_evaluated)
                 {
                     _Q = (*_D)->evaluate(*_D_out);
+                    _evaluated = true;
                 }
 
                 return out ^ _Q;
@@ -119,9 +128,10 @@ namespace logicsim
 
             bool TMemoryComponent::_evaluate(unsigned int out)
             {
-                if (_clk_edge())
+                if (_clk_edge() && !_evaluated)
                 {
                     _Q ^= (*_T)->evaluate(*_T_out);
+                    _evaluated = true;
                 }
                 return out ^ _Q;
             }
