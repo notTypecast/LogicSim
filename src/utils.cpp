@@ -37,5 +37,16 @@ namespace logicsim
             _pos = 0;
             _done = false;
         }
+
+        size_t get_int_from_bools(std::vector<bool> bools)
+        {
+            size_t result = 0;
+            for (size_t i = 0; i < bools.size(); ++i)
+            {
+                result |= static_cast<int>(bools[i]) << i;
+            }
+
+            return result;
+        }
     }
 }

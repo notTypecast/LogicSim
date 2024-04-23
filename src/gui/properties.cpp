@@ -8,7 +8,7 @@ namespace logicsim
         std::vector<QString> splitParamString(std::string param_string)
         {
             utils::StringSplitter splitter;
-            splitter.reset(param_string, ';');
+            splitter.reset(param_string, ',');
 
             std::vector<QString> res;
 
@@ -49,7 +49,7 @@ namespace logicsim
             case OSCILLATOR:
             {
                 _addTitleGroup("Oscillator Properties");
-                std::vector<QString> option_values = splitParamString(component->paramString());
+                std::vector<QString> option_values = splitParamString(component->component_model()->param_string());
                 option_values[1] = QString::number(option_values[1].toInt() - option_values[0].toInt());
 
                 _addValueGroup("Cycle", {{"Low", option_values[0]}, {"High", option_values[1]}},
@@ -60,7 +60,7 @@ namespace logicsim
                     {
                         return std::string();
                     }
-                    return params[0]->text().toStdString() + ';' + std::to_string(low + high);
+                    return params[0]->text().toStdString() + ',' + std::to_string(low + high);
                 });
                 break;
             }

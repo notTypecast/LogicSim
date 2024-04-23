@@ -8,8 +8,10 @@
 #include <unordered_map>
 #include <fstream>
 #include <stdexcept>
+
 #include "model/component.hpp"
 #include "model/mapped_data.hpp"
+
 #include "utils.hpp"
 
 namespace logicsim

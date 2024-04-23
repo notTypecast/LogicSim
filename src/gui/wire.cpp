@@ -1,6 +1,5 @@
 #include "gui/wire.hpp"
 #include "gui/component_label.hpp"
-#include <iostream>
 
 namespace logicsim
 {
@@ -35,18 +34,13 @@ namespace logicsim
             return _setComponent(1, component, dx, dy);
         }
 
-        void Wire::clearComponent2()
-        {
-            _conns[1].component = nullptr;
-        }
-
-        void Wire::repositionDest(int dest_dx, int dest_dy)
+        void Wire::repositionDest(int dest_x, int dest_y)
         {
             int src_x = _conns[0].x;
             int src_y = _conns[0].y;
 
-            int hwire_size = std::abs(src_x - dest_dx) / 2;
-            int vwire_size = std::abs(src_y - dest_dy) + resources::WIRE_THICKNESS;
+            int hwire_size = std::abs(src_x - dest_x) / 2;
+            int vwire_size = std::abs(src_y - dest_y) + resources::WIRE_THICKNESS;
 
             _hwire1->resize(hwire_size, resources::WIRE_THICKNESS);
             _hwire2->resize(hwire_size, resources::WIRE_THICKNESS);
@@ -58,18 +52,18 @@ namespace logicsim
             _hwire2->setPixmap(hwire);
             _vwire->setPixmap(resources::getWire(resources::LINE_TYPE::VERTICAL, vwire_size));
 
-            if (src_x > dest_dx)
+            if (src_x > dest_x)
             {
-                std::swap(src_x, dest_dx);
-                std::swap(src_y, dest_dy);
+                std::swap(src_x, dest_x);
+                std::swap(src_y, dest_y);
             }
 
-            int min_y = std::min(src_y, dest_dy);
+            int min_y = std::min(src_y, dest_y);
             int mid_x = src_x + hwire_size;
 
             _hwire1->move(src_x, src_y);
             _vwire->move(mid_x, min_y);
-            _hwire2->move(mid_x, dest_dy);
+            _hwire2->move(mid_x, dest_y);
         }
 
         bool Wire::saveInComponents()
@@ -98,9 +92,20 @@ namespace logicsim
             repositionDest(_conns[1].x, _conns[1].y);
         }
 
+        std::tuple<ComponentLabel *, int, int> Wire::input_component_info() const
+        {
+            int comp_idx = !_conns[0].is_input;
+            return {_conns[comp_idx].component, _conns[comp_idx].idx, _conns[!comp_idx].idx};
+        }
+
         ComponentLabel *Wire::component1() const
         {
             return _conns[0].component;
+        }
+
+        ComponentLabel *Wire::component2() const
+        {
+            return _conns[1].component;
         }
 
         int Wire::getComponent1x() const
@@ -162,8 +167,9 @@ namespace logicsim
             int distance = std::numeric_limits<int>::max();
             io_idx = 0;
 
+            const std::vector<std::pair<double, double>> &vec = resources::getComponentIOPositionVector(component->comp_type(), is_input);
             int i = -1;
-            for (auto const & p : resources::getComponentIOPositionVector(component->comp_type(), is_input))
+            for (auto const & p : vec)
             {
                 ++i;
                 int new_distance = std::abs(dy - p.second * component->height());

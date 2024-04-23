@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <string>
 #include <functional>
+
 #include "model/component.hpp"
 #include "model/gates.hpp"
 #include "model/inputs.hpp"
@@ -28,7 +29,8 @@ namespace logicsim
             "TFLIPFLOP",
             "OUTPUT",
             "5IN_7SEGMENT",
-            "8IN_7SEGMENT"};
+            "8IN_7SEGMENT"
+        };
 
     #define DEFINE_FACTORY_FUNCTION(name, class_t)   \
         inline component::Component *create_##name() \

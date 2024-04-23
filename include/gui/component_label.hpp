@@ -8,6 +8,10 @@
 #include "gui/wire.hpp"
 #include "gui/properties.hpp"
 
+#include "model/component.hpp"
+#include "model/mapped_data.hpp"
+
+#include "utils.hpp"
 
 namespace logicsim
 {
@@ -17,17 +21,17 @@ namespace logicsim
         {
             Q_OBJECT
         public:
-            explicit ComponentLabel(QWidget *parent = nullptr);
+            explicit ComponentLabel(COMPONENT comp_type, int resource_idx, QWidget *parent = nullptr);
             ~ComponentLabel();
 
-            void setCompType(COMPONENT comp_type);
             COMPONENT comp_type() const;
+
+            model::component::Component *component_model() const;
 
             void setBorder(QLabel *border);
             QLabel *border() const;
 
             int resourceIdx() const;
-            std::string paramString() const;
 
             // keep wire connected to this component
             // is_input: whether wire is input connection
@@ -44,7 +48,6 @@ namespace logicsim
 
         protected:
             int _resource_idx = 0;
-            std::string _param_string;
             COMPONENT _comp_type;
             // input wires: 1 wire per input
             std::vector<Wire *> _input_wires;
@@ -59,10 +62,15 @@ namespace logicsim
 
             Properties *_properties_popup = nullptr;
 
+            // Component Model
+            model::component::Component *_component_model;
+
         public slots:
             // called on object creation
             // triggered by properties popup
+            // sets resource index and loads resource
             void setResourceByIdx(int idx);
+            // sets new parameter string for component
             void setParams(std::string params);
 
         protected slots:
@@ -72,8 +80,8 @@ namespace logicsim
             void checkRangeQuery(int min_x, int min_y, int max_x, int max_y);
             // triggered by wireSnap of DesignArea
             void wireSnap(ComponentLabel *wire_source, int x, int y);
-            // triggered by checkPosition of DesignArea
-            void checkPosition(int x, int y);
+            // triggered by evaluate of DesignArea
+            void evaluate();
 
         signals:
             // emitted when a mouse press registers on component during select mode
@@ -87,11 +95,9 @@ namespace logicsim
             // emitted when a wire being created is moved
             void wireMoved(int dx, int dy);
             // emitted to respond to a wireSnap request, when position can snap to an input/output
-            void wireSnapFound(int x, int y);
+            void wireSnapFound(ComponentLabel *component, int x, int y);
             // emitted when a wire being created is released
-            void wireReleased(int dx, int dy);
-            // emitted to respond to a checkPosition request, when position fits
-            void positionOverlaps(ComponentLabel *component, int x, int y);
+            void wireReleased();
 
         };
     }

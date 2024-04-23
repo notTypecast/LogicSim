@@ -70,7 +70,10 @@ namespace logicsim
                 }
                 for (auto &target : _active_components)
                 {
-                    target->evaluate();
+                    for (size_t i = 0; i < target->n_evals(); ++i)
+                    {
+                        target->evaluate(i);
+                    }
                 }
             }
 

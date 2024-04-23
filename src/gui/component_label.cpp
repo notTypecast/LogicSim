@@ -1,11 +1,28 @@
 #include "gui/component_label.hpp"
-#include <iostream>
+
 namespace logicsim
 {
     namespace gui
     {
-        ComponentLabel::ComponentLabel(QWidget *parent): QLabel{parent}
+        ComponentLabel::ComponentLabel(COMPONENT comp_type, int resource_idx, QWidget *parent): QLabel{parent}
         {
+            _comp_type = comp_type;
+            _input_wires = std::vector<Wire *>(resources::comp_io_rel_pos[comp_type].first.size(), nullptr);
+            _output_wires = std::vector<std::vector<Wire *>>(resources::comp_io_rel_pos[comp_type].second.size(), std::vector<Wire *>());
+
+            setResourceByIdx(resource_idx);
+
+            _component_model = model::ctype_map.at(comp_type_to_ctype.at(comp_type))();
+
+            switch (comp_type)
+            {
+            case CONSTANT:
+            case SWITCH:
+                _component_model->set_params(std::to_string(static_cast<int>(resource_idx)));
+                break;
+            default:
+                break;
+            }
         }
 
         ComponentLabel::~ComponentLabel()
@@ -32,18 +49,18 @@ namespace logicsim
             }
 
             delete _border;
-        }
 
-        void ComponentLabel::setCompType(COMPONENT comp_type)
-        {
-            _comp_type = comp_type;
-            _input_wires = std::vector<Wire *>(resources::comp_io_rel_pos[comp_type].first.size(), nullptr);
-            _output_wires = std::vector<std::vector<Wire *>>(resources::comp_io_rel_pos[comp_type].second.size(), std::vector<Wire *>());
+            delete _component_model;
         }
 
         COMPONENT ComponentLabel::comp_type() const
         {
             return _comp_type;
+        }
+
+        model::component::Component *ComponentLabel::component_model() const
+        {
+            return _component_model;
         }
 
         void ComponentLabel::setBorder(QLabel *border)
@@ -73,12 +90,7 @@ namespace logicsim
 
         void ComponentLabel::setParams(std::string param_string)
         {
-            _param_string = param_string;
-        }
-
-        std::string ComponentLabel::paramString() const
-        {
-            return _param_string;
+            _component_model->set_params(param_string);
         }
 
         bool ComponentLabel::saveWire(Wire *wire, bool is_input, int idx)
@@ -104,6 +116,7 @@ namespace logicsim
             if (is_input)
             {
                 _input_wires[idx] = nullptr;
+                dynamic_cast<model::component::NInputComponent *>(_component_model)->remove_input(idx);
             }
             else
             {
@@ -146,6 +159,8 @@ namespace logicsim
                 ev->accept();
                 emit wireMoved(ev->x(), ev->y());
                 break;
+            default:
+                break;
             }
         }
 
@@ -166,6 +181,8 @@ namespace logicsim
                 ev->accept();
                 emit wireSource(this, ev->x(), ev->y());
                 break;
+            default:
+                break;
             }
         }
 
@@ -178,7 +195,7 @@ namespace logicsim
                 break;
             case WIRE:
                 ev->accept();
-                emit wireReleased(ev->x(), ev->y());
+                emit wireReleased();
                 break;
             default:
                 break;
@@ -248,16 +265,46 @@ namespace logicsim
                 return;
             }
 
-            emit wireSnapFound(target_x, target_y);
+            emit wireSnapFound(this, target_x, target_y);
         }
 
-        void ComponentLabel::checkPosition(int x, int y)
+        void ComponentLabel::evaluate()
         {
-            int obj_x = this->x();
-            int obj_y = this->y();
-            if (obj_x <= x && obj_y <= y && x <= obj_x + width() && y <= obj_y + height())
+            try
             {
-                emit positionOverlaps(this, x, y);
+                switch (_comp_type)
+                {
+                case LED:
+                    setPixmap(resources::comp_images.at(_comp_type)[_component_model->evaluate()]);
+                    break;
+                case _7SEG_5IN:
+                {
+                    std::vector<bool> evals(8);
+                    for (int i = 0; i < 8; ++i)
+                    {
+                        evals[(7 + i) % 8] = _component_model->evaluate(i);
+                    }
+
+                    setPixmap(resources::comp_images.at(_comp_type)[resources::_7seg_5in_res_map.at(utils::get_int_from_bools(evals))]);
+                    break;
+                }
+                case _7SEG_8IN:
+                {
+                    std::vector<bool> evals(8);
+                    for (int i = 0; i < 8; ++i)
+                    {
+                        evals[(7 + i) % 8] = _component_model->evaluate(i);
+                    }
+                    setPixmap(resources::comp_images.at(_comp_type)[utils::get_int_from_bools(evals)]);
+                    break;
+                }
+                default:
+                    break;
+                }
+            }
+            catch (model::component::null_input)
+            {
+                return;
             }
         }
     }

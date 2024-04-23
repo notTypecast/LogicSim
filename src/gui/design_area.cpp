@@ -17,6 +17,7 @@ namespace logicsim
             {
                 for (const auto & component: _selected_components)
                 {
+                    _circuit_model.remove_component(*(component->component_model()));
                     delete component;
                 }
                 _selected_components.clear();
@@ -42,10 +43,11 @@ namespace logicsim
                 break;
 
             case INSERT:
-                ComponentLabel *label = new ComponentLabel(widget());
-                label->setCompType(_insert_component);
-                label->setResourceByIdx(_insert_resource_idx);
-                label->setParams("2;3"); // TODO: set actual param string
+            {
+                ComponentLabel *label = new ComponentLabel(_insert_component, _insert_resource_idx, widget());
+
+                model::component::Component *component_model = label->component_model();
+                _circuit_model.add_component(*component_model);
 
                 QObject::connect(label, SIGNAL (selected(ComponentLabel *, bool)), this, SLOT (addSelected(ComponentLabel *, bool)));
                 QObject::connect(label, SIGNAL (moved(int, int)), this, SLOT (moveSelectedComponents(int, int)));
@@ -55,15 +57,17 @@ namespace logicsim
                 QObject::connect(label, SIGNAL (wireSource(ComponentLabel *, int, int)), this, SLOT (getWireSource(ComponentLabel *, int, int)));
                 QObject::connect(label, SIGNAL (wireMoved(int, int)), this, SLOT (moveWireDest(int, int)));
                 QObject::connect(this, SIGNAL (wireSnap(ComponentLabel *, int, int)), label, SLOT (wireSnap(ComponentLabel *, int, int)));
-                QObject::connect(label, SIGNAL (wireSnapFound(int, int)), this, SLOT (getWireSnapPos(int, int)));
-                QObject::connect(label, SIGNAL (wireReleased(int, int)), this, SLOT (setWireDest(int, int)));
-                QObject::connect(this, SIGNAL (checkPosition(int, int)), label, SLOT (checkPosition(int, int)));
-                QObject::connect(label, SIGNAL (positionOverlaps(ComponentLabel *, int, int)), this, SLOT (positionOverlaps(ComponentLabel *, int, int)));
+                QObject::connect(label, SIGNAL (wireSnapFound(ComponentLabel *, int, int)), this, SLOT (getWireSnapPos(ComponentLabel *, int, int)));
+                QObject::connect(label, SIGNAL (wireReleased()), this, SLOT (setWireDest()));
+                QObject::connect(this, SIGNAL (evaluate()), label, SLOT (evaluate()));
 
                 label->move(ev->x(), ev->y());
                 label->show();
 
                 addSelected(label);
+                break;
+            }
+            default:
                 break;
             }
         }
@@ -198,6 +202,7 @@ namespace logicsim
 
         void DesignArea::getWireSource(ComponentLabel *component, int dx, int dy)
         {
+            std::get<0>(_wire_snap_closest) = nullptr;
             _wire = new Wire(widget());
             bool set = _wire->setComponent1(component, dx, dy);
             if (!set)
@@ -213,50 +218,75 @@ namespace logicsim
             {
                 return;
             }
-            _wire_snap_x = -1;
+            _wire_snap_positions.clear();
             int x = dx + _wire->getComponent1x();
             int y = dy + _wire->getComponent1y();
             emit wireSnap(_wire->component1(), x, y);
-            if (_wire_snap_x == -1)
+            if (_wire_snap_positions.empty())
             {
+                std::get<0>(_wire_snap_closest) = nullptr;
                 _wire->repositionDest(x, y);
             }
             else
             {
-                _wire->repositionDest(_wire_snap_x, _wire_snap_y);
+                double distance = std::numeric_limits<double>::max();
+
+                for (const auto & triplet : _wire_snap_positions)
+                {
+                    int new_distance = std::pow(x - std::get<1>(triplet), 2) + std::pow(y - std::get<2>(triplet), 2);
+                    if (distance > new_distance)
+                    {
+                        distance = new_distance;
+                        _wire_snap_closest = triplet;
+                    }
+                }
+
+                _wire->repositionDest(std::get<1>(_wire_snap_closest), std::get<2>(_wire_snap_closest));
             }
         }
 
-        void DesignArea::getWireSnapPos(int x, int y)
+        void DesignArea::getWireSnapPos(ComponentLabel *component, int x, int y)
         {
-            _wire_snap_x = x;
-            _wire_snap_y = y;
+            _wire_snap_positions.push_back({component, x, y});
         }
 
-        void DesignArea::setWireDest(int dx, int dy)
+        void DesignArea::setWireDest()
         {
-            if (_wire == nullptr)
-            {
-                return;
-            }
-            emit checkPosition(dx + _wire->getComponent1x(), dy + _wire->getComponent1y());
-            if (!_wire->finalized())
+            ComponentLabel *dest_component = std::get<0>(_wire_snap_closest);
+            if (_wire == nullptr || dest_component == nullptr)
             {
                 delete _wire;
+                _wire = nullptr;
+                return;
+            }
+
+            _wire->setComponent2(dest_component, std::get<1>(_wire_snap_closest) - dest_component->x(), std::get<2>(_wire_snap_closest) - dest_component->y());
+            if (!_wire->saveInComponents())
+            {
+                delete _wire;
+                _wire = nullptr;
+                return;
+            }
+
+            std::tuple<ComponentLabel *, int, int> info = _wire->input_component_info();
+            // component 1 is input
+            if (dest_component != std::get<0>(info))
+            {
+                model::component::NInputComponent *ninput_component = dynamic_cast<model::component::NInputComponent *>(_wire->component1()->component_model());
+                ninput_component->set_input(std::get<1>(info), *(dest_component->component_model()), std::get<2>(info));
+            }
+            // component 2 is input
+            else
+            {
+                model::component::NInputComponent *ninput_component = dynamic_cast<model::component::NInputComponent *>(dest_component->component_model());
+                ninput_component->set_input(std::get<1>(info), *(_wire->component1()->component_model()), std::get<2>(info));
             }
         }
 
-        void DesignArea::positionOverlaps(ComponentLabel *component, int x, int y)
+        void DesignArea::executeTick()
         {
-            if (_wire->finalized())
-            {
-                return;
-            }
-            _wire->setComponent2(component, x - component->x(), y - component->y());
-            if (!_wire->saveInComponents())
-            {
-                _wire->clearComponent2();
-            }
+            _circuit_model.tick();
+            emit evaluate();
         }
 
         void DesignArea::setSelectMode()
@@ -278,6 +308,28 @@ namespace logicsim
         {
             _selected_tool = TOOL::WIRE;
             emit setMode(_selected_tool);
+        }
+
+        void DesignArea::setSimulationMode()
+        {
+            try
+            {
+                _circuit_model.check();
+            }
+            catch (model::component::null_input)
+            {
+                // invalid circuit popup
+                std::cout << "Invalid circuit" << std::endl;
+                return;
+            }
+
+            _selected_tool = TOOL::SIMULATE;
+            emit setMode(_selected_tool);
+
+            _timer = new QTimer(this);
+            QObject::connect(_timer, SIGNAL (timeout()), this, SLOT (executeTick()));
+            int ms = 1000 / _freq;
+            _timer->start(ms ? ms : 1);
         }
     }
 }

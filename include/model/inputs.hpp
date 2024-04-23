@@ -55,7 +55,7 @@ namespace logicsim
 
             protected:
                 unsigned int _low_ticks = 10;
-                unsigned int _period = 10;
+                unsigned int _period = 20;
                 bool _evaluate(unsigned int = 0) override;
             };
 

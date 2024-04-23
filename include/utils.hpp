@@ -2,6 +2,8 @@
 #define LOGICSIM_MODEL_UTILS_HPP
 
 #include <string>
+#include <vector>
+#include <cmath>
 
 namespace logicsim
 {
@@ -24,6 +26,8 @@ namespace logicsim
             size_t _pos = 0;
             bool _done = false;
         };
+
+        size_t get_int_from_bools(std::vector<bool> bools);
     }
 }
 

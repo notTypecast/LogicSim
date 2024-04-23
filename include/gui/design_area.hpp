@@ -5,13 +5,18 @@
 #include <QScrollArea>
 #include <QMouseEvent>
 #include <QString>
+#include <QTimer>
 
 #include <vector>
 #include <unordered_set>
 #include <algorithm>
+#include <cmath>
 
 #include "gui/resource_loader.hpp"
 #include "gui/component_label.hpp"
+
+#include "model/circuit.hpp"
+#include "model/component.hpp"
 
 namespace logicsim
 {
@@ -51,8 +56,16 @@ namespace logicsim
 
             // current wire being drawn
             Wire *_wire = nullptr;
-            // position to snap destination to
-            int _wire_snap_x, _wire_snap_y;
+            // positions to snap destination to
+            // wire snaps to closest
+            std::tuple<ComponentLabel *, int, int> _wire_snap_closest;
+            std::vector<std::tuple<ComponentLabel *, int, int>> _wire_snap_positions;
+
+            // Circuit model
+            model::circuit::Circuit _circuit_model;
+
+            int _freq = 100;
+            QTimer *_timer;
 
             /* Signals and slots often transmit position information
              * Such information is referred to as global, if its frame of reference
@@ -68,6 +81,10 @@ namespace logicsim
             void setInsertMode();
             // triggered by triggered of actionWire
             void setWireMode();
+            // triggered by triggered of actionStart
+            void setSimulationMode();
+
+            // Design Slots
 
             // triggered by selected of ComponentLabel
             // adds component to selected (or removes, based on ctrl)
@@ -87,13 +104,14 @@ namespace logicsim
             void moveWireDest(int dx, int dy);
             // triggered by wireSnapFound of ComponentLabel
             // sets _wire_snap_x and _wire_snap_y to x and y
-            void getWireSnapPos(int x, int y);
+            void getWireSnapPos(ComponentLabel *component, int x, int y);
             // triggered by wireReleased of ComponentLabel
             // sets final position of wire target as dx, dy away from the wire source position
-            void setWireDest(int dx, int dy);
-            // triggered by positionOverlaps of ComponentLabel
-            // used to respond to a checkPosition signal sent by setWireDest
-            void positionOverlaps(ComponentLabel *component, int x, int y);
+            void setWireDest();
+
+            // Simulation
+            // triggered by timer
+            void executeTick();
 
         signals:
             // emitted when the mode is changed
@@ -103,9 +121,9 @@ namespace logicsim
             // emitted during wire creation, when destination is moved
             // used to find components whose inputs/outputs are close to wire destination for snapping
             void wireSnap(ComponentLabel *wire_source, int x, int y);
-            // emitted during wire creation, whend destination is finalized
-            // used to find component node that wire should connect to, and create connection
-            void checkPosition(int x, int y);
+            // emitted during simulation, after every tick
+            // components receiving this signal will evaluate based on their component model
+            void evaluate();
         };
     }
 }

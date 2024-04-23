@@ -27,6 +27,11 @@ namespace logicsim
                 return _inputs[0]->evaluate(_inputs_out[0]);
             }
 
+            unsigned int BaseOutput::n_evals() const
+            {
+                return 2;
+            }
+
             std::string BaseOutput::ctype() const
             {
                 return "OUTPUT";
@@ -69,23 +74,28 @@ namespace logicsim
                 switch (out)
                 {
                 case 1:
-                    return !(x[4] && x[3] && x[2] || x[4] && x[3] && !x[2] && !x[1] || !x[4] && !x[3] && x[2] && !x[1]);
+                    return !(x[0] && x[1] && x[2] || x[0] && x[1] && !x[2] && !x[3] || !x[0] && !x[1] && x[2] && !x[3]);
                 case 2:
-                    return !(x[3] && x[2] && x[1] || !x[4] && x[3] && !x[2] && !x[1] || !x[4] && !x[3] && !x[2] && x[1] || x[4] && !x[3] && x[2] && !x[1]);
+                    return !(x[1] && x[2] && x[3] || !x[0] && x[1] && !x[2] && !x[3] || !x[0] && !x[1] && !x[2] && x[3] || x[0] && !x[1] && x[2] && !x[3]);
                 case 3:
-                    return !(!x[4] && x[1] || !x[4] && x[3] && !x[2] && !x[1] || x[4] && !x[3] && !x[2] && x[1]);
+                    return !(!x[0] && x[3] || !x[0] && x[1] && !x[2] && !x[3] || x[0] && !x[1] && !x[2] && x[3]);
                 case 4:
-                    return !(!x[4] && !x[3] && !x[2] || !x[4] && x[3] && x[2] && x[1] || x[4] && x[3] && !x[2] && !x[1]);
+                    return !(!x[0] && !x[1] && !x[2] || !x[0] && x[1] && x[2] && x[3] || x[0] && x[1] && !x[2] && !x[3]);
                 case 5:
-                    return !(!x[4] && !x[3] && x[2] || !x[4] && x[2] && x[1] || !x[4] && !x[3] && !x[2] && x[1] || x[4] && x[3] && !x[2] && x[1]);
+                    return !(!x[0] && !x[1] && x[2] || !x[0] && x[2] && x[3] || !x[0] && !x[1] && !x[2] && x[3] || x[0] && x[1] && !x[2] && x[3]);
                 case 6:
-                    return !(!x[4] && !x[3] && !x[2] && x[1] || !x[4] && x[3] && !x[2] && !x[1] || x[4] && x[3] && !x[2] && x[1] || x[4] && !x[3] && x[2] && x[1]);
+                    return !(!x[0] && !x[1] && !x[2] && x[3] || !x[0] && x[1] && !x[2] && !x[3] || x[0] && x[1] && !x[2] && x[3] || x[0] && !x[1] && x[2] && x[3]);
                 case 7:
-                    return !(x[3] && x[2] && !x[1] || x[4] && x[3] && x[2] || x[4] && x[2] && x[1] || x[4] && x[3] && !x[1] || !x[4] && x[3] && !x[2] && x[1]);
+                    return !(x[1] && x[2] && !x[3] || x[0] && x[1] && x[2] || x[0] && x[2] && x[3] || x[0] && x[1] && !x[3] || !x[0] && x[1] && !x[2] && x[3]);
                 case 0:
                 default:
-                    return x[0];
+                    return x[4];
                 }
+            }
+
+            unsigned int _5in_7SegmentDisplay::n_evals() const
+            {
+                return 8;
             }
 
             std::string _5in_7SegmentDisplay::ctype() const
@@ -129,7 +139,12 @@ namespace logicsim
                     }
                 }
 
-                return out < 8 ? _input_cache[out] : _input_cache[0];
+                return out < 8 ? _input_cache[7 - out] : _input_cache[0];
+            }
+
+            unsigned int _8in_7SegmentDisplay::n_evals() const
+            {
+                return 8;
             }
 
             std::string _8in_7SegmentDisplay::ctype() const

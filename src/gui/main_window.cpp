@@ -11,9 +11,10 @@ namespace logicsim
 
             _ui->setupUi(this);
 
+            // group tools for exclusive selection
             QActionGroup *tool_group = new QActionGroup(this);
 
-            // group tools for exclusive selection
+            // Design
             tool_group->addAction(_ui->actionSelect);
             _ui->actionSelect->setChecked(true);
             QObject::connect(_ui->actionSelect, SIGNAL (triggered()), _ui->designArea, SLOT (setSelectMode()));
@@ -115,6 +116,11 @@ namespace logicsim
             tool_group->addAction(_ui->actionD_Flip_Flop);
             _ui->actionD_Flip_Flop->setProperty("component-type", static_cast<int>(COMPONENT::DFLIPFLOP));
             QObject::connect(_ui->actionD_Flip_Flop, SIGNAL (triggered()), _ui->designArea, SLOT (setInsertMode()));
+
+            // Simulation
+            // TODO: uncheck tool group action when selecting this
+            QObject::connect(_ui->actionStart, SIGNAL (triggered()), _ui->designArea, SLOT (setSimulationMode()));
+
         }
 
         MainWindow::~MainWindow()

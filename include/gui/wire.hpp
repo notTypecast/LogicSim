@@ -34,12 +34,9 @@ namespace logicsim
             bool setComponent1(ComponentLabel *component, int dx, int dy);
             // sets destination component
             bool setComponent2(ComponentLabel *component, int dx, int dy);
-            // removes destination component
-            void clearComponent2();
-            // repositions wire based on given destination coordinates (dx, dy)
-            // destination coordinates are relative to source origin point
+            // repositions wire based on given global destination coordinates (dest_x, dest_y)
             // source coordinates are in _conns[0]
-            void repositionDest(int dest_dx, int dest_dy);
+            void repositionDest(int dest_x, int dest_y);
             // saves this wire in the components it is connected to through _conns
             // both components must have been set
             // returns false if connection failed (both inputs/ouputs, already connected input)
@@ -47,7 +44,11 @@ namespace logicsim
             // repositions wire to current location
             void reposition();
 
+            // returns information about the component which is being driven
+            // pair: {Component * of driven component, index of input, index of output}
+            std::tuple<ComponentLabel *, int, int> input_component_info() const;
             ComponentLabel *component1() const;
+            ComponentLabel *component2() const;
 
             // returns position of component 1
             int getComponent1x() const;

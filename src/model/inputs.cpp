@@ -103,8 +103,15 @@ namespace logicsim
 
             void Oscillator::set_params(const std::string &param_string)
             {
+
+                int period = std::stoi(param_string.substr(param_string.find(',') + 1));
+                if (period <= 0)
+                {
+                    return;
+                }
+
+                _period = period;
                 _low_ticks = std::stoi(param_string.substr(0, param_string.find(',')));
-                _period = std::stoi(param_string.substr(param_string.find(',') + 1));
             }
 
             // Keypad

@@ -25,6 +25,7 @@ namespace logicsim
             {
             public:
                 Component();
+                virtual ~Component();
 
                 virtual bool evaluate(unsigned int out = 0);
                 virtual void check() const; // recursively checks input components
@@ -33,6 +34,9 @@ namespace logicsim
 
                 virtual unsigned int n_inputs() const;
                 virtual unsigned int n_outputs() const;
+                // n_evals: how many evaluations component produces (indices as input to evaluate())
+                // for non-outputs, this is equal to n_outputs
+                virtual unsigned int n_evals() const;
 
                 // Methods for saving/loading circuits
                 unsigned int id() const;
@@ -55,6 +59,7 @@ namespace logicsim
                 NInputComponent(unsigned int n);
 
                 void set_input(size_t index, Component &input, unsigned int out = 0);
+                void remove_input(size_t index);
 
                 virtual std::vector<std::pair<unsigned int, unsigned int>> input_ids() const override;
 

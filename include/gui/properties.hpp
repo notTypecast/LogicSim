@@ -12,8 +12,9 @@
 
 #include <functional>
 
-#include "utils.hpp"
 #include "gui/resource_loader.hpp"
+
+#include "utils.hpp"
 
 namespace logicsim
 {

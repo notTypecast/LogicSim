@@ -6,6 +6,14 @@
 
 #include <unordered_set>
 #include <unordered_map>
+#include <bitset>
+
+#include "model/mapped_data.hpp"
+#include "model/component.hpp"
+#include "model/gates.hpp"
+#include "model/inputs.hpp"
+#include "model/outputs.hpp"
+#include "model/memory.hpp"
 
 namespace logicsim
 {
@@ -17,7 +25,8 @@ namespace logicsim
         {
             SELECT,
             WIRE,
-            INSERT
+            INSERT,
+            SIMULATE
         };
 
         enum COMPONENT
@@ -47,20 +56,111 @@ namespace logicsim
             DFLIPFLOP
         };
 
+        inline std::unordered_map<COMPONENT, std::string> comp_type_to_ctype = {
+            {NOT_GATE, "NOT"},
+            {AND_GATE, "AND"},
+            {OR_GATE, "OR"},
+            {XOR_GATE, "XOR"},
+            {NAND_GATE, "NAND"},
+            {NOR_GATE, "NOR"},
+            {XNOR_GATE, "XNOR"},
+            {CONSTANT, "CONSTANT"},
+            {SWITCH, "SWITCH"},
+            {OSCILLATOR, "OSCILLATOR"},
+            {KEYPAD, "KEYPAD"},
+            {LED, "OUTPUT"},
+            {_7SEG_5IN, "5IN_7SEGMENT"},
+            {_7SEG_8IN, "8IN_7SEGMENT"},
+            {SRLATCH, "SRLATCH"},
+            {JKLATCH, "JKLATCH"},
+            {DLATCH, "DLATCH"},
+            {TLATCH, "TLATCH"},
+            {SRFLIPFLOP, "SRFLIPFLOP"},
+            {JKFLIPFLOP, "JKFLIPFLOP"},
+            {DFLIPFLOP, "DFLIPFLOP"},
+            {TFLIPFLOP, "TFLIPFLOP"}
+        };
+
         namespace resources
         {
-            inline std::unordered_set<COMPONENT> components_with_properties;
+            inline std::unordered_set<COMPONENT> components_with_properties =
+            {
+                COMPONENT::CONSTANT,
+                COMPONENT::SWITCH,
+                COMPONENT::OSCILLATOR
+            };
 
             inline QString IMG_PATH = "../LogicSim/res/";
 
             // images for each component
+            // initialized when load is called, because QPixmap cannot be created here
             inline std::unordered_map<COMPONENT, std::vector<QPixmap>> comp_images;
 
             inline QPixmap *border;
             inline QPixmap *hselline, *vselline;
             inline QPixmap *hwire, *vwire;
 
-            inline std::unordered_map<COMPONENT, std::pair<std::vector<std::pair<double, double>>, std::vector<std::pair<double, double>>>> comp_io_rel_pos;
+            inline std::unordered_map<size_t, size_t> _7seg_5in_res_map =
+            {
+                {119, 1},
+                {65, 2},
+                {110, 3},
+                {107, 4},
+                {89, 5},
+                {59, 6},
+                {63, 7},
+                {97, 8},
+                {127, 9},
+                {121, 10},
+                {125, 11},
+                {31, 12},
+                {54, 13},
+                {79, 14},
+                {62, 15},
+                {60, 16},
+                {247, 17},
+                {193, 18},
+                {238, 19},
+                {235, 20},
+                {217, 21},
+                {187, 22},
+                {191, 23},
+                {225, 24},
+                {255, 25},
+                {249, 26},
+                {253, 27},
+                {159, 28},
+                {182, 29},
+                {207, 30},
+                {190, 31},
+                {188, 32},
+            };
+
+            inline std::unordered_map<COMPONENT, std::pair<std::vector<std::pair<double, double>>, std::vector<std::pair<double, double>>>> comp_io_rel_pos =
+            {
+                {COMPONENT::NOT_GATE, {{{0.04, 0.48}}, {{0.9, 0.48}}}},
+                {COMPONENT::AND_GATE, {{{0.12, 0.26}, {0.12, 0.7}}, {{0.9, 0.48}}}},
+                {COMPONENT::OR_GATE, {{{0.08, 0.2}, {0.08, 0.76}}, {{0.86, 0.48}}}},
+                {COMPONENT::XOR_GATE, {{{0.08, 0.2}, {0.08, 0.76}}, {{0.86, 0.48}}}},
+                {COMPONENT::NAND_GATE, {{{0.04, 0.26}, {0.04, 0.7}}, {{0.92, 0.48}}}},
+                {COMPONENT::NOR_GATE, {{{0.04, 0.2}, {0.04, 0.76}}, {{0.92, 0.48}}}},
+                {COMPONENT::XNOR_GATE, {{{0.04, 0.2}, {0.04, 0.76}}, {{0.92, 0.48}}}},
+                {COMPONENT::CONSTANT, {{}, {{0.84, 0.48}}}},
+                {COMPONENT::SWITCH, {{}, {{0.84, 0.48}}}},
+                {COMPONENT::OSCILLATOR, {{}, {{0.84, 0.48}}}},
+                {COMPONENT::KEYPAD, {{}, {{0.96, 0.55}, {0.96, 0.65}, {0.96, 0.75}, {0.96, 0.85}}}},
+                {COMPONENT::LED, {{{0.12, 0.48}}, {}}},
+                {COMPONENT::_7SEG_5IN, {{{0.12, 0.44}, {0.12, 0.54}, {0.12, 0.63}, {0.12, 0.72}, {0.12, 0.82}}, {}}},
+                {COMPONENT::_7SEG_8IN, {{{0.12, 0.16}, {0.12, 0.26}, {0.12, 0.35}, {0.12, 0.44}, {0.12, 0.54}, {0.12, 0.63}, {0.12, 0.72}, {0.12, 0.82}}, {}}},
+                {COMPONENT::SRLATCH, {{{0.08, 0.22}, {0.08, 0.38}, {0.08, 0.76}}, {{0.88, 0.22}, {0.88, 0.76}}}},
+                {COMPONENT::JKLATCH, {{{0.08, 0.22}, {0.08, 0.38}, {0.08, 0.76}}, {{0.88, 0.22}, {0.88, 0.76}}}},
+                {COMPONENT::TLATCH, {{{0.08, 0.22}, {0.08, 0.76}}, {{0.88, 0.22}, {0.88, 0.76}}}},
+                {COMPONENT::DLATCH, {{{0.08, 0.22}, {0.08, 0.76}}, {{0.88, 0.22}, {0.88, 0.76}}}},
+                {COMPONENT::SRFLIPFLOP, {{{0.08, 0.22}, {0.08, 0.38}, {0.08, 0.76}}, {{0.88, 0.22}, {0.88, 0.76}}}},
+                {COMPONENT::JKFLIPFLOP, {{{0.08, 0.22}, {0.08, 0.38}, {0.08, 0.76}}, {{0.88, 0.22}, {0.88, 0.76}}}},
+                {COMPONENT::TFLIPFLOP, {{{0.08, 0.22}, {0.08, 0.76}}, {{0.88, 0.22}, {0.88, 0.76}}}},
+                {COMPONENT::DFLIPFLOP, {{{0.08, 0.22}, {0.08, 0.76}}, {{0.88, 0.22}, {0.88, 0.76}}}},
+            };
 
             enum LINE_TYPE
             {

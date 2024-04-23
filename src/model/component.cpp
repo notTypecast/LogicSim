@@ -19,6 +19,11 @@ namespace logicsim
                 _id = _CURR_ID++;
             }
 
+            Component::~Component()
+            {
+
+            }
+
             bool Component::evaluate(unsigned int out)
             {
                 if (_cache.find(out) == _cache.end())
@@ -54,6 +59,11 @@ namespace logicsim
                 return 1;
             }
 
+            unsigned int Component::n_evals() const
+            {
+                return n_outputs();
+            }
+
             unsigned int Component::id() const
             {
                 return _id;
@@ -81,6 +91,12 @@ namespace logicsim
                 assert(index < _n);
                 _inputs[index] = &input;
                 _inputs_out[index] = out;
+            }
+
+            void NInputComponent::remove_input(size_t index)
+            {
+                assert(index < _n);
+                _inputs[index] = nullptr;
             }
 
             void NInputComponent::check() const

@@ -74,9 +74,7 @@ namespace logicsim
                     {COMPONENT::SWITCH, {QPixmap(IMG_PATH + "SWITCH0.png"), QPixmap(IMG_PATH + "SWITCH1.png")}},
                     {COMPONENT::OSCILLATOR, {QPixmap(IMG_PATH + "OSCILLATOR.png")}},
                     {COMPONENT::KEYPAD, {QPixmap(IMG_PATH + "KEYPAD.png")}},
-                    {COMPONENT::LED, {QPixmap(IMG_PATH + "LED0.png")}},
-                    {COMPONENT::_7SEG_5IN, {QPixmap(IMG_PATH + "7SEG5IN.png")}},
-                    {COMPONENT::_7SEG_8IN, {QPixmap(IMG_PATH + "7SEG8IN.png")}},
+                    {COMPONENT::LED, {QPixmap(IMG_PATH + "LED0.png"), QPixmap(IMG_PATH + "LED1.png")}},
                     {COMPONENT::SRLATCH, {QPixmap(IMG_PATH + "SRLATCH.png")}},
                     {COMPONENT::JKLATCH, {QPixmap(IMG_PATH + "JKLATCH.png")}},
                     {COMPONENT::TLATCH, {QPixmap(IMG_PATH + "TLATCH.png")}},
@@ -87,43 +85,28 @@ namespace logicsim
                     {COMPONENT::DFLIPFLOP, {QPixmap(IMG_PATH + "DFF.png")}},
                 };
 
+                comp_images[COMPONENT::_7SEG_5IN] = std::vector<QPixmap>(33);
+                comp_images[COMPONENT::_7SEG_5IN][0] = QPixmap(IMG_PATH + "7SEG5IN.png");
+
+                for (int i = 1; i < 33; ++i)
+                {
+                    comp_images[COMPONENT::_7SEG_5IN][i] = QPixmap(IMG_PATH + "7SEG5IN_" + QString::fromStdString(std::bitset<5>(i - 1).to_string()) + ".png");
+                }
+
+                comp_images[COMPONENT::_7SEG_8IN] = std::vector<QPixmap>(256);
+                comp_images[COMPONENT::_7SEG_8IN][0] = QPixmap(IMG_PATH + "7SEG8IN.png");
+
+                for (int i = 1; i < 256; ++i)
+                {
+                    comp_images[COMPONENT::_7SEG_8IN][i] = QPixmap(IMG_PATH + "7SEG8IN_" + QString::fromStdString(std::bitset<8>(i).to_string()) + ".png");
+                }
+
+
                 border = new QPixmap(IMG_PATH + "border.png");
                 hselline = new QPixmap(IMG_PATH + "hselline.png");
                 vselline = new QPixmap(IMG_PATH + "vselline.png");
                 hwire = new QPixmap(IMG_PATH + "hwire.png");
                 vwire = new QPixmap(IMG_PATH + "vwire.png");
-
-                comp_io_rel_pos =
-                {
-                    {COMPONENT::NOT_GATE, {{{0.04, 0.48}}, {{0.9, 0.48}}}},
-                    {COMPONENT::AND_GATE, {{{0.12, 0.26}, {0.12, 0.7}}, {{0.9, 0.48}}}},
-                    {COMPONENT::OR_GATE, {{{0.08, 0.2}, {0.08, 0.76}}, {{0.86, 0.48}}}},
-                    {COMPONENT::XOR_GATE, {{{0.08, 0.2}, {0.08, 0.76}}, {{0.86, 0.48}}}},
-                    {COMPONENT::NAND_GATE, {{{0.04, 0.26}, {0.04, 0.7}}, {{0.92, 0.48}}}},
-                    {COMPONENT::NOR_GATE, {{{0.04, 0.2}, {0.04, 0.76}}, {{0.92, 0.48}}}},
-                    {COMPONENT::XNOR_GATE, {{{0.04, 0.2}, {0.04, 0.76}}, {{0.92, 0.48}}}},
-                    {COMPONENT::CONSTANT, {{}, {{0.84, 0.48}}}},
-                    {COMPONENT::SWITCH, {{}, {{0.84, 0.48}}}},
-                    {COMPONENT::OSCILLATOR, {{}, {{0.84, 0.48}}}},
-                    {COMPONENT::KEYPAD, {{}, {{0.96, 0.55}, {0.96, 0.65}, {0.96, 0.75}, {0.96, 0.85}}}},
-                    {COMPONENT::LED, {{{0.12, 0.48}}, {}}},
-                    {COMPONENT::_7SEG_5IN, {{{0.12, 0.44}, {0.12, 0.54}, {0.12, 0.63}, {0.12, 0.72}, {0.12, 0.82}}, {}}},
-                    {COMPONENT::_7SEG_8IN, {{{0.12, 0.16}, {0.12, 0.26}, {0.12, 0.35}, {0.12, 0.44}, {0.12, 0.54}, {0.12, 0.63}, {0.12, 0.72}, {0.12, 0.82}}, {}}},
-                    {COMPONENT::SRLATCH, {{{0.08, 0.22}, {0.08, 0.38}, {0.08, 0.76}}, {{0.88, 0.22}, {0.88, 0.76}}}},
-                    {COMPONENT::JKLATCH, {{{0.08, 0.22}, {0.08, 0.38}, {0.08, 0.76}}, {{0.88, 0.22}, {0.88, 0.76}}}},
-                    {COMPONENT::TLATCH, {{{0.08, 0.22}, {0.08, 0.76}}, {{0.88, 0.22}, {0.88, 0.76}}}},
-                    {COMPONENT::DLATCH, {{{0.08, 0.22}, {0.08, 0.76}}, {{0.88, 0.22}, {0.88, 0.76}}}},
-                    {COMPONENT::SRFLIPFLOP, {{{0.08, 0.22}, {0.08, 0.38}, {0.08, 0.76}}, {{0.88, 0.22}, {0.88, 0.76}}}},
-                    {COMPONENT::JKFLIPFLOP, {{{0.08, 0.22}, {0.08, 0.38}, {0.08, 0.76}}, {{0.88, 0.22}, {0.88, 0.76}}}},
-                    {COMPONENT::TFLIPFLOP, {{{0.08, 0.22}, {0.08, 0.76}}, {{0.88, 0.22}, {0.88, 0.76}}}},
-                    {COMPONENT::DFLIPFLOP, {{{0.08, 0.22}, {0.08, 0.76}}, {{0.88, 0.22}, {0.88, 0.76}}}},
-                };
-
-                components_with_properties = {
-                    COMPONENT::CONSTANT,
-                    COMPONENT::SWITCH,
-                    COMPONENT::OSCILLATOR
-                };
             }
 
             void deallocate()
