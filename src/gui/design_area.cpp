@@ -60,8 +60,9 @@ namespace logicsim
                 QObject::connect(label, SIGNAL (wireSnapFound(ComponentLabel *, int, int)), this, SLOT (getWireSnapPos(ComponentLabel *, int, int)));
                 QObject::connect(label, SIGNAL (wireReleased()), this, SLOT (setWireDest()));
                 QObject::connect(this, SIGNAL (evaluate()), label, SLOT (evaluate()));
+                QObject::connect(this, SIGNAL (resetResource()), label, SLOT (resetResource()));
 
-                label->move(ev->x(), ev->y());
+                label->move(ev->x() - label->width()/2, ev->y() - label->height()/2);
                 label->show();
 
                 addSelected(label);
@@ -133,9 +134,13 @@ namespace logicsim
             }
 
             case INSERT:
-                _selected_components[0]->move(ev->x(), ev->y());
-                _selected_components[0]->border()->move(_selected_components[0]->x(), _selected_components[0]->y());
+            {
+                int x = ev->x() - _selected_components[0]->width()/2;
+                int y = ev->y() - _selected_components[0]->height()/2;
+                _selected_components[0]->move(x, y);
+                _selected_components[0]->border()->move(x, y);
                 break;
+            }
             default:
                 break;
             }
@@ -336,6 +341,7 @@ namespace logicsim
                 return;
             }
             _ticks_label->show();
+            _ticks_label->setText("Ticks: 0");
 
             _selected_tool = TOOL::SIMULATE;
             emit setMode(_selected_tool);
@@ -366,6 +372,11 @@ namespace logicsim
             _timer->stop();
         }
 
+        void DesignArea::stepSimulation()
+        {
+            executeTick();
+        }
+
         void DesignArea::continueSimulation()
         {
             _timer->start();
@@ -374,6 +385,8 @@ namespace logicsim
         void DesignArea::resetSimulation()
         {
             _circuit_model.reset();
+            _ticks_label->setText("Ticks: 0");
+            emit resetResource();
         }
     }
 }

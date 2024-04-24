@@ -14,41 +14,66 @@ namespace logicsim
             // Component
             unsigned int Component::_CURR_ID = 0;
 
-            Component::Component()
+            Component::Component(unsigned int delay, unsigned int n_evals) : _history_size(delay + 1), _n_evals(n_evals), _cache_history(_history_size, std::vector<bool>(n_evals, false))
             {
                 _id = _CURR_ID++;
             }
 
             Component::~Component()
             {
+            }
 
+            void Component::tick()
+            {
+                if (!_cached)
+                {
+                    if (_history_size > 1)
+                    {
+                        std::vector<bool> back = std::move(_cache_history.back());
+                        _cache_history.pop_back();
+                        _cache_history.push_front(std::move(back));
+                    }
+
+                    for (size_t i = 0; i < n_evals(); ++i)
+                    {
+                        _cache_history.front()[i] = _evaluate(i);
+                    }
+                    _cached = true;
+                }
             }
 
             bool Component::evaluate(unsigned int out)
             {
-                if (_cache.find(out) == _cache.end())
+                // if there is no delay, component must be evaluated now if it hasn't already been
+                if (_history_size == 1)
                 {
-                    _cache[out] = _evaluate(out);
+                    tick();
                 }
-                return _cache[out];
-            }
-
-            void Component::clear()
-            {
-                if (!_cache.empty())
-                {
-                    _cache.clear();
-                }
+                return _cache_history.back()[out];
             }
 
             void Component::check() const
             {
             }
 
-            void Component::reset()
+            void Component::clear()
             {
+                _cached = false;
             }
 
+            void Component::reset()
+            {
+                std::list<std::vector<bool>>::iterator it;
+                for (it = _cache_history.begin(); it != _cache_history.end(); ++it)
+                {
+                    for (size_t i = 0; i < _n_evals; ++i)
+                    {
+                        (*it)[i] = false;
+                    }
+                }
+            }
+
+            // default value
             unsigned int Component::n_inputs() const
             {
                 return 0;
@@ -61,7 +86,7 @@ namespace logicsim
 
             unsigned int Component::n_evals() const
             {
-                return n_outputs();
+                return _n_evals;
             }
 
             unsigned int Component::id() const
@@ -84,7 +109,7 @@ namespace logicsim
             }
 
             // NInputComponent
-            NInputComponent::NInputComponent(unsigned int n) : _n(n), _inputs(n, nullptr), _inputs_out(n) {}
+            NInputComponent::NInputComponent(unsigned int n, unsigned int delay, unsigned int n_evals) : Component(delay, n_evals), _n(n), _inputs(n, nullptr), _inputs_out(n) {}
 
             void NInputComponent::set_input(size_t index, Component &input, unsigned int out)
             {
@@ -107,24 +132,6 @@ namespace logicsim
                     {
                         throw null_input();
                     }
-                    input->check();
-                }
-            }
-
-            void NInputComponent::clear()
-            {
-                Component::clear();
-                for (auto &input : _inputs)
-                {
-                    input->clear();
-                }
-            }
-
-            void NInputComponent::reset()
-            {
-                for (auto &input : _inputs)
-                {
-                    input->reset();
                 }
             }
 
@@ -148,13 +155,23 @@ namespace logicsim
             }
 
             // TimeComponent
-            bool TimeComponent::evaluate(unsigned int out)
+            TimeComponent::TimeComponent(unsigned int delay, unsigned int n_evals) : Component(delay, n_evals)
             {
-                if (_cache.find(out) == _cache.end())
+            }
+
+            void TimeComponent::tick()
+            {
+                if (!_cached)
                 {
                     ++_ticks;
                 }
-                return Component::evaluate(out);
+                Component::tick();
+            }
+
+            void TimeComponent::reset()
+            {
+                _ticks = -1;
+                Component::reset();
             }
         }
     }

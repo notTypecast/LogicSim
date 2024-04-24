@@ -9,7 +9,13 @@ namespace logicsim
     {
         namespace input
         {
-            class Constant : public component::Component
+            class Input : public component::Component
+            {
+            public:
+                Input(unsigned int n_evals);
+            };
+
+            class Constant : public Input
             {
             public:
                 Constant();
@@ -24,7 +30,7 @@ namespace logicsim
                 bool _evaluate(unsigned int = 0) override;
             };
 
-            class Switch : public component::Component
+            class Switch : public Input
             {
             public:
                 Switch();
@@ -51,15 +57,13 @@ namespace logicsim
                 std::string param_string() const override;
                 void set_params(const std::string &param_string) override;
 
-                void reset() override;
-
             protected:
-                unsigned int _low_ticks = 10;
-                unsigned int _period = 20;
+                unsigned int _low_ticks = 200;
+                unsigned int _period = 400;
                 bool _evaluate(unsigned int = 0) override;
             };
 
-            class Keypad : public component::Component
+            class Keypad : public Input
             {
             public:
                 Keypad();

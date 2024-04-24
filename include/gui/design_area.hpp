@@ -67,7 +67,7 @@ namespace logicsim
             // Circuit model
             model::circuit::Circuit _circuit_model;
 
-            int _freq = 10;
+            int _freq = 100;
             QTimer *_timer;
 
             QStatusBar *_status_bar;
@@ -122,6 +122,8 @@ namespace logicsim
             void executeTick();
             // triggered by triggered of actionPause
             void pauseSimulation();
+            // triggered by triggered of actionStep
+            void stepSimulation();
             // triggered by triggered of actionContinue
             void continueSimulation();
             // triggered by triggered of actionReset
@@ -138,6 +140,8 @@ namespace logicsim
             // emitted during simulation, after every tick
             // components receiving this signal will evaluate based on their component model
             void evaluate();
+            // emitted when simulation is reset
+            void resetResource();
         };
     }
 }

@@ -17,6 +17,7 @@ namespace logicsim
             DEFINE_2_INPUT_COMPONENT(XNOR)
 
             DEFINE_1_INPUT_COMPONENT(NOT)
+            DEFINE_1_INPUT_COMPONENT(BUFFER)
         }
     }
 }

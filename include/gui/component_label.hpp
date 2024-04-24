@@ -86,6 +86,8 @@ namespace logicsim
             void wireSnap(ComponentLabel *wire_source, int x, int y);
             // triggered by evaluate of DesignArea
             void evaluate();
+            // triggered by resetResource of DesignArea
+            void resetResource();
 
         signals:
             // emitted when a mouse press registers on component during select mode

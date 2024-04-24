@@ -28,9 +28,6 @@ namespace logicsim
                 void add_component(component::Component &component);
                 void remove_component(component::Component &component);
 
-                // TODO: Change
-                component::Component &get_active_component(size_t idx) const;
-
                 void tick();
                 void check() const;
                 void reset();
@@ -48,7 +45,6 @@ namespace logicsim
             protected:
                 unsigned int _total_ticks = 0;
                 std::vector<component::Component *> _components;
-                std::vector<component::Component *> _active_components;
                 std::unordered_set<unsigned int> _component_ids;
 
                 // Components created by this object, to be deleted in destructor

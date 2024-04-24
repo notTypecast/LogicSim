@@ -32,6 +32,7 @@ namespace logicsim
 
             _insert_actions =
             {
+                {_ui->actionBuffer, COMPONENT::BUFFER, -1},
                 {_ui->actionNOT, COMPONENT::NOT_GATE, -1},
                 {_ui->actionAND, COMPONENT::AND_GATE, -1},
                 {_ui->actionOR, COMPONENT::OR_GATE, -1},
@@ -89,6 +90,8 @@ namespace logicsim
             QObject::connect(_ui->actionPause, SIGNAL (triggered()), _ui->designArea, SLOT (pauseSimulation()));
             QObject::connect(_ui->actionPause, SIGNAL (triggered()), this, SLOT (enableContinue()));
 
+            QObject::connect(_ui->actionStep, SIGNAL (triggered()), _ui->designArea, SLOT (stepSimulation()));
+
             QObject::connect(_ui->actionContinue, SIGNAL (triggered()), _ui->designArea, SLOT (continueSimulation()));
             QObject::connect(_ui->actionContinue, SIGNAL (triggered()), this, SLOT (enablePause()));
 
@@ -106,6 +109,7 @@ namespace logicsim
 
         void MainWindow::setSimulationMenu()
         {
+            _sim_paused = false;
             _setSimulationMenu(true);
         }
 
@@ -126,7 +130,15 @@ namespace logicsim
             }
 
             _ui->actionStop->setEnabled(enabled);
-            _ui->actionPause->setEnabled(enabled);
+            if (_sim_paused)
+            {
+                _ui->actionStep->setEnabled(enabled);
+                _ui->actionContinue->setEnabled(enabled);
+            }
+            else
+            {
+                _ui->actionPause->setEnabled(enabled);
+            }
             _ui->actionReset->setEnabled(enabled);
 
             _ui->actionStart->setEnabled(!enabled);
@@ -135,13 +147,17 @@ namespace logicsim
         void MainWindow::enableContinue()
         {
             _ui->actionContinue->setEnabled(true);
+            _ui->actionStep->setEnabled(true);
             _ui->actionPause->setEnabled(false);
+            _sim_paused = true;
         }
 
         void MainWindow::enablePause()
         {
             _ui->actionPause->setEnabled(true);
+            _ui->actionStep->setEnabled(false);
             _ui->actionContinue->setEnabled(false);
+            _sim_paused = false;
         }
     }
 }

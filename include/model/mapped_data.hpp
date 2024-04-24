@@ -16,22 +16,6 @@ namespace logicsim
 {
     namespace model
     {
-        // ctypes of active components
-        const std::unordered_set<std::string> ACTIVE_COMPONENTS = {
-            "OSCILLATOR",
-            "SRLATCH",
-            "JKLATCH",
-            "DLATCH",
-            "TLATCH",
-            "SRFLIPFLOP",
-            "JKFLIPFLOP",
-            "DFLIPFLOP",
-            "TFLIPFLOP",
-            "OUTPUT",
-            "5IN_7SEGMENT",
-            "8IN_7SEGMENT"
-        };
-
     #define DEFINE_FACTORY_FUNCTION(name, class_t)   \
         inline component::Component *create_##name() \
         {                                            \
@@ -45,6 +29,7 @@ namespace logicsim
         DEFINE_FACTORY_FUNCTION(nor, gate::NOR)
         DEFINE_FACTORY_FUNCTION(xnor, gate::XNOR)
         DEFINE_FACTORY_FUNCTION(not, gate::NOT)
+        DEFINE_FACTORY_FUNCTION(buffer, gate::BUFFER)
 
         DEFINE_FACTORY_FUNCTION(constant, input::Constant)
         DEFINE_FACTORY_FUNCTION(switch, input::Switch)
@@ -72,6 +57,7 @@ namespace logicsim
             {"NOR", &create_nor},
             {"XNOR", &create_xnor},
             {"NOT", &create_not},
+            {"BUFFER", &create_buffer},
             {"CONSTANT", &create_constant},
             {"SWITCH", &create_switch},
             {"OSCILLATOR", &create_oscillator},

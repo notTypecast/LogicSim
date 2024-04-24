@@ -8,7 +8,7 @@ namespace logicsim
         namespace memory
         {
             // MemoryComponent
-            MemoryComponent::MemoryComponent(unsigned int n) : NInputComponent(n + 1)
+            MemoryComponent::MemoryComponent(unsigned int n) : NInputComponent(n + 1, 5, 2)
             {
                 _clk = &_inputs[_inputs.size() - 1];
                 _clk_out = &_inputs_out[_inputs.size() - 1];
@@ -21,12 +21,13 @@ namespace logicsim
 
             void MemoryComponent::clear()
             {
-                NInputComponent::clear();
+                Component::clear();
                 _evaluated = false;
             }
 
             void MemoryComponent::reset()
             {
+                Component::reset();
                 _Q = false;
             }
 

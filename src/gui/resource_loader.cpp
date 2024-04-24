@@ -63,6 +63,7 @@ namespace logicsim
             {
                 comp_images =
                 {
+                    {COMPONENT::BUFFER, {QPixmap(IMG_PATH + "BUFFER.png")}},
                     {COMPONENT::NOT_GATE, {QPixmap(IMG_PATH + "NOT.png")}},
                     {COMPONENT::AND_GATE, {QPixmap(IMG_PATH + "AND.png")}},
                     {COMPONENT::OR_GATE, {QPixmap(IMG_PATH + "OR.png")}},

@@ -3,11 +3,13 @@
 
 #include <string>
 #include <vector>
+#include <list>
 #include <unordered_map>
 #include <cassert>
 #include <type_traits>
 #include <exception>
 #include <limits>
+#include <utility>
 
 namespace logicsim
 {
@@ -24,19 +26,23 @@ namespace logicsim
             class Component
             {
             public:
-                Component();
+                Component(unsigned int delay, unsigned int n_evals);
                 virtual ~Component();
 
-                virtual bool evaluate(unsigned int out = 0);
-                virtual void check() const; // recursively checks input components
-                virtual void clear();       // recursively clears cached state of input components
-                virtual void reset();       // recursively resets component state
+                // calculates all outputs for current inputs
+                virtual void tick();
+                // returns value for given output, taking delay into account
+                bool evaluate(unsigned int out = 0);
+
+                virtual void check() const; // checks input components
+                virtual void clear();       // clears component cache, allowing next tick
+                virtual void reset();       // resets component state
 
                 virtual unsigned int n_inputs() const;
                 virtual unsigned int n_outputs() const;
                 // n_evals: how many evaluations component produces (indices as input to evaluate())
                 // for non-outputs, this is equal to n_outputs
-                virtual unsigned int n_evals() const;
+                unsigned int n_evals() const;
 
                 // Methods for saving/loading circuits
                 unsigned int id() const;
@@ -49,14 +55,21 @@ namespace logicsim
             protected:
                 static unsigned int _CURR_ID;
                 unsigned int _id;
-                std::unordered_map<unsigned int, bool> _cache;
+
+                size_t _history_size;
+                unsigned int _n_evals;
+                std::list<std::vector<bool>> _cache_history;
+                bool _cached = false;
+
                 virtual bool _evaluate(unsigned int out = 0) = 0;
+
+
             };
 
             class NInputComponent : public Component
             {
             public:
-                NInputComponent(unsigned int n);
+                NInputComponent(unsigned int n, unsigned int delay, unsigned int n_evals);
 
                 void set_input(size_t index, Component &input, unsigned int out = 0);
                 void remove_input(size_t index);
@@ -64,8 +77,6 @@ namespace logicsim
                 virtual std::vector<std::pair<unsigned int, unsigned int>> input_ids() const override;
 
                 void check() const override;
-                void clear() override;
-                void reset() override;
 
                 unsigned int n_inputs() const override;
 
@@ -75,41 +86,44 @@ namespace logicsim
                 std::vector<unsigned int> _inputs_out;
             };
 
-    #define DEFINE_1_INPUT_COMPONENT(name)                                    \
-        class name : public component::NInputComponent                        \
-        {                                                                     \
-        public:                                                               \
-            name() : NInputComponent(1) {}                                    \
-            name(Component &input, unsigned int out = 0) : NInputComponent(1) \
-            {                                                                 \
-                set_input(0, input, out);                                     \
-            }                                                                 \
-            std::string ctype() const override;                               \
-                                                                              \
-        protected:                                                            \
-            bool _evaluate(unsigned int = 0) override;                        \
+    #define DEFINE_1_INPUT_COMPONENT(name)                                          \
+        class name : public component::NInputComponent                              \
+        {                                                                           \
+        public:                                                                     \
+            name() : NInputComponent(1, 1, 1) {}                                    \
+            name(Component &input, unsigned int out = 0) : NInputComponent(1, 1, 1) \
+            {                                                                       \
+                set_input(0, input, out);                                           \
+            }                                                                       \
+            std::string ctype() const override;                                     \
+                                                                                    \
+        protected:                                                                  \
+            bool _evaluate(unsigned int = 0) override;                              \
         };
 
-    #define DEFINE_2_INPUT_COMPONENT(name)                                                                                \
-        class name : public component::NInputComponent                                                                    \
-        {                                                                                                                 \
-        public:                                                                                                           \
-            name() : NInputComponent(2) {}                                                                                \
-            name(Component &input1, Component &input2, unsigned int out1 = 0, unsigned int out2 = 0) : NInputComponent(2) \
-            {                                                                                                             \
-                set_input(0, input1, out1);                                                                               \
-                set_input(1, input2, out2);                                                                               \
-            }                                                                                                             \
-            std::string ctype() const override;                                                                           \
-                                                                                                                          \
-        protected:                                                                                                        \
-            bool _evaluate(unsigned int = 0) override;                                                                    \
+    #define DEFINE_2_INPUT_COMPONENT(name)                                                                                      \
+        class name : public component::NInputComponent                                                                          \
+        {                                                                                                                       \
+        public:                                                                                                                 \
+            name() : NInputComponent(2, 1, 1) {}                                                                                \
+            name(Component &input1, Component &input2, unsigned int out1 = 0, unsigned int out2 = 0) : NInputComponent(2, 1, 1) \
+            {                                                                                                                   \
+                set_input(0, input1, out1);                                                                                     \
+                set_input(1, input2, out2);                                                                                     \
+            }                                                                                                                   \
+            std::string ctype() const override;                                                                                 \
+                                                                                                                                \
+        protected:                                                                                                              \
+            bool _evaluate(unsigned int = 0) override;                                                                          \
         };
 
             class TimeComponent : public Component
             {
             public:
-                bool evaluate(unsigned int out = 0) override;
+                TimeComponent(unsigned int delay, unsigned int n_evals);
+
+                void tick() override;
+                void reset() override;
 
             protected:
                 unsigned long _ticks = -1;

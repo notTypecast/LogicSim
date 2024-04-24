@@ -12,7 +12,7 @@ namespace logicsim
             class Output : public component::NInputComponent
             {
             public:
-                Output(unsigned int n = 1);
+                Output(unsigned int n_inputs, unsigned int n_evals);
 
                 unsigned int n_outputs() const override;
             };
@@ -22,8 +22,6 @@ namespace logicsim
             public:
                 BaseOutput();
                 BaseOutput(Component &input, unsigned int out = 0);
-
-                unsigned int n_evals() const override;
 
                 std::string ctype() const override;
 
@@ -41,8 +39,6 @@ namespace logicsim
 
                 void clear() override;
 
-                unsigned int n_evals() const override;
-
                 std::string ctype() const override;
 
             protected:
@@ -59,8 +55,6 @@ namespace logicsim
                 void set_inputs(component::Component &input1, component::Component &input2, component::Component &input3, component::Component &input4, component::Component &input5, component::Component &input6, component::Component &input7, component::Component &input8, unsigned int input1_out = 0, unsigned int input2_out = 0, unsigned int input3_out = 0, unsigned int input4_out = 0, unsigned int input5_out = 0, unsigned int input6_out = 0, unsigned int input7_out = 0, unsigned int input8_out = 0);
 
                 void clear() override;
-
-                unsigned int n_evals() const override;
 
                 std::string ctype() const override;
 

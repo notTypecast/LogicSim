@@ -6,12 +6,18 @@ namespace logicsim
     {
         namespace input
         {
+            // Input
+            Input::Input(unsigned int n_evals) : Component(0, n_evals)
+            {
+
+            }
+
             // Constant
-            Constant::Constant()
+            Constant::Constant() : Input(1)
             {
             }
 
-            Constant::Constant(bool value)
+            Constant::Constant(bool value) : Input(1)
             {
                 _value = value;
             }
@@ -37,11 +43,11 @@ namespace logicsim
             }
 
             // Switch
-            Switch::Switch()
+            Switch::Switch() : Input(1)
             {
             }
 
-            Switch::Switch(bool value)
+            Switch::Switch(bool value) : Input(1)
             {
                 _value = value;
             }
@@ -72,17 +78,12 @@ namespace logicsim
             }
 
             // Oscillator
-            Oscillator::Oscillator()
+            Oscillator::Oscillator() : TimeComponent(0, 1)
             {
             }
 
-            Oscillator::Oscillator(unsigned int low_ticks, unsigned int high_ticks) : _low_ticks(low_ticks), _period(low_ticks + high_ticks)
+            Oscillator::Oscillator(unsigned int low_ticks, unsigned int high_ticks) : TimeComponent(0, 1), _low_ticks(low_ticks), _period(low_ticks + high_ticks)
             {
-            }
-
-            void Oscillator::reset()
-            {
-                _ticks = 0;
             }
 
             bool Oscillator::_evaluate(unsigned int)
@@ -115,7 +116,7 @@ namespace logicsim
             }
 
             // Keypad
-            Keypad::Keypad() : _key(0)
+            Keypad::Keypad() : Input(4), _key(0)
             {
             }
 

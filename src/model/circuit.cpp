@@ -21,15 +21,7 @@ namespace logicsim
                     throw std::invalid_argument("Component already added");
                 }
 
-                if (ACTIVE_COMPONENTS.find(component.ctype()) != ACTIVE_COMPONENTS.end())
-                {
-                    _active_components.push_back(&component);
-                }
-                else
-                {
-                    _components.push_back(&component);
-                }
-
+                _components.push_back(&component);
                 _component_ids.insert(component.id());
             }
 
@@ -40,47 +32,26 @@ namespace logicsim
                     throw std::invalid_argument("Component not found");
                 }
 
-                if (ACTIVE_COMPONENTS.find(component.ctype()) != ACTIVE_COMPONENTS.end())
-                {
-                    _active_components.erase(std::remove(_active_components.begin(), _active_components.end(), &component), _active_components.end());
-                }
-                else
-                {
-                    _components.erase(std::remove(_components.begin(), _components.end(), &component), _components.end());
-                }
-
+                _components.erase(std::remove(_components.begin(), _components.end(), &component), _components.end());
                 _component_ids.erase(component.id());
-            }
-
-            component::Component &Circuit::get_active_component(size_t idx) const
-            {
-                if (idx >= _active_components.size())
-                {
-                    throw std::out_of_range("Index out of range");
-                }
-
-                return *_active_components[idx];
             }
 
             void Circuit::tick()
             {
-                for (auto &target : _active_components)
+                for (auto &target : _components)
                 {
                     target->clear();
                 }
-                for (auto &target : _active_components)
+                for (auto &target : _components)
                 {
-                    for (size_t i = 0; i < target->n_evals(); ++i)
-                    {
-                        target->evaluate(i);
-                    }
+                    target->tick();
                 }
                 ++_total_ticks;
             }
 
             void Circuit::check() const
             {
-                for (const auto &target : _active_components)
+                for (const auto &target : _components)
                 {
                     target->check();
                 }
@@ -88,7 +59,7 @@ namespace logicsim
 
             void Circuit::reset()
             {
-                for (auto &target : _active_components)
+                for (auto &target : _components)
                 {
                     target->reset();
                 }
@@ -104,31 +75,28 @@ namespace logicsim
             {
                 std::ofstream file("saves/" + filename + ".lsc");
 
-                for (const auto &v : {&_components, &_active_components})
+                for (auto &component : _components)
                 {
-                    for (auto &component : *v)
+                    file << component->id() << ";" << component->ctype() << ";" << component->param_string() << ";";
+
+                    std::vector<std::pair<unsigned int, unsigned int>> input_ids = component->input_ids();
+                    for (size_t i = 0; i < input_ids.size(); ++i)
                     {
-                        file << component->id() << ";" << component->ctype() << ";" << component->param_string() << ";";
-
-                        std::vector<std::pair<unsigned int, unsigned int>> input_ids = component->input_ids();
-                        for (size_t i = 0; i < input_ids.size(); ++i)
+                        if (input_ids[i].first == std::numeric_limits<unsigned int>::max() && input_ids[i].second == std::numeric_limits<unsigned int>::max())
                         {
-                            if (input_ids[i].first == std::numeric_limits<unsigned int>::max() && input_ids[i].second == std::numeric_limits<unsigned int>::max())
-                            {
-                                file << "NULL";
-                            }
-                            else
-                            {
-                                file << input_ids[i].first << ":" << input_ids[i].second;
-                            }
-                            if (i < input_ids.size() - 1)
-                            {
-                                file << ",";
-                            }
+                            file << "NULL";
                         }
-
-                        file << "\n";
+                        else
+                        {
+                            file << input_ids[i].first << ":" << input_ids[i].second;
+                        }
+                        if (i < input_ids.size() - 1)
+                        {
+                            file << ",";
+                        }
                     }
+
+                    file << "\n";
                 }
 
                 file.close();

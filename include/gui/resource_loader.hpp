@@ -34,6 +34,7 @@ namespace logicsim
         enum COMPONENT
         {
             NONE,
+            BUFFER,
             NOT_GATE,
             AND_GATE,
             OR_GATE,
@@ -59,6 +60,7 @@ namespace logicsim
         };
 
         inline std::unordered_map<COMPONENT, std::string> comp_type_to_ctype = {
+            {BUFFER, "BUFFER"},
             {NOT_GATE, "NOT"},
             {AND_GATE, "AND"},
             {OR_GATE, "OR"},
@@ -149,6 +151,7 @@ namespace logicsim
 
             inline std::unordered_map<COMPONENT, std::pair<std::vector<std::pair<double, double>>, std::vector<std::pair<double, double>>>> comp_io_rel_pos =
             {
+                {COMPONENT::BUFFER, {{{0.04, 0.48}}, {{0.9, 0.48}}}},
                 {COMPONENT::NOT_GATE, {{{0.04, 0.48}}, {{0.9, 0.48}}}},
                 {COMPONENT::AND_GATE, {{{0.12, 0.26}, {0.12, 0.7}}, {{0.9, 0.48}}}},
                 {COMPONENT::OR_GATE, {{{0.08, 0.2}, {0.08, 0.76}}, {{0.86, 0.48}}}},

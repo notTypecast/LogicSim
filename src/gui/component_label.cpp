@@ -80,7 +80,9 @@ namespace logicsim
         void ComponentLabel::setResourceByIdx(int idx)
         {
             _resource_idx = idx;
-            setPixmap(resources::comp_images.at(_comp_type)[_resource_idx]);
+            QPixmap &res = resources::comp_images.at(_comp_type)[_resource_idx];
+            setPixmap(res);
+            resize(res.width(), res.height());
         }
 
         int ComponentLabel::resourceIdx() const
@@ -378,6 +380,11 @@ namespace logicsim
             {
                 return;
             }
+        }
+
+        void ComponentLabel::resetResource()
+        {
+            setResourceByIdx(_base_resource_idx);
         }
     }
 }

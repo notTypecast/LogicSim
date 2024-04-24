@@ -29,6 +29,7 @@ namespace logicsim
             std::vector<std::tuple<QAction *, COMPONENT, int>> _insert_actions;
 
             void _setSimulationMenu(bool enabled);
+            bool _sim_paused;
 
         protected slots:
             void setSimulationMenu();

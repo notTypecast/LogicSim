@@ -75,6 +75,16 @@ namespace logicsim
             {
                 return "NOT";
             }
+
+            bool BUFFER::_evaluate(unsigned int)
+            {
+                return _inputs[0]->evaluate(_inputs_out[0]);
+            }
+
+            std::string BUFFER::ctype() const
+            {
+                return "BUFFER";
+            }
         }
     }
 }
