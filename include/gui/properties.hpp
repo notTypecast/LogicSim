@@ -22,37 +22,41 @@ namespace logicsim
     {
         class ComponentLabel;
 
-        std::vector<QString> splitParamString(std::string param_string);
-
         class Properties : public QWidget
         {
             Q_OBJECT
 
         public:
-            explicit Properties(QWidget *parent = nullptr);
+            explicit Properties(QString title, QWidget *parent = nullptr);
             ~Properties();
 
-            void setup(ComponentLabel *component);
+
+            // adds a single option for a user-provided value
+            // this counts as an individual group
+            // create_value: function to create value to be emitted by optionValue based on entry
+            // after: text to place to the right of text entry
+            void addValueEntry(QString option_name, QString option_value, std::function<QString(QLineEdit *)> create_value, QString after = "");
+            // adds group of radio options, out of which one can be selected
+            // options: {{option name, option value}, ...}
+            // when an option is selected, emits optionIndex with its index, and optionValue with its value
+            void addExclusiveGroup(QString title, std::vector<std::pair<QString, QString>> options, int init_checked_idx = 0);
+            // adds group of options with user-provided values
+            // options: {{option name, option value}, ...}
+            // create_value: function with input: vector of option values, output: string to emit
+            // when OK is pressed, emits optionValue with a string created using create_value
+            void addValueGroup(QString title, std::vector<std::pair<QString, QString>> options, std::function<QString(std::vector<QLineEdit *>)> create_value);
 
         protected:
-            ComponentLabel *_component;
-            QVBoxLayout *_title_group_layout;
+            unsigned int _groups = 0;
+            QVBoxLayout *_title_group_layout = nullptr;
 
-            std::function<void()> _close_func = nullptr;
+            std::vector<std::function<void()>> _close_funcs;
 
-            // adds title
-            void _addTitleGroup(QString title);
-            // adds group of radio options, out of which one can be selected
-            // options: {{option name, param string}, ...}
-            void _addExclusiveGroup(QString title, std::vector<std::pair<QString, std::string>> options);
-            // adds group of options with user-provided values
-            // options: {{option name, current value}, ...}
-            // create_params: function with input: vector of option values, output: param string to emit
-            void _addValueGroup(QString title, std::vector<std::pair<QString, QString>> options, std::function<std::string(std::vector<QLineEdit *>)> create_params);
+            static const size_t VALUE_ENTRY_OFFSET = 25;
 
         signals:
-            void setValue(int value);
-            void setParams(std::string params);
+            void optionIndex(int option_idx, int group_idx);
+            void optionValue(QString value, int group_idx);
 
         protected slots:
             void done();

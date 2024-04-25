@@ -12,6 +12,17 @@ namespace logicsim
 
             _ui->setupUi(this);
 
+            QLabel *ticks_label = new QLabel(_ui->statusbar);
+            ticks_label->setObjectName("perm-label");
+            _ui->statusbar->addPermanentWidget(ticks_label);
+            _ui->tabHandler->setStatusBar(_ui->statusbar);
+
+            QObject::connect(_ui->tabHandler, SIGNAL (designToolChanged(TOOL, COMPONENT)), this, SLOT (setLastDesignTool(TOOL, COMPONENT)));
+            QObject::connect(_ui->tabHandler, SIGNAL (designTabChosen()), this, SLOT (setDesignMenu()));
+            QObject::connect(_ui->tabHandler, SIGNAL (simulationTabChosen(bool)), this, SLOT (setSimulationMenu(bool)));
+
+            QObject::connect(_ui->actionNew, SIGNAL (triggered()), _ui->tabHandler, SLOT (addDesignArea()));
+
             _tool_group = new QActionGroup(this);
 
             QObject::connect(_tool_group, &QActionGroup::triggered, [this, last_action = static_cast<QAction *>(_ui->actionSelect)](QAction* action) mutable
@@ -61,10 +72,10 @@ namespace logicsim
             // Design
             _tool_group->addAction(_ui->actionSelect);
             _ui->actionSelect->setChecked(true);
-            QObject::connect(_ui->actionSelect, SIGNAL (triggered()), _ui->designArea, SLOT (setSelectMode()));
+            QObject::connect(_ui->actionSelect, SIGNAL (triggered()), _ui->tabHandler, SLOT (setSelectMode()));
 
             _tool_group->addAction(_ui->actionWire);
-            QObject::connect(_ui->actionWire, SIGNAL (triggered()), _ui->designArea, SLOT (setWireMode()));
+            QObject::connect(_ui->actionWire, SIGNAL (triggered()), _ui->tabHandler, SLOT (setWireMode()));
 
             for (const auto &triplet : _insert_actions)
             {
@@ -76,28 +87,28 @@ namespace logicsim
                 {
                     action->setProperty("resource-idx", res_idx);
                 }
-                QObject::connect(action, SIGNAL (triggered()), _ui->designArea, SLOT (setInsertMode()));
+                QObject::connect(action, SIGNAL (triggered()), _ui->tabHandler, SLOT (setInsertMode()));
             }
 
             // Simulation
             _tool_group->addAction(_ui->actionStart);
-            QObject::connect(_ui->actionStart, SIGNAL (triggered()), _ui->designArea, SLOT (setSimulationMode()));
+            QObject::connect(_ui->actionStart, SIGNAL (triggered()), _ui->tabHandler, SLOT (setSimulationMode()));
             QObject::connect(_ui->actionStart, SIGNAL (triggered()), this, SLOT (setSimulationMenu()));
 
-            QObject::connect(_ui->actionStop, SIGNAL (triggered()), _ui->designArea, SLOT (stopSimulationMode()));
+            QObject::connect(_ui->actionStop, SIGNAL (triggered()), _ui->tabHandler, SLOT (stopSimulationMode()));
             QObject::connect(_ui->actionStop, SIGNAL (triggered()), this, SLOT (setDesignMenu()));
 
-            QObject::connect(_ui->actionPause, SIGNAL (triggered()), _ui->designArea, SLOT (pauseSimulation()));
+            QObject::connect(_ui->actionPause, SIGNAL (triggered()), _ui->tabHandler, SLOT (pauseSimulation()));
             QObject::connect(_ui->actionPause, SIGNAL (triggered()), this, SLOT (enableContinue()));
 
-            QObject::connect(_ui->actionStep, SIGNAL (triggered()), _ui->designArea, SLOT (stepSimulation()));
+            QObject::connect(_ui->actionStep, SIGNAL (triggered()), _ui->tabHandler, SLOT (stepSimulation()));
 
-            QObject::connect(_ui->actionContinue, SIGNAL (triggered()), _ui->designArea, SLOT (continueSimulation()));
+            QObject::connect(_ui->actionContinue, SIGNAL (triggered()), _ui->tabHandler, SLOT (continueSimulation()));
             QObject::connect(_ui->actionContinue, SIGNAL (triggered()), this, SLOT (enablePause()));
 
-            QObject::connect(_ui->actionReset, SIGNAL (triggered()), _ui->designArea, SLOT (resetSimulation()));
+            QObject::connect(_ui->actionReset, SIGNAL (triggered()), _ui->tabHandler, SLOT (resetSimulation()));
 
-            _ui->designArea->setStatusBar(_ui->statusbar);
+            QObject::connect(_ui->actionProperties, SIGNAL (triggered()), this, SLOT (simulationProperties()));
 
         }
 
@@ -107,17 +118,50 @@ namespace logicsim
             delete _ui;
         }
 
-        void MainWindow::setSimulationMenu()
+        void MainWindow::setLastDesignTool(TOOL tool, COMPONENT comp_type)
         {
-            _sim_paused = false;
+            _last_design_tool = tool;
+            _last_insert_comp = comp_type;
+        }
+
+        void MainWindow::addDesignArea()
+        {
+            _ui->tabHandler->addDesignArea();
+        }
+
+        void MainWindow::setSimulationMenu(bool running)
+        {
+            _sim_paused = !running;
             _setSimulationMenu(true);
         }
 
         void MainWindow::setDesignMenu()
         {
             _setSimulationMenu(false);
-            _ui->actionSelect->setChecked(true);
-            emit _ui->actionSelect->triggered();
+            switch (_last_design_tool)
+            {
+            case INSERT:
+                for (const auto &triplet: _insert_actions)
+                {
+                    if (std::get<1>(triplet) == _last_insert_comp)
+                    {
+                        QAction *action = std::get<0>(triplet);
+                        action->setChecked(true);
+                        emit action->triggered();
+                        break;
+                    }
+                }
+                break;
+            case WIRE:
+                _ui->actionWire->setChecked(true);
+                emit _ui->actionWire->triggered();
+                break;
+            case SELECT:
+            default:
+                _ui->actionSelect->setChecked(true);
+                emit _ui->actionSelect->triggered();
+                break;
+            }
         }
 
         void MainWindow::_setSimulationMenu(bool enabled)
@@ -134,9 +178,12 @@ namespace logicsim
             {
                 _ui->actionStep->setEnabled(enabled);
                 _ui->actionContinue->setEnabled(enabled);
+                _ui->actionPause->setEnabled(!enabled);
             }
             else
             {
+                _ui->actionStep->setEnabled(!enabled);
+                _ui->actionContinue->setEnabled(!enabled);
                 _ui->actionPause->setEnabled(enabled);
             }
             _ui->actionReset->setEnabled(enabled);
@@ -158,6 +205,36 @@ namespace logicsim
             _ui->actionStep->setEnabled(false);
             _ui->actionContinue->setEnabled(false);
             _sim_paused = false;
+        }
+
+        void MainWindow::simulationProperties()
+        {
+            Properties *sim_properties_popup = new Properties("Simulation Properties", this);
+
+            sim_properties_popup->addValueEntry("Frequency", QString::number(_ui->tabHandler->currentDesignArea()->frequency()), [](QLineEdit *entry) {
+                bool ok;
+                int val = entry->text().toInt(&ok);
+                if (!ok || val <= 0)
+                {
+                    return QString();
+                }
+                if (val > 1000)
+                {
+                    return QString("1000");
+                }
+                return entry->text();
+            }, "Hz");
+
+            QObject::connect(sim_properties_popup, SIGNAL (optionValue(QString, int)), this, SLOT (setSimulationFrequency(QString)));
+
+            QSize popup_size = sim_properties_popup->sizeHint();
+            sim_properties_popup->move(x() + width()/2 - popup_size.width()/2, y() + height()/2 - popup_size.height()/2);
+            sim_properties_popup->show();
+        }
+
+        void MainWindow::setSimulationFrequency(QString freq)
+        {
+            _ui->tabHandler->currentDesignArea()->setFrequency(freq.toInt());
         }
     }
 }

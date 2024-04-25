@@ -1,85 +1,15 @@
 #include "gui/properties.hpp"
 #include "gui/component_label.hpp"
-
+#include <iostream>
 namespace logicsim
 {
     namespace gui
     {
-        std::vector<QString> splitParamString(std::string param_string)
-        {
-            utils::StringSplitter splitter;
-            splitter.reset(param_string, ',');
-
-            std::vector<QString> res;
-
-            while (splitter.has_next())
-            {
-                res.push_back(QString::fromUtf8(splitter.next().c_str()));
-            }
-
-            return res;
-        }
-
-        Properties::Properties(QWidget *parent) :
+        Properties::Properties(QString title, QWidget *parent) :
             QWidget(parent)
         {
             setWindowFlags(Qt::Popup | Qt::FramelessWindowHint);
-        }
 
-        Properties::~Properties()
-        {
-        }
-
-        void Properties::setup(ComponentLabel *component)
-        {
-            _component = component;
-            QObject::connect(this, SIGNAL (setValue(int)), component, SLOT (setResourceByIdx(int)));
-            QObject::connect(this, SIGNAL (setParams(std::string)), component, SLOT (setParams(std::string)));
-
-            switch (component->comp_type())
-            {
-            case CONSTANT:
-                _addTitleGroup("Constant Properties");
-                _addExclusiveGroup("Type", {{"0", "0"}, {"1", "1"}});
-                break;
-            case SWITCH:
-                _addTitleGroup("Switch Properties");
-                _addExclusiveGroup("State", {{"Off", "0"}, {"On", "1"}});
-                break;
-            case OSCILLATOR:
-            {
-                _addTitleGroup("Oscillator Properties");
-                std::vector<QString> option_values = splitParamString(component->component_model()->param_string());
-                option_values[1] = QString::number(option_values[1].toInt() - option_values[0].toInt());
-
-                _addValueGroup("Cycle", {{"Low", option_values[0]}, {"High", option_values[1]}},
-                [](std::vector<QLineEdit *> params) {
-                    bool ok1, ok2;
-                    int low = params[0]->text().toInt(&ok1), high = params[1]->text().toInt(&ok2);
-                    if (!(ok1 && ok2))
-                    {
-                        return std::string();
-                    }
-                    return params[0]->text().toStdString() + ',' + std::to_string(low + high);
-                });
-                break;
-            }
-            default:
-                break;
-            }
-        }
-
-        void Properties::done()
-        {
-            if (_close_func != nullptr)
-            {
-                _close_func();
-            }
-            close();
-        }
-
-        void Properties::_addTitleGroup(QString title)
-        {
             QVBoxLayout *main_layout = new QVBoxLayout(this);
             main_layout->setAlignment(Qt::AlignTop);
             QGroupBox *title_group = new QGroupBox(title, this);
@@ -93,9 +23,53 @@ namespace logicsim
             main_layout->addWidget(ok_button);
         }
 
-        void Properties::_addExclusiveGroup(QString title, std::vector<std::pair<QString, std::string>> options)
+        Properties::~Properties()
         {
-            int checked_idx = _component->resourceIdx();
+        }
+
+        void Properties::done()
+        {
+            for (const auto &func : _close_funcs)
+            {
+                func();
+            }
+            close();
+        }
+
+        void Properties::addValueEntry(QString option_name, QString option_value, std::function<QString(QLineEdit *)> create_value, QString after)
+        {
+            int group_idx = _groups++;
+            QHBoxLayout *layout = new QHBoxLayout;
+
+            QLabel *name_label = new QLabel(option_name, this);
+            QFontMetrics fm(name_label->font());
+            name_label->setFixedWidth(fm.horizontalAdvance(option_name) + VALUE_ENTRY_OFFSET);
+            layout->addWidget(name_label);
+
+            QLineEdit *entry = new QLineEdit(this);
+            entry->setText(option_value);
+            layout->addWidget(entry);
+
+            QLabel *after_label = new QLabel(after, this);
+            layout->addWidget(after_label);
+
+            _close_funcs.push_back([this, group_idx, create_value, entry]()
+            {
+                QString value_string = create_value(entry);
+                if (!value_string.isEmpty())
+                {
+                    emit optionValue(value_string, group_idx);
+                }
+            });
+
+            layout->setAlignment(Qt::AlignTop);
+            _title_group_layout->addLayout(layout);
+        }
+
+        void Properties::addExclusiveGroup(QString title, std::vector<std::pair<QString, QString>> options, int init_checked_idx)
+        {
+            int group_idx = _groups++;
+            int checked_idx = init_checked_idx;
             QGroupBox *group = new QGroupBox(title, this);
             QVBoxLayout *layout = new QVBoxLayout;
 
@@ -103,9 +77,9 @@ namespace logicsim
             for (const auto &option_pair : options) {
                 QRadioButton *radio_button = new QRadioButton(option_pair.first, this);
                 layout->addWidget(radio_button);
-                QObject::connect(radio_button, &QRadioButton::clicked, this, [this, i, option_pair]() {
-                    emit setValue(i);
-                    emit setParams(option_pair.second);
+                QObject::connect(radio_button, &QRadioButton::clicked, this, [this, group_idx, i, option_pair]() {
+                    emit optionIndex(i, group_idx);
+                    emit optionValue(option_pair.second, group_idx);
                 });
                 if (i++ == checked_idx)
                 {
@@ -118,12 +92,16 @@ namespace logicsim
             _title_group_layout->addWidget(group);
         }
 
-        void Properties::_addValueGroup(QString title, std::vector<std::pair<QString, QString>> options, std::function<std::string(std::vector<QLineEdit *>)> create_params)
+        void Properties::addValueGroup(QString title, std::vector<std::pair<QString, QString>> options, std::function<QString(std::vector<QLineEdit *>)> create_value)
         {
+            int group_idx = _groups++;
             QGroupBox *group = new QGroupBox(title, this);
             QVBoxLayout *layout = new QVBoxLayout;
 
             std::vector<QLineEdit *> entries(options.size());
+
+            int max_label_width = -1;
+            std::vector<QLabel *> option_labels(options.size());
 
             int i = 0;
             for (const auto & option_pair: options)
@@ -133,6 +111,11 @@ namespace logicsim
 
                 QLabel *option_name = new QLabel(option_pair.first, this);
                 option_layout->addWidget(option_name);
+
+                option_labels[i] = option_name;
+                QFontMetrics fm(option_name->font());
+                max_label_width = std::max(max_label_width, fm.horizontalAdvance(option_pair.first));
+
                 entries[i] = new QLineEdit(this);
                 entries[i]->setText(option_pair.second);
                 option_layout->addWidget(entries[i]);
@@ -141,15 +124,20 @@ namespace logicsim
                 ++i;
             }
 
-            _close_func = [this, create_params, entries]()
+            for (const auto &option_name : option_labels)
             {
-                std::string param_string = create_params(entries);
-                if (!param_string.empty())
+                option_name->setFixedWidth(max_label_width + VALUE_ENTRY_OFFSET);
+            }
+
+            _close_funcs.push_back([this, group_idx, create_value, entries]()
+            {
+                QString value_string = create_value(entries);
+                if (!value_string.isEmpty())
                 {
-                    emit setParams(param_string);
+                    emit optionValue(value_string, group_idx);
                 }
 
-            };
+            });
 
             group->setLayout(layout);
             layout->setAlignment(Qt::AlignTop);

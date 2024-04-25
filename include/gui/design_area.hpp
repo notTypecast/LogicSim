@@ -2,7 +2,6 @@
 #define LOGICSIM_GUI_DESIGN_AREA_HPP
 
 #include <QApplication>
-#include <QScrollArea>
 #include <QMouseEvent>
 #include <QString>
 #include <QTimer>
@@ -12,6 +11,7 @@
 #include <unordered_set>
 #include <algorithm>
 #include <cmath>
+#include <fstream>
 
 #include "gui/resource_loader.hpp"
 #include "gui/component_label.hpp"
@@ -23,7 +23,7 @@ namespace logicsim
 {
     namespace gui
     {
-        class DesignArea : public QScrollArea
+        class DesignArea : public QWidget
         {
             Q_OBJECT
         public:
@@ -35,7 +35,23 @@ namespace logicsim
 
             void keyPressEvent(QKeyEvent *ev);
 
+            TOOL mode() const;
+            void setMode(TOOL tool, COMPONENT comp_type = COMPONENT::NONE, int res_idx = 0);
+            void stopSimulationMode();
+            void pauseSimulation();
+            void stepSimulation();
+            void continueSimulation();
+            void resetSimulation();
+
             void setStatusBar(QStatusBar *status_bar);
+
+            unsigned int frequency() const;
+            void setFrequency(unsigned int freq);
+
+            // called when tab changes from/to this
+            void pauseState();
+            // returns true if there was a running simulation before
+            bool continueState();
 
         protected:
             // removes all components from selected
@@ -67,11 +83,19 @@ namespace logicsim
             // Circuit model
             model::circuit::Circuit _circuit_model;
 
-            int _freq = 100;
-            QTimer *_timer;
+            unsigned int _freq = 100;
+            QTimer *_timer = nullptr;
 
             QStatusBar *_status_bar;
             QLabel *_ticks_label;
+
+            // State information
+            // Saved when tab changes, to reset when reselected
+            QString _ticks_label_text;
+            bool _state_sim_paused;
+
+            std::vector<std::string> _filenames;
+            bool _writeToFile(bool new_file = false) const;
 
             /* Signals and slots often transmit position information
              * Such information is referred to as global, if its frame of reference
@@ -81,17 +105,6 @@ namespace logicsim
              * in that case, it is denoted as (dx, dy)
              */
         protected slots:
-            // triggered by triggered of actionSelect
-            void setSelectMode();
-            // triggered by triggered of any action that corresponds to a component
-            void setInsertMode();
-            // triggered by triggered of actionWire
-            void setWireMode();
-            // triggered by triggered of actionStart
-            void setSimulationMode();
-            // triggered by triggered of actionStop
-            void stopSimulationMode();
-
             // Design Slots
 
             // triggered by selected of ComponentLabel
@@ -120,18 +133,10 @@ namespace logicsim
             // Simulation
             // triggered by timer
             void executeTick();
-            // triggered by triggered of actionPause
-            void pauseSimulation();
-            // triggered by triggered of actionStep
-            void stepSimulation();
-            // triggered by triggered of actionContinue
-            void continueSimulation();
-            // triggered by triggered of actionReset
-            void resetSimulation();
 
         signals:
             // emitted when the mode is changed
-            void setMode(TOOL tool);
+            void modeChanged(TOOL tool);
             // emitted when a selection area is completed, to find components inside it
             void rangeQuery(int x_min, int y_min, int x_max, int y_max);
             // emitted during wire creation, when destination is moved
@@ -142,6 +147,8 @@ namespace logicsim
             void evaluate();
             // emitted when simulation is reset
             void resetResource();
+            // emitted when writing to file
+            void writeComponent(std::ofstream &file) const;
         };
     }
 }

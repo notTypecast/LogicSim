@@ -90,9 +90,9 @@ namespace logicsim
             return _resource_idx;
         }
 
-        void ComponentLabel::setParams(std::string param_string)
+        void ComponentLabel::setParams(QString param_string)
         {
-            _component_model->set_params(param_string);
+            _component_model->set_params(param_string.toStdString());
         }
 
         bool ComponentLabel::saveWire(Wire *wire, bool is_input, int idx)
@@ -270,21 +270,70 @@ namespace logicsim
                 {
                     break;
                 }
-            {
-                _properties_popup = new Properties(parentWidget());
-                _properties_popup->setup(this);
-
-                QRect main_geometry = (static_cast<QWidget *>(parentWidget()->parent()->parent()->parent()->parent()))->geometry();
-                _properties_popup->move(main_geometry.x() + x() + width(), main_geometry.y() + y());
-                _properties_popup->show();
+                _setupProperties();
                 break;
-            }
             case SIMULATE:
                 mousePressEvent(ev);
                 break;
             default:
                 break;
             }
+        }
+
+        void ComponentLabel::_setupProperties()
+        {
+            switch (_comp_type)
+            {
+            case CONSTANT:
+                _properties_popup = new Properties("Constant Properties", parentWidget());
+                _properties_popup->addExclusiveGroup("Type", {{"0", "0"}, {"1", "1"}}, _resource_idx);
+                break;
+            case SWITCH:
+                _properties_popup = new Properties("Switch Properties", parentWidget());
+                _properties_popup->addExclusiveGroup("State", {{"Off", "0"}, {"On", "1"}}, _resource_idx);
+                break;
+            case OSCILLATOR:
+            {
+                _properties_popup = new Properties("Oscillator Properties", parentWidget());
+
+                utils::StringSplitter splitter(_component_model->param_string(), ',');
+                QString low = QString::fromStdString(splitter.next());
+                QString high = QString::fromStdString(splitter.next());
+                high = QString::number(high.toInt() - low.toInt());
+                QString phase;
+
+                if (splitter.has_next())
+                {
+                    phase = QString::fromStdString(splitter.next());
+                }
+                else
+                {
+                    phase = "0";
+                }
+
+                _properties_popup->addValueGroup("Cycle", {{"Low", low}, {"High", high}, {"Phase", phase}},
+                [](std::vector<QLineEdit *> params) {
+                    bool ok1, ok2, ok3;
+                    int low = params[0]->text().toInt(&ok1), high = params[1]->text().toInt(&ok2);
+                    params[2]->text().toInt(&ok3);
+                    if (!(ok1 && ok2 && ok3))
+                    {
+                        return QString();
+                    }
+                    return params[0]->text() + ',' + QString::number(low + high) + ',' + params[2]->text();
+                });
+                break;
+            }
+            default:
+                break;
+            }
+
+            QObject::connect(_properties_popup, SIGNAL (optionIndex(int, int)), this, SLOT (setResourceByIdx(int)));
+            QObject::connect(_properties_popup, SIGNAL (optionValue(QString, int)), this, SLOT (setParams(QString)));
+
+            QRect main_geometry = (static_cast<QWidget *>(parentWidget()->parent()->parent()))->geometry();
+            _properties_popup->move(main_geometry.x() + x() + width(), main_geometry.y() + y());
+            _properties_popup->show();
         }
 
         void ComponentLabel::changeMode(TOOL tool)
@@ -385,6 +434,30 @@ namespace logicsim
         void ComponentLabel::resetResource()
         {
             setResourceByIdx(_base_resource_idx);
+        }
+
+        void ComponentLabel::writeComponent(std::ofstream &file)
+        {
+            file << _component_model->id() << ';' << _component_model->ctype() << ';' << _component_model->param_string() << ';' << std::to_string(x()) << ',' << std::to_string(y()) << ';';
+
+            std::vector<std::pair<unsigned int, unsigned int>> input_ids = _component_model->input_ids();
+            for (size_t i = 0; i < input_ids.size(); ++i)
+            {
+                if (input_ids[i].first == std::numeric_limits<unsigned int>::max() && input_ids[i].second == std::numeric_limits<unsigned int>::max())
+                {
+                    file << "NULL";
+                }
+                else
+                {
+                    file << input_ids[i].first << ":" << input_ids[i].second;
+                }
+                if (i < input_ids.size() - 1)
+                {
+                    file << ",";
+                }
+            }
+
+            file << "\n";
         }
     }
 }

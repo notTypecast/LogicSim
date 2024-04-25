@@ -82,8 +82,9 @@ namespace logicsim
             {
             }
 
-            Oscillator::Oscillator(unsigned int low_ticks, unsigned int high_ticks) : TimeComponent(0, 1), _low_ticks(low_ticks), _period(low_ticks + high_ticks)
+            Oscillator::Oscillator(unsigned int low_ticks, unsigned int high_ticks, unsigned int phase) : TimeComponent(0, 1), _low_ticks(low_ticks), _period(low_ticks + high_ticks), _phase(phase)
             {
+                _ticks = phase - 1;
             }
 
             bool Oscillator::_evaluate(unsigned int)
@@ -99,20 +100,26 @@ namespace logicsim
 
             std::string Oscillator::param_string() const
             {
-                return std::to_string(_low_ticks) + "," + std::to_string(_period);
+                return std::to_string(_low_ticks) + ',' + std::to_string(_period) + ',' + std::to_string(_phase);
             }
 
             void Oscillator::set_params(const std::string &param_string)
             {
-
-                int period = std::stoi(param_string.substr(param_string.find(',') + 1));
+                utils::StringSplitter splitter(param_string, ',');
+                int low_ticks = std::stoi(splitter.next());
+                int period = std::stoi(splitter.next());
                 if (period <= 0)
                 {
                     return;
                 }
-
+                _low_ticks = low_ticks;
                 _period = period;
-                _low_ticks = std::stoi(param_string.substr(0, param_string.find(',')));
+
+                if (splitter.has_next())
+                {
+                    _phase = std::stoi(splitter.next());
+                    _ticks = _phase - 1;
+                }
             }
 
             // Keypad

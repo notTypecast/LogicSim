@@ -3,6 +3,8 @@
 
 #include "model/component.hpp"
 
+#include "utils.hpp"
+
 namespace logicsim
 {
     namespace model
@@ -51,7 +53,7 @@ namespace logicsim
             {
             public:
                 Oscillator();
-                Oscillator(unsigned int low_ticks, unsigned int high_ticks);
+                Oscillator(unsigned int low_ticks, unsigned int high_ticks, unsigned int phase = 0);
 
                 std::string ctype() const override;
                 std::string param_string() const override;
@@ -60,6 +62,7 @@ namespace logicsim
             protected:
                 unsigned int _low_ticks = 200;
                 unsigned int _period = 400;
+                unsigned int _phase = 0;
                 bool _evaluate(unsigned int = 0) override;
             };
 

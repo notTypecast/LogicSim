@@ -6,12 +6,14 @@
 #include <QActionGroup>
 #include <QString>
 
+#include "gui/properties.hpp"
 #include "gui/resource_loader.hpp"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
+// TODO: keep design
 namespace logicsim
 {
     namespace gui
@@ -31,12 +33,22 @@ namespace logicsim
             void _setSimulationMenu(bool enabled);
             bool _sim_paused;
 
+            TOOL _last_design_tool = TOOL::SELECT;
+            COMPONENT _last_insert_comp = COMPONENT::NONE;
+
         protected slots:
-            void setSimulationMenu();
+            void addDesignArea();
+
+            void setSimulationMenu(bool running = true);
             void setDesignMenu();
+            // TODO: if component is constant, 1 switches to 0 (same enum type)
+            void setLastDesignTool(TOOL tool, COMPONENT comp_type = COMPONENT::NONE);
 
             void enableContinue();
             void enablePause();
+
+            void simulationProperties();
+            void setSimulationFrequency(QString freq);
         };
 
     }

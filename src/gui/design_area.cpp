@@ -4,11 +4,8 @@ namespace logicsim
 {
     namespace gui
     {
-        DesignArea::DesignArea(QWidget *parent): QScrollArea{parent}
+        DesignArea::DesignArea(QWidget *parent): QWidget(parent)
         {
-            setWidget(new QWidget(this));
-            widget()->resize(width(), height());
-
         }
 
         void DesignArea::keyPressEvent(QKeyEvent *ev)
@@ -34,7 +31,7 @@ namespace logicsim
                 _select_y = ev->y();
                 for (int i = 0; i < 4; ++i)
                 {
-                    _selection_border[i] = new QLabel(widget());
+                    _selection_border[i] = new QLabel(this);
                     _selection_border[i]->show();
                 }
                 break;
@@ -44,14 +41,14 @@ namespace logicsim
 
             case INSERT:
             {
-                ComponentLabel *label = new ComponentLabel(_insert_component, _insert_resource_idx, widget());
+                ComponentLabel *label = new ComponentLabel(_insert_component, _insert_resource_idx, this);
 
                 model::component::Component *component_model = label->component_model();
                 _circuit_model.add_component(*component_model);
 
                 QObject::connect(label, SIGNAL (selected(ComponentLabel *, bool)), this, SLOT (addSelected(ComponentLabel *, bool)));
                 QObject::connect(label, SIGNAL (moved(int, int)), this, SLOT (moveSelectedComponents(int, int)));
-                QObject::connect(this, SIGNAL (setMode(TOOL)), label, SLOT (changeMode(TOOL)));
+                QObject::connect(this, SIGNAL (modeChanged(TOOL)), label, SLOT (changeMode(TOOL)));
                 QObject::connect(this, SIGNAL (rangeQuery(int, int, int, int)), label, SLOT (checkRangeQuery(int, int, int, int)));
                 QObject::connect(label, SIGNAL (selected_nocheck(ComponentLabel *)), this, SLOT (addSelected_nocheck(ComponentLabel *)));
                 QObject::connect(label, SIGNAL (wireSource(ComponentLabel *, int, int)), this, SLOT (getWireSource(ComponentLabel *, int, int)));
@@ -149,8 +146,55 @@ namespace logicsim
         void DesignArea::setStatusBar(QStatusBar *status_bar)
         {
             _status_bar = status_bar;
-            _ticks_label = new QLabel(_status_bar);
-            _status_bar->addPermanentWidget(_ticks_label);
+            _ticks_label = status_bar->findChild<QLabel *>("perm-label");
+        }
+
+        void DesignArea::setFrequency(unsigned int freq)
+        {
+            _freq = freq;
+            if (_timer != nullptr)
+            {
+                _timer->setInterval(1000 / freq);
+            }
+        }
+
+        unsigned int DesignArea::frequency() const
+        {
+            return _freq;
+        }
+
+        void DesignArea::pauseState()
+        {
+            _ticks_label_text = _ticks_label->isHidden() ? "" : _ticks_label->text();
+            if (_selected_tool == TOOL::SIMULATE)
+            {
+                _state_sim_paused = !_timer->isActive();
+                pauseSimulation();
+            }
+
+        }
+
+        bool DesignArea::continueState()
+        {
+            if (!_ticks_label_text.isEmpty())
+            {
+                _ticks_label->setText(_ticks_label_text);
+                _ticks_label->show();
+            }
+            else
+            {
+                _ticks_label->hide();
+            }
+            if (_selected_tool == TOOL::SIMULATE)
+            {
+                if (!_state_sim_paused)
+                {
+                    continueSimulation();
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         void DesignArea::addSelected(ComponentLabel *component, bool ctrl)
@@ -182,7 +226,7 @@ namespace logicsim
         {
             _selected_components.push_back(component);
 
-            QLabel *border = new QLabel(widget());
+            QLabel *border = new QLabel(this);
             border->setPixmap(resources::getBorder(component->width(), component->height()));
             border->setAttribute(Qt::WA_TransparentForMouseEvents);
 
@@ -215,7 +259,7 @@ namespace logicsim
         void DesignArea::getWireSource(ComponentLabel *component, int dx, int dy)
         {
             std::get<0>(_wire_snap_closest) = nullptr;
-            _wire = new Wire(widget());
+            _wire = new Wire(this);
             bool set = _wire->setComponent1(component, dx, dy);
             if (!set)
             {
@@ -302,59 +346,57 @@ namespace logicsim
             emit evaluate();
         }
 
-        void DesignArea::setSelectMode()
+        TOOL DesignArea::mode() const
         {
-            _selected_tool = TOOL::SELECT;
-            emit setMode(_selected_tool);
+            return _selected_tool;
         }
 
-        void DesignArea::setInsertMode()
+        void DesignArea::setMode(TOOL tool, COMPONENT comp_type, int res_idx)
         {
-            _selected_tool = TOOL::INSERT;
-            emit setMode(_selected_tool);
-            _insert_component = static_cast<COMPONENT>(QObject::sender()->property("component-type").value<int>());
-            QVariant res_idx = QObject::sender()->property("resource-idx");
-            _insert_resource_idx = res_idx.isValid() ? res_idx.value<int>() : 0;
-        }
+            _selected_tool = tool;
 
-        void DesignArea::setWireMode()
-        {
-            _selected_tool = TOOL::WIRE;
-            emit setMode(_selected_tool);
-        }
-
-        void DesignArea::setSimulationMode()
-        {
-            for (const auto &component : _selected_components)
+            switch (tool)
             {
-                component->border()->hide();
+            case TOOL::INSERT:
+            {
+                _insert_component = comp_type;
+                _insert_resource_idx = res_idx;
+                break;
+            }
+            case TOOL::SIMULATE:
+                for (const auto &component : _selected_components)
+                {
+                    component->border()->hide();
+                }
+
+                try
+                {
+                    _circuit_model.check();
+                }
+                catch (model::component::null_input)
+                {
+                    // invalid circuit popup
+                    std::cout << "Invalid circuit" << std::endl;
+                    return;
+                }
+                _ticks_label->show();
+                _ticks_label->setText("Ticks: 0");
+
+                _timer = new QTimer(this);
+                QObject::connect(_timer, SIGNAL (timeout()), this, SLOT (executeTick()));
+                _timer->start(1000 / _freq);
+                break;
+            default:
+                break;
             }
 
-            try
-            {
-                _circuit_model.check();
-            }
-            catch (model::component::null_input)
-            {
-                // invalid circuit popup
-                std::cout << "Invalid circuit" << std::endl;
-                return;
-            }
-            _ticks_label->show();
-            _ticks_label->setText("Ticks: 0");
-
-            _selected_tool = TOOL::SIMULATE;
-            emit setMode(_selected_tool);
-
-            _timer = new QTimer(this);
-            QObject::connect(_timer, SIGNAL (timeout()), this, SLOT (executeTick()));
-            int ms = 1000 / _freq;
-            _timer->start(ms ? ms : 1);
+            emit modeChanged(tool);
         }
 
         void DesignArea::stopSimulationMode()
         {
             delete _timer;
+            _timer = nullptr;
             _circuit_model.reset();
             _ticks_label->hide();
 
@@ -387,6 +429,26 @@ namespace logicsim
             _circuit_model.reset();
             _ticks_label->setText("Ticks: 0");
             emit resetResource();
+        }
+
+        bool DesignArea::_writeToFile(bool new_file) const
+        {
+            /*
+            std::ofstream file;
+            if (_filenames[currentIndex()] != "Untitled*" && !new_file)
+            {
+                file.open(_filenames[currentIndex()]);
+            }
+            else
+            {
+                // create new file
+            }
+
+            emit writeComponent(file);
+
+            file.close();
+
+            return !file.fail();*/
         }
     }
 }

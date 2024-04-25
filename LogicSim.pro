@@ -19,6 +19,7 @@ SOURCES += \
     src/model/outputs.cpp \
     src/utils.cpp \
     src/gui/main_window.cpp \
+    src/gui/tab_handler.cpp \
     src/gui/design_area.cpp \
     src/gui/component_label.cpp \
     src/gui/resource_loader.cpp \
@@ -35,6 +36,7 @@ HEADERS += \
     include/model/outputs.hpp \
     include/utils.hpp \
     include/gui/main_window.hpp \
+    include/gui/tab_handler.hpp \
     include/gui/design_area.hpp \
     include/gui/component_label.hpp \
     include/gui/resource_loader.hpp \

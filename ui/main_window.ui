@@ -11,12 +11,12 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>LogicSim</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout">
     <item>
-     <widget class="logicsim::gui::DesignArea" name="designArea">
+     <widget class="logicsim::gui::TabHandler" name="tabHandler">
       <property name="palette">
        <palette>
         <active>
@@ -459,21 +459,13 @@
         </disabled>
        </palette>
       </property>
-      <property name="autoFillBackground">
-       <bool>false</bool>
+      <property name="currentIndex">
+       <number>0</number>
       </property>
-      <property name="widgetResizable">
-       <bool>true</bool>
-      </property>
-      <widget class="QWidget" name="scrollAreaWidgetContents">
-       <property name="geometry">
-        <rect>
-         <x>0</x>
-         <y>0</y>
-         <width>1254</width>
-         <height>513</height>
-        </rect>
-       </property>
+      <widget class="QWidget" name="tab_1">
+       <attribute name="title">
+        <string>Untitled*</string>
+       </attribute>
       </widget>
      </widget>
     </item>
@@ -494,7 +486,6 @@
     </property>
     <addaction name="actionNew"/>
     <addaction name="actionOpen"/>
-    <addaction name="actionClose"/>
     <addaction name="actionSave"/>
     <addaction name="actionSave_As"/>
    </widget>
@@ -569,6 +560,8 @@
     <addaction name="actionStep"/>
     <addaction name="actionContinue"/>
     <addaction name="actionReset"/>
+    <addaction name="separator"/>
+    <addaction name="actionProperties"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuTools"/>
@@ -851,12 +844,17 @@
     <string>Step</string>
    </property>
   </action>
+  <action name="actionProperties">
+   <property name="text">
+    <string>Properties</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
-   <class>logicsim::gui::DesignArea</class>
-   <extends>QScrollArea</extends>
-   <header>include/gui/design_area.hpp</header>
+   <class>logicsim::gui::TabHandler</class>
+   <extends>QTabWidget</extends>
+   <header>include/gui/tab_handler.hpp</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

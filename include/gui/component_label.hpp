@@ -4,6 +4,10 @@
 #include <QLabel>
 #include <QMouseEvent>
 
+#include <vector>
+#include <string>
+#include <fstream>
+
 #include "gui/resource_loader.hpp"
 #include "gui/wire.hpp"
 #include "gui/properties.hpp"
@@ -69,13 +73,15 @@ namespace logicsim
             // Component Model
             model::component::Component *_component_model;
 
+            void _setupProperties();
+
         public slots:
             // called on object creation
             // triggered by properties popup
             // sets resource index and loads resource
             void setResourceByIdx(int idx);
             // sets new parameter string for component
-            void setParams(std::string params);
+            void setParams(QString params);
 
         protected slots:
             // triggered by changeMode of DesignArea
@@ -88,6 +94,8 @@ namespace logicsim
             void evaluate();
             // triggered by resetResource of DesignArea
             void resetResource();
+            // triggered by writeComponent of DesignArea
+            void writeComponent(std::ofstream &file);
 
         signals:
             // emitted when a mouse press registers on component during select mode
