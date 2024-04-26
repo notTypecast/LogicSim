@@ -87,6 +87,32 @@ namespace logicsim
 
         namespace resources
         {
+            inline std::unordered_map<std::string, COMPONENT> ctype_to_component_t = {
+                {"AND", COMPONENT::AND_GATE},
+                {"OR", COMPONENT::OR_GATE},
+                {"XOR", COMPONENT::XOR_GATE},
+                {"NAND", COMPONENT::NAND_GATE},
+                {"NOR", COMPONENT::NOR_GATE},
+                {"XNOR", COMPONENT::XNOR_GATE},
+                {"NOT", COMPONENT::NOT_GATE},
+                {"BUFFER", COMPONENT::BUFFER},
+                {"CONSTANT", COMPONENT::CONSTANT},
+                {"SWITCH", COMPONENT::SWITCH},
+                {"OSCILLATOR", COMPONENT::OSCILLATOR},
+                {"KEYPAD", COMPONENT::KEYPAD},
+                {"SRLATCH", COMPONENT::SRLATCH},
+                {"JKLATCH", COMPONENT::JKLATCH},
+                {"DLATCH", COMPONENT::DLATCH},
+                {"TLATCH", COMPONENT::TLATCH},
+                {"SRFLIPFLOP", COMPONENT::SRFLIPFLOP},
+                {"JKFLIPFLOP", COMPONENT::JKFLIPFLOP},
+                {"DFLIPFLOP", COMPONENT::DFLIPFLOP},
+                {"TFLIPFLOP", COMPONENT::TFLIPFLOP},
+                {"OUTPUT", COMPONENT::LED},
+                {"5IN_7SEGMENT", COMPONENT::_7SEG_5IN},
+                {"8IN_7SEGMENT", COMPONENT::_7SEG_8IN}
+            };
+
             inline std::unordered_set<COMPONENT> components_with_properties =
             {
                 COMPONENT::CONSTANT,

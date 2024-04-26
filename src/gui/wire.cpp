@@ -34,6 +34,16 @@ namespace logicsim
             return _setComponent(1, component, dx, dy);
         }
 
+        bool Wire::setComponent1(ComponentLabel *component, bool is_input, int io_idx)
+        {
+            return _setComponent(0, component, is_input, io_idx);
+        }
+
+        bool Wire::setComponent2(ComponentLabel *component, bool is_input, int io_idx)
+        {
+            return _setComponent(1, component, is_input, io_idx);
+        }
+
         void Wire::repositionDest(int dest_x, int dest_y)
         {
             int src_x = _conns[0].x;
@@ -138,6 +148,23 @@ namespace logicsim
             }
 
             return result;
+        }
+
+        bool Wire::_setComponent(int idx, ComponentLabel *component, bool is_input, int io_idx)
+        {
+            if (static_cast<size_t>(io_idx) >= resources::getComponentIOPositionVector(component->comp_type(), is_input).size())
+            {
+                return false;
+            }
+
+            _conns[idx].component = component;
+            _conns[idx].is_input = is_input;
+            _conns[idx].idx = io_idx;
+            std::tie(_conns[idx].x, _conns[idx].y) = resources::getComponentIORelativePos(component, is_input, io_idx);
+            _conns[idx].x += component->x();
+            _conns[idx].y += component->y();
+
+            return true;
         }
 
         void Wire::_updatePosition(int idx)

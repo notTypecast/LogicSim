@@ -34,6 +34,8 @@ namespace logicsim
 
                 unsigned int total_ticks() const;
 
+                bool empty() const;
+
                 // Write circuit to file
                 // Only writes components that have been added to the circuit
                 // Components that are inputs to existing components must also be in the circuit

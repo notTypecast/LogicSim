@@ -462,7 +462,7 @@
       <property name="currentIndex">
        <number>0</number>
       </property>
-      <widget class="QWidget" name="tab_1">
+      <widget class="logicsim::gui::DesignArea" name="tab_1">
        <attribute name="title">
         <string>Untitled*</string>
        </attribute>
@@ -486,8 +486,11 @@
     </property>
     <addaction name="actionNew"/>
     <addaction name="actionOpen"/>
+    <addaction name="actionClose"/>
     <addaction name="actionSave"/>
     <addaction name="actionSave_As"/>
+    <addaction name="separator"/>
+    <addaction name="actionExit"/>
    </widget>
    <widget class="QMenu" name="menuComponents">
     <property name="title">
@@ -577,11 +580,6 @@
   <action name="actionOpen">
    <property name="text">
     <string>Open</string>
-   </property>
-  </action>
-  <action name="actionClose">
-   <property name="text">
-    <string>Close</string>
    </property>
   </action>
   <action name="actionSave">
@@ -849,12 +847,28 @@
     <string>Properties</string>
    </property>
   </action>
+  <action name="actionClose">
+   <property name="text">
+    <string>Close</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="text">
+    <string>Exit</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
    <class>logicsim::gui::TabHandler</class>
    <extends>QTabWidget</extends>
    <header>include/gui/tab_handler.hpp</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>logicsim::gui::DesignArea</class>
+   <extends>QWidget</extends>
+   <header>include/gui/design_area.hpp</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

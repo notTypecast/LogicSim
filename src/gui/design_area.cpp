@@ -42,23 +42,7 @@ namespace logicsim
             case INSERT:
             {
                 ComponentLabel *label = new ComponentLabel(_insert_component, _insert_resource_idx, this);
-
-                model::component::Component *component_model = label->component_model();
-                _circuit_model.add_component(*component_model);
-
-                QObject::connect(label, SIGNAL (selected(ComponentLabel *, bool)), this, SLOT (addSelected(ComponentLabel *, bool)));
-                QObject::connect(label, SIGNAL (moved(int, int)), this, SLOT (moveSelectedComponents(int, int)));
-                QObject::connect(this, SIGNAL (modeChanged(TOOL)), label, SLOT (changeMode(TOOL)));
-                QObject::connect(this, SIGNAL (rangeQuery(int, int, int, int)), label, SLOT (checkRangeQuery(int, int, int, int)));
-                QObject::connect(label, SIGNAL (selected_nocheck(ComponentLabel *)), this, SLOT (addSelected_nocheck(ComponentLabel *)));
-                QObject::connect(label, SIGNAL (wireSource(ComponentLabel *, int, int)), this, SLOT (getWireSource(ComponentLabel *, int, int)));
-                QObject::connect(label, SIGNAL (wireMoved(int, int)), this, SLOT (moveWireDest(int, int)));
-                QObject::connect(this, SIGNAL (wireSnap(ComponentLabel *, int, int)), label, SLOT (wireSnap(ComponentLabel *, int, int)));
-                QObject::connect(label, SIGNAL (wireSnapFound(ComponentLabel *, int, int)), this, SLOT (getWireSnapPos(ComponentLabel *, int, int)));
-                QObject::connect(label, SIGNAL (wireReleased()), this, SLOT (setWireDest()));
-                QObject::connect(this, SIGNAL (evaluate()), label, SLOT (evaluate()));
-                QObject::connect(this, SIGNAL (resetResource()), label, SLOT (resetResource()));
-
+                _add_component(label);
                 label->move(ev->x() - label->width()/2, ev->y() - label->height()/2);
                 label->show();
 
@@ -147,6 +131,8 @@ namespace logicsim
         {
             _status_bar = status_bar;
             _ticks_label = status_bar->findChild<QLabel *>("perm-label");
+            _ticks_label->setText("");
+            _ticks_label->hide();
         }
 
         void DesignArea::setFrequency(unsigned int freq)
@@ -165,17 +151,23 @@ namespace logicsim
 
         void DesignArea::pauseState()
         {
-            _ticks_label_text = _ticks_label->isHidden() ? "" : _ticks_label->text();
             if (_selected_tool == TOOL::SIMULATE)
             {
                 _state_sim_paused = !_timer->isActive();
                 pauseSimulation();
             }
 
+            _paused_state = true;
         }
 
         bool DesignArea::continueState()
         {
+            if (!_paused_state)
+            {
+                return false;
+            }
+            _paused_state = false;
+
             if (!_ticks_label_text.isEmpty())
             {
                 _ticks_label->setText(_ticks_label_text);
@@ -183,6 +175,7 @@ namespace logicsim
             }
             else
             {
+                _ticks_label->setText("");
                 _ticks_label->hide();
             }
             if (_selected_tool == TOOL::SIMULATE)
@@ -195,6 +188,25 @@ namespace logicsim
             }
 
             return false;
+        }
+
+        void DesignArea::_add_component(ComponentLabel *label)
+        {
+            _circuit_model.add_component(*(label->component_model()));
+
+            QObject::connect(label, SIGNAL (selected(ComponentLabel *, bool)), this, SLOT (addSelected(ComponentLabel *, bool)));
+            QObject::connect(label, SIGNAL (moved(int, int)), this, SLOT (moveSelectedComponents(int, int)));
+            QObject::connect(this, SIGNAL (modeChanged(TOOL)), label, SLOT (changeMode(TOOL)));
+            QObject::connect(this, SIGNAL (rangeQuery(int, int, int, int)), label, SLOT (checkRangeQuery(int, int, int, int)));
+            QObject::connect(label, SIGNAL (selected_nocheck(ComponentLabel *)), this, SLOT (addSelected_nocheck(ComponentLabel *)));
+            QObject::connect(label, SIGNAL (wireSource(ComponentLabel *, int, int)), this, SLOT (getWireSource(ComponentLabel *, int, int)));
+            QObject::connect(label, SIGNAL (wireMoved(int, int)), this, SLOT (moveWireDest(int, int)));
+            QObject::connect(this, SIGNAL (wireSnap(ComponentLabel *, int, int)), label, SLOT (wireSnap(ComponentLabel *, int, int)));
+            QObject::connect(label, SIGNAL (wireSnapFound(ComponentLabel *, int, int)), this, SLOT (getWireSnapPos(ComponentLabel *, int, int)));
+            QObject::connect(label, SIGNAL (wireReleased()), this, SLOT (setWireDest()));
+            QObject::connect(this, SIGNAL (evaluate()), label, SLOT (evaluate()));
+            QObject::connect(this, SIGNAL (resetResource()), label, SLOT (resetResource()));
+            QObject::connect(this, SIGNAL (writeComponent(std::ofstream &)), label, SLOT (writeComponent(std::ofstream &)));
         }
 
         void DesignArea::addSelected(ComponentLabel *component, bool ctrl)
@@ -342,7 +354,8 @@ namespace logicsim
         void DesignArea::executeTick()
         {
             _circuit_model.tick();
-            _ticks_label->setText("Ticks: " + QString::number(_circuit_model.total_ticks()));
+            _ticks_label_text = "Ticks: " + QString::number(_circuit_model.total_ticks());
+            _ticks_label->setText(_ticks_label_text);
             emit evaluate();
         }
 
@@ -380,7 +393,8 @@ namespace logicsim
                     return;
                 }
                 _ticks_label->show();
-                _ticks_label->setText("Ticks: 0");
+                _ticks_label_text = "Ticks: 0";
+                _ticks_label->setText(_ticks_label_text);
 
                 _timer = new QTimer(this);
                 QObject::connect(_timer, SIGNAL (timeout()), this, SLOT (executeTick()));
@@ -398,6 +412,7 @@ namespace logicsim
             delete _timer;
             _timer = nullptr;
             _circuit_model.reset();
+            _ticks_label->setText("");
             _ticks_label->hide();
 
             _selected_tool = TOOL::SELECT;
@@ -431,24 +446,254 @@ namespace logicsim
             emit resetResource();
         }
 
-        bool DesignArea::_writeToFile(bool new_file) const
+        bool DesignArea::empty() const
         {
-            /*
+            return _circuit_model.empty();
+        }
+
+        QString DesignArea::filename() const
+        {
+            return _filename;
+        }
+
+        bool DesignArea::writeToFile(bool new_file)
+        {
             std::ofstream file;
-            if (_filenames[currentIndex()] != "Untitled*" && !new_file)
+
+            if (_filename.isEmpty() || new_file)
             {
-                file.open(_filenames[currentIndex()]);
+                QString filename = QFileDialog::getSaveFileName(this, "Save File", "../LogicSim/saves/untitled.lsc", "LogicSim Circuit files (*.lsc)");
+                if (filename.isEmpty())
+                {
+                    return true;
+                }
+                _filename = filename;
+                file.open(_filename.toStdString());
             }
             else
             {
-                // create new file
+                file.open(_filename.toStdString());
             }
+
+            file << std::to_string(_freq) << "\n";
 
             emit writeComponent(file);
 
             file.close();
 
-            return !file.fail();*/
+            return !file.fail();
+        }
+
+        void DesignArea::readFromFile(QString filename)
+        {
+            // TODO: defensive programming for changing file values
+            _filename = filename;
+            std::ifstream file(_filename.toStdString());
+
+            if (file.fail())
+            {
+                throw std::invalid_argument("File not found");
+            }
+
+            std::string line;
+
+            getline(file, line);
+
+            if (!utils::is_positive_int(line))
+            {
+                throw std::invalid_argument("Invalid file format: invalid frequency");
+            }
+
+            _freq = std::stoi(line);
+
+            std::unordered_map<std::string, ComponentLabel *> components;
+            std::vector<std::pair<std::string, std::string>> component_inputs;
+
+            logicsim::utils::StringSplitter splitter;
+
+            for (size_t i = 1; getline(file, line); ++i)
+            {
+                splitter.reset(line, ';');
+
+                std::string id_str = splitter.next();
+                if (id_str.empty())
+                {
+                    _delete_components(components);
+                    throw std::invalid_argument("Invalid file format: line " + std::to_string(i) + " empty");
+                }
+
+                std::string ctype;
+                if (!splitter.has_next() || (ctype = splitter.next()).empty())
+                {
+                    _delete_components(components);
+                    throw std::invalid_argument("Invalid file format: line " + std::to_string(i) + " missing component type");
+                }
+
+                std::string params;
+                if (!splitter.has_next())
+                {
+                    _delete_components(components);
+                    throw std::invalid_argument("Invalid file format: line " + std::to_string(i) + " missing parameters");
+                }
+                params = splitter.next();
+
+                int res_idx;
+
+                if (utils::is_positive_int(params))
+                {
+                    res_idx = std::stoi(params);
+                }
+                else
+                {
+                    res_idx = 0;
+                }
+
+                ComponentLabel *component = new ComponentLabel(resources::ctype_to_component_t.at(ctype), res_idx, this);
+                _add_component(component);
+                components[id_str] = component;
+
+                component->setParams(QString::fromStdString(params));
+
+                if (!splitter.has_next())
+                {
+                    _delete_components(components);
+                    throw std::invalid_argument("Invalid file format: line " + std::to_string(i) + " missing coordinates");
+                }
+
+                logicsim::utils::StringSplitter splitter2(splitter.next(), ',');
+
+                int x, y;
+                try {
+                    x = std::stoi(splitter2.next());
+                }
+                catch (std::invalid_argument) {
+                    _delete_components(components);
+                    throw std::invalid_argument("Invalid file format: line " + std::to_string(i) + " bad coordinate");
+                }
+
+                if (!splitter2.has_next())
+                {
+                    _delete_components(components);
+                    throw std::invalid_argument("Invalid file format: line " + std::to_string(i) + " missing coordinate 2");
+                }
+
+                try {
+                    y = std::stoi(splitter2.next());
+                }
+                catch (std::invalid_argument) {
+                    _delete_components(components);
+                    throw std::invalid_argument("Invalid file format: line " + std::to_string(i) + " bad coordinate");
+                }
+
+                component->move(x, y);
+                component->show();
+
+                if (splitter2.has_next())
+                {
+                    _delete_components(components);
+                    throw std::invalid_argument("Invalid file format: line " + std::to_string(i) + " too many fields");
+                }
+
+                if (!splitter.has_next())
+                {
+                    _delete_components(components);
+                    throw std::invalid_argument("Invalid file format: line " + std::to_string(i) + " missing inputs");
+                }
+
+                component_inputs.emplace_back(id_str, splitter.next());
+
+                if (splitter.has_next())
+                {
+                    _delete_components(components);
+                    throw std::invalid_argument("Invalid file format: line " + std::to_string(i) + " too many fields");
+                }
+            }
+
+            file.close();
+
+            logicsim::utils::StringSplitter splitter2;
+
+            for (const auto &input : component_inputs)
+            {
+                if (input.second.empty())
+                {
+                    if (components[input.first]->component_model()->n_inputs() > 0)
+                    {
+                        _delete_components(components);
+                        throw std::invalid_argument("Invalid file format: missing inputs for component " + input.first);
+                    }
+                    continue;
+                }
+
+                splitter.reset(input.second, ',');
+
+                size_t i;
+                for (i = 0; splitter.has_next(); ++i)
+                {
+                    if (i >= components[input.first]->component_model()->n_inputs())
+                    {
+                        _delete_components(components);
+                        throw std::invalid_argument("Invalid file format: too many inputs for component " + input.first);
+                    }
+                    std::string input_str = splitter.next();
+                    if (input_str == "NULL")
+                    {
+                        continue;
+                    }
+                    splitter2.reset(input_str, ':');
+                    std::string input_id_str = splitter2.next();
+                    if (input_id_str.empty() || components.find(input_id_str) == components.end() || !splitter2.has_next())
+                    {
+                        _delete_components(components);
+                        throw std::invalid_argument("Invalid file format: invalid input for component " + input.first);
+                    }
+                    unsigned int output_idx;
+                    try
+                    {
+                        output_idx = std::stoi(splitter2.next());
+                        if (output_idx >= components[input_id_str]->component_model()->n_outputs())
+                        {
+                            _delete_components(components);
+                            throw std::invalid_argument("");
+                        }
+                    }
+                    catch (const std::invalid_argument &e)
+                    {
+                        _delete_components(components);
+                        throw std::invalid_argument("Invalid file format: invalid output index for component " + input.first);
+                    }
+                    if (splitter2.has_next())
+                    {
+                        _delete_components(components);
+                        throw std::invalid_argument("Invalid file format: too many fields for input of " + input.first);
+                    }
+
+                    Wire *wire = new Wire(this);
+                    wire->setComponent1(components[input.first], true, i);
+                    wire->setComponent2(components[input_id_str], false, output_idx);
+                    wire->saveInComponents();
+                    wire->reposition();
+
+                    model::component::NInputComponent *n_input_component = dynamic_cast<model::component::NInputComponent *>(components[input.first]->component_model());
+                    n_input_component->set_input(i, *(components[input_id_str]->component_model()), output_idx);
+                }
+
+                if (i < components[input.first]->component_model()->n_inputs())
+                {
+                    _delete_components(components);
+                    throw std::invalid_argument("Invalid file format: missing inputs for component " + input.first);
+                }
+
+                setMode(TOOL::SELECT);
+            }
+        }
+
+        void DesignArea::_delete_components(std::unordered_map<std::string, ComponentLabel *> components)
+        {
+            for (const auto &pair : components)
+            {
+                delete pair.second;
+            }
         }
     }
 }

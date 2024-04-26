@@ -34,6 +34,13 @@ namespace logicsim
             bool setComponent1(ComponentLabel *component, int dx, int dy);
             // sets destination component
             bool setComponent2(ComponentLabel *component, int dx, int dy);
+
+            // sets source component based on given i/o index
+            // returns false if i/o index doesn't exist
+            bool setComponent1(ComponentLabel *component, bool is_input, int io_idx);
+            // sets destination component based on given i/o index
+            bool setComponent2(ComponentLabel *component, bool is_input, int io_idx);
+
             // repositions wire based on given global destination coordinates (dest_x, dest_y)
             // source coordinates are in _conns[0]
             void repositionDest(int dest_x, int dest_y);
@@ -76,6 +83,7 @@ namespace logicsim
             WireConnection _conns[2];
 
             bool _setComponent(int idx, ComponentLabel *component, int dx, int dy);
+            bool _setComponent(int idx, ComponentLabel *component, bool is_input, int io_idx);
             void _updatePosition(int idx);
         };
     }

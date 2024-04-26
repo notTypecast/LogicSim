@@ -12,19 +12,40 @@ namespace logicsim
 
             _ui->setupUi(this);
 
+            // initialize status bar and pass to tab handler
             QLabel *ticks_label = new QLabel(_ui->statusbar);
             ticks_label->setObjectName("perm-label");
             _ui->statusbar->addPermanentWidget(ticks_label);
             _ui->tabHandler->setStatusBar(_ui->statusbar);
 
+            // handle menu changes (action enable/disable logic)
             QObject::connect(_ui->tabHandler, SIGNAL (designToolChanged(TOOL, COMPONENT)), this, SLOT (setLastDesignTool(TOOL, COMPONENT)));
             QObject::connect(_ui->tabHandler, SIGNAL (designTabChosen()), this, SLOT (setDesignMenu()));
             QObject::connect(_ui->tabHandler, SIGNAL (simulationTabChosen(bool)), this, SLOT (setSimulationMenu(bool)));
 
+            // File menu
+            _ui->actionNew->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_N));
             QObject::connect(_ui->actionNew, SIGNAL (triggered()), _ui->tabHandler, SLOT (addDesignArea()));
 
+            _ui->actionOpen->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_O));
+            QObject::connect(_ui->actionOpen, SIGNAL (triggered()), _ui->tabHandler, SLOT (openFile()));
+
+            _ui->actionClose->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_W));
+            QObject::connect(_ui->actionClose, SIGNAL (triggered()), _ui->tabHandler, SLOT (removeDesignArea()));
+
+            _ui->actionSave->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_S));
+            QObject::connect(_ui->actionSave, SIGNAL (triggered()), _ui->tabHandler, SLOT (saveFile()));
+
+            _ui->actionSave_As->setShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_S));
+            QObject::connect(_ui->actionSave_As, SIGNAL (triggered()), _ui->tabHandler, SLOT (saveFileAs()));
+
+            // TODO: map to function that closes all tabs (thus prompting to save all unsaved tabs)
+            QObject::connect(_ui->actionExit, &QAction::triggered, &QApplication::quit);
+
+            // group tools for exclusive seleciton
             _tool_group = new QActionGroup(this);
 
+            // remove action check from simulation actions
             QObject::connect(_tool_group, &QActionGroup::triggered, [this, last_action = static_cast<QAction *>(_ui->actionSelect)](QAction* action) mutable
             {
                 if (action == _ui->actionStart)
@@ -69,7 +90,7 @@ namespace logicsim
                 {_ui->actionD_Flip_Flop, COMPONENT::DFLIPFLOP, -1},
             };
 
-            // Design
+            // Design actions
             _tool_group->addAction(_ui->actionSelect);
             _ui->actionSelect->setChecked(true);
             QObject::connect(_ui->actionSelect, SIGNAL (triggered()), _ui->tabHandler, SLOT (setSelectMode()));
@@ -90,7 +111,7 @@ namespace logicsim
                 QObject::connect(action, SIGNAL (triggered()), _ui->tabHandler, SLOT (setInsertMode()));
             }
 
-            // Simulation
+            // Simulation actions
             _tool_group->addAction(_ui->actionStart);
             QObject::connect(_ui->actionStart, SIGNAL (triggered()), _ui->tabHandler, SLOT (setSimulationMode()));
             QObject::connect(_ui->actionStart, SIGNAL (triggered()), this, SLOT (setSimulationMenu()));

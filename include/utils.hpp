@@ -28,6 +28,8 @@ namespace logicsim
         };
 
         size_t get_int_from_bools(std::vector<bool> bools);
+
+        bool is_positive_int(std::string str);
     }
 }
 

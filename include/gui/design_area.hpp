@@ -6,6 +6,7 @@
 #include <QString>
 #include <QTimer>
 #include <QStatusBar>
+#include <QFileDialog>
 
 #include <vector>
 #include <unordered_set>
@@ -53,6 +54,14 @@ namespace logicsim
             // returns true if there was a running simulation before
             bool continueState();
 
+            // whether circuit is empty
+            bool empty() const;
+
+            QString filename() const;
+            // writes current circuit to file
+            bool writeToFile(bool new_file = false);
+            void readFromFile(QString filename);
+
         protected:
             // removes all components from selected
             void _unselectAll();
@@ -91,11 +100,14 @@ namespace logicsim
 
             // State information
             // Saved when tab changes, to reset when reselected
+            bool _paused_state = false;
             QString _ticks_label_text;
             bool _state_sim_paused;
 
-            std::vector<std::string> _filenames;
-            bool _writeToFile(bool new_file = false) const;
+            QString _filename;
+
+            void _add_component(ComponentLabel *component);
+            void _delete_components(std::unordered_map<std::string, ComponentLabel *> components);
 
             /* Signals and slots often transmit position information
              * Such information is referred to as global, if its frame of reference

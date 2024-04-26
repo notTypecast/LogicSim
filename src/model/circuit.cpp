@@ -71,6 +71,11 @@ namespace logicsim
                 return _total_ticks;
             }
 
+            bool Circuit::empty() const
+            {
+                return _components.empty();
+            }
+
             bool Circuit::write(const std::string &filename) const
             {
                 std::ofstream file("saves/" + filename + ".lsc");

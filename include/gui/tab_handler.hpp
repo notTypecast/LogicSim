@@ -2,6 +2,7 @@
 #define LOGICSIM_GUI_TAB_HANDLER_HPP
 
 #include <QTabWidget>
+#include <QMessageBox>
 
 #include <vector>
 
@@ -29,11 +30,18 @@ namespace logicsim
 
             int _selected_idx = 0;
 
+            void _saveFile(bool new_file);
+
         public slots:
             void addDesignArea();
+            void removeDesignArea();
+            void openFile();
+            void saveFile();
+            void saveFileAs();
 
         protected slots:
             void changeArea(int idx);
+            bool removeDesignArea(int idx);
 
             void setSelectMode();
             void setWireMode();
