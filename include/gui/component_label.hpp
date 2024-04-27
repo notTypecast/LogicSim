@@ -45,6 +45,9 @@ namespace logicsim
             // update wire positions based on current position
             void moveWires();
 
+            void removeFromCircuit();
+            void bringBackToCircuit();
+
             void mouseMoveEvent(QMouseEvent *ev);
             void mousePressEvent(QMouseEvent *ev);
             void mouseReleaseEvent(QMouseEvent *ev);
@@ -104,6 +107,8 @@ namespace logicsim
             void selected_nocheck(ComponentLabel *component);
             // emitted when mouse is moved while component is selected
             void moved(int dx, int dy);
+            // emitted when mouse click is released after move
+            void moveFinished();
             // emitted when a mouse press registers on component during wire mode
             void wireSource(ComponentLabel *component, int dx, int dy);
             // emitted when a wire being created is moved

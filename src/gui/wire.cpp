@@ -1,6 +1,6 @@
 #include "gui/wire.hpp"
 #include "gui/component_label.hpp"
-
+#include <iostream>
 namespace logicsim
 {
     namespace gui
@@ -102,10 +102,24 @@ namespace logicsim
             repositionDest(_conns[1].x, _conns[1].y);
         }
 
-        std::tuple<ComponentLabel *, int, int> Wire::input_component_info() const
+        void Wire::hide()
         {
-            int comp_idx = !_conns[0].is_input;
-            return {_conns[comp_idx].component, _conns[comp_idx].idx, _conns[!comp_idx].idx};
+            _hwire1->hide();
+            _vwire->hide();
+            _hwire2->hide();
+        }
+
+        void Wire::show()
+        {
+            _hwire1->show();
+            _vwire->show();
+            _hwire2->show();
+        }
+
+        std::pair<ComponentLabel *, int> Wire::outputComponentInfo() const
+        {
+            int comp_idx = _conns[0].is_input;
+            return {_conns[comp_idx].component, _conns[comp_idx].idx};
         }
 
         ComponentLabel *Wire::component1() const
@@ -133,10 +147,22 @@ namespace logicsim
             return _conns[1].component != nullptr;
         }
 
+        void Wire::saveInOppositeComponent(ComponentLabel *component)
+        {
+            bool idx = _conns[0].component == component;
+            _conns[idx].component->saveWire(this, _conns[idx].is_input, _conns[idx].idx);
+        }
+
         void Wire::removeFromOppositeComponent(ComponentLabel *component)
         {
             bool idx = _conns[0].component == component;
             _conns[idx].component->removeWire(this, _conns[idx].is_input, _conns[idx].idx);
+        }
+
+        void Wire::removeFromComponents()
+        {
+            _conns[0].component->removeWire(this, _conns[0].is_input, _conns[0].idx);
+            _conns[1].component->removeWire(this, _conns[1].is_input, _conns[1].idx);
         }
 
         bool Wire::_setComponent(int idx, ComponentLabel *component, int dx, int dy)

@@ -291,5 +291,15 @@ namespace logicsim
         {
             currentDesignArea()->resetSimulation();
         }
+
+        void TabHandler::undoAction()
+        {
+            currentDesignArea()->undoAction();
+        }
+
+        void TabHandler::redoAction()
+        {
+            currentDesignArea()->redoAction();
+        }
     }
 }

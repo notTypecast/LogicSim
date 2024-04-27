@@ -53,6 +53,60 @@ namespace logicsim
             delete _component_model;
         }
 
+        void ComponentLabel::removeFromCircuit()
+        {
+            for (const auto &wire: _input_wires)
+            {
+                if (wire != nullptr)
+                {
+                    wire->removeFromOppositeComponent(this);
+                    wire->hide();
+                }
+            }
+
+            for (const auto &output: _output_wires)
+            {
+                for (const auto &wire: output)
+                {
+                    if (wire != nullptr)
+                    {
+                        wire->removeFromOppositeComponent(this);
+                        wire->hide();
+                    }
+                }
+            }
+
+            if (_border != nullptr)
+            {
+                delete _border;
+                _border = nullptr;
+            }
+        }
+
+        void ComponentLabel::bringBackToCircuit()
+        {
+            for (const auto &wire: _input_wires)
+            {
+                if (wire != nullptr)
+                {
+                    wire->saveInOppositeComponent(this);
+                    wire->show();
+                }
+            }
+
+            for (const auto &output: _output_wires)
+            {
+                for (const auto &wire: output)
+                {
+                    if (wire != nullptr)
+                    {
+                        wire->saveInOppositeComponent(this);
+                        wire->show();
+                    }
+                }
+            }
+        }
+
         COMPONENT ComponentLabel::comp_type() const
         {
             return _comp_type;
@@ -104,6 +158,9 @@ namespace logicsim
                     return false;
                 }
                 _input_wires[idx] = wire;
+
+                std::pair<ComponentLabel *, int> output_info = wire->outputComponentInfo();
+                dynamic_cast<model::component::NInputComponent *>(_component_model)->set_input(idx, *(output_info.first->component_model()), output_info.second);
             }
             else
             {
@@ -238,6 +295,10 @@ namespace logicsim
         {
             switch (_current_tool)
             {
+            case SELECT:
+                ev->accept();
+                emit moveFinished();
+                break;
             case INSERT:
                 ev->ignore();
                 break;

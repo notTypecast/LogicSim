@@ -50,6 +50,8 @@ namespace logicsim
             void openFile();
             void saveFile();
             void saveFileAs();
+            void undoAction();
+            void redoAction();
 
         protected slots:
             void changeArea(int idx);

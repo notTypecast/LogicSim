@@ -39,6 +39,13 @@ namespace logicsim
             _ui->actionSave_As->setShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_S));
             QObject::connect(_ui->actionSave_As, SIGNAL (triggered()), _ui->tabHandler, SLOT (saveFileAs()));
 
+            // Edit menu
+            _ui->actionUndo->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Z));
+            QObject::connect(_ui->actionUndo, SIGNAL (triggered()), _ui->tabHandler, SLOT (undoAction()));
+
+            _ui->actionRedo->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Y));
+            QObject::connect(_ui->actionRedo, SIGNAL (triggered()), _ui->tabHandler, SLOT (redoAction()));
+
             // TODO: map to function that closes all tabs (thus prompting to save all unsaved tabs)
             QObject::connect(_ui->actionExit, &QAction::triggered, &QApplication::quit);
 
@@ -190,6 +197,9 @@ namespace logicsim
 
         void MainWindow::_setSimulationMenu(bool enabled)
         {
+            _ui->actionUndo->setEnabled(!enabled);
+            _ui->actionRedo->setEnabled(!enabled);
+
             _ui->actionSelect->setEnabled(!enabled);
             _ui->actionWire->setEnabled(!enabled);
             for (const auto &triplet : _insert_actions)

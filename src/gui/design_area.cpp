@@ -1,4 +1,5 @@
 #include "gui/design_area.hpp"
+#include "gui/undo_commands.hpp"
 #include <iostream>
 namespace logicsim
 {
@@ -6,17 +7,22 @@ namespace logicsim
     {
         DesignArea::DesignArea(QWidget *parent): QWidget(parent)
         {
+            _undo_stack = new QUndoStack(this);
         }
 
         void DesignArea::keyPressEvent(QKeyEvent *ev)
         {
             if (ev->key() == Qt::Key_Delete)
             {
+                /*)
                 for (const auto & component: _selected_components)
                 {
                     _circuit_model.remove_component(*(component->component_model()));
                     delete component;
                 }
+                */
+                DeleteComponentsCommand *delete_command = new DeleteComponentsCommand(this, _selected_components);
+                _undo_stack->push(delete_command);
                 _selected_components.clear();
             }
         }
@@ -41,12 +47,9 @@ namespace logicsim
 
             case INSERT:
             {
-                ComponentLabel *label = new ComponentLabel(_insert_component, _insert_resource_idx, this);
-                _add_component(label);
-                label->move(ev->x() - label->width()/2, ev->y() - label->height()/2);
-                label->show();
-
-                addSelected(label);
+                InsertComponentCommand *insert_command = new InsertComponentCommand(this, ev);
+                _undo_stack->push(insert_command);
+                addSelected(insert_command->component());
                 break;
             }
             default:
@@ -190,13 +193,20 @@ namespace logicsim
             return false;
         }
 
-        void DesignArea::_add_component(ComponentLabel *label)
+        void DesignArea::_connect_component(ComponentLabel *label, bool first_time)
         {
             _circuit_model.add_component(*(label->component_model()));
 
+            if (first_time)
+            {
+                // connections that aren't disconnected by _disconnect_component
+                QObject::connect(this, SIGNAL (modeChanged(TOOL)), label, SLOT (changeMode(TOOL)));
+                QObject::connect(this, SIGNAL (resetResource()), label, SLOT (resetResource()));
+            }
+
             QObject::connect(label, SIGNAL (selected(ComponentLabel *, bool)), this, SLOT (addSelected(ComponentLabel *, bool)));
             QObject::connect(label, SIGNAL (moved(int, int)), this, SLOT (moveSelectedComponents(int, int)));
-            QObject::connect(this, SIGNAL (modeChanged(TOOL)), label, SLOT (changeMode(TOOL)));
+            QObject::connect(label, SIGNAL (moveFinished()), this, SLOT (finishMove()));
             QObject::connect(this, SIGNAL (rangeQuery(int, int, int, int)), label, SLOT (checkRangeQuery(int, int, int, int)));
             QObject::connect(label, SIGNAL (selected_nocheck(ComponentLabel *)), this, SLOT (addSelected_nocheck(ComponentLabel *)));
             QObject::connect(label, SIGNAL (wireSource(ComponentLabel *, int, int)), this, SLOT (getWireSource(ComponentLabel *, int, int)));
@@ -205,8 +215,29 @@ namespace logicsim
             QObject::connect(label, SIGNAL (wireSnapFound(ComponentLabel *, int, int)), this, SLOT (getWireSnapPos(ComponentLabel *, int, int)));
             QObject::connect(label, SIGNAL (wireReleased()), this, SLOT (setWireDest()));
             QObject::connect(this, SIGNAL (evaluate()), label, SLOT (evaluate()));
-            QObject::connect(this, SIGNAL (resetResource()), label, SLOT (resetResource()));
             QObject::connect(this, SIGNAL (writeComponent(std::ofstream &)), label, SLOT (writeComponent(std::ofstream &)));
+        }
+
+        void DesignArea::_disconnect_component(ComponentLabel *label)
+        {
+            _circuit_model.remove_component(*(label->component_model()));
+
+            // don't disconnect, so component stays up to date on mode
+            // QObject::disconnect(this, SIGNAL (modeChanged(TOOL)), label, SLOT (changeMode(TOOL)));
+            // QObject::disconnect(this, SIGNAL (resetResource()), label, SLOT (resetResource()));
+
+            QObject::disconnect(label, SIGNAL (selected(ComponentLabel *, bool)), this, SLOT (addSelected(ComponentLabel *, bool)));
+            QObject::disconnect(label, SIGNAL (moved(int, int)), this, SLOT (moveSelectedComponents(int, int)));
+            QObject::disconnect(label, SIGNAL (moveFinished()), this, SLOT (finishMove()));
+            QObject::disconnect(this, SIGNAL (rangeQuery(int, int, int, int)), label, SLOT (checkRangeQuery(int, int, int, int)));
+            QObject::disconnect(label, SIGNAL (selected_nocheck(ComponentLabel *)), this, SLOT (addSelected_nocheck(ComponentLabel *)));
+            QObject::disconnect(label, SIGNAL (wireSource(ComponentLabel *, int, int)), this, SLOT (getWireSource(ComponentLabel *, int, int)));
+            QObject::disconnect(label, SIGNAL (wireMoved(int, int)), this, SLOT (moveWireDest(int, int)));
+            QObject::disconnect(this, SIGNAL (wireSnap(ComponentLabel *, int, int)), label, SLOT (wireSnap(ComponentLabel *, int, int)));
+            QObject::disconnect(label, SIGNAL (wireSnapFound(ComponentLabel *, int, int)), this, SLOT (getWireSnapPos(ComponentLabel *, int, int)));
+            QObject::disconnect(label, SIGNAL (wireReleased()), this, SLOT (setWireDest()));
+            QObject::disconnect(this, SIGNAL (evaluate()), label, SLOT (evaluate()));
+            QObject::disconnect(this, SIGNAL (writeComponent(std::ofstream &)), label, SLOT (writeComponent(std::ofstream &)));
         }
 
         void DesignArea::addSelected(ComponentLabel *component, bool ctrl)
@@ -246,7 +277,6 @@ namespace logicsim
             border->show();
 
             component->setBorder(border);
-
         }
 
         void DesignArea::_unselectAll()
@@ -260,12 +290,39 @@ namespace logicsim
 
         void DesignArea::moveSelectedComponents(int dx, int dy)
         {
+            if (!_moved_components)
+            {
+                _moved_components = true;
+                _init_comp_positions = std::vector<QPoint>(_selected_components.size());
+                for (size_t i = 0; i < _selected_components.size(); ++i)
+                {
+                    _init_comp_positions[i] = _selected_components[i]->pos();
+                }
+            }
             for (const auto &component : _selected_components)
             {
                 component->move(dx + component->x(), dy + component->y());
                 component->border()->move(component->x(), component->y());
                 component->moveWires();
             }
+        }
+
+        void DesignArea::finishMove()
+        {
+            if (!_moved_components)
+            {
+                return;
+            }
+            _moved_components = false;
+            std::vector<QPoint> final_positions(_selected_components.size());
+
+            for (size_t i = 0; i < _selected_components.size(); ++i)
+            {
+                final_positions[i] = _selected_components[i]->pos();
+            }
+
+            MoveComponentsCommand *move_command = new MoveComponentsCommand(_selected_components, _init_comp_positions, final_positions);
+            _undo_stack->push(move_command);
         }
 
         void DesignArea::getWireSource(ComponentLabel *component, int dx, int dy)
@@ -329,25 +386,15 @@ namespace logicsim
             }
 
             _wire->setComponent2(dest_component, std::get<1>(_wire_snap_closest) - dest_component->x(), std::get<2>(_wire_snap_closest) - dest_component->y());
-            if (!_wire->saveInComponents())
-            {
-                delete _wire;
-                _wire = nullptr;
-                return;
-            }
 
-            std::tuple<ComponentLabel *, int, int> info = _wire->input_component_info();
-            // component 1 is input
-            if (dest_component != std::get<0>(info))
+            InsertWireCommand *wire_command = new InsertWireCommand(_wire);
+            _undo_stack->push(wire_command);
+
+            if (!wire_command->connected())
             {
-                model::component::NInputComponent *ninput_component = dynamic_cast<model::component::NInputComponent *>(_wire->component1()->component_model());
-                ninput_component->set_input(std::get<1>(info), *(dest_component->component_model()), std::get<2>(info));
-            }
-            // component 2 is input
-            else
-            {
-                model::component::NInputComponent *ninput_component = dynamic_cast<model::component::NInputComponent *>(dest_component->component_model());
-                ninput_component->set_input(std::get<1>(info), *(_wire->component1()->component_model()), std::get<2>(info));
+                _wire = nullptr;
+                _undo_stack->undo();
+                wire_command->setObsolete(true);
             }
         }
 
@@ -549,7 +596,7 @@ namespace logicsim
                 }
 
                 ComponentLabel *component = new ComponentLabel(resources::ctype_to_component_t.at(ctype), res_idx, this);
-                _add_component(component);
+                _connect_component(component);
                 components[id_str] = component;
 
                 component->setParams(QString::fromStdString(params));
@@ -693,6 +740,22 @@ namespace logicsim
             for (const auto &pair : components)
             {
                 delete pair.second;
+            }
+        }
+
+        void DesignArea::undoAction()
+        {
+            if (_selected_tool != TOOL::SIMULATE)
+            {
+                _undo_stack->undo();
+            }
+        }
+
+        void DesignArea::redoAction()
+        {
+            if (_selected_tool != TOOL::SIMULATE)
+            {
+                _undo_stack->redo();
             }
         }
     }

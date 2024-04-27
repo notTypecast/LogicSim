@@ -51,9 +51,12 @@ namespace logicsim
             // repositions wire to current location
             void reposition();
 
+            void hide();
+            void show();
+
             // returns information about the component which is being driven
-            // pair: {Component * of driven component, index of input, index of output}
-            std::tuple<ComponentLabel *, int, int> input_component_info() const;
+            // pair: {Component * of output component, index of output}
+            std::pair<ComponentLabel *, int> outputComponentInfo() const;
             ComponentLabel *component1() const;
             ComponentLabel *component2() const;
 
@@ -64,8 +67,10 @@ namespace logicsim
             // whether component 2 has been set
             bool finalized() const;
 
+            void saveInOppositeComponent(ComponentLabel *component);
             // removes wire from opposite component (component passed must be one of the wire's components)
             void removeFromOppositeComponent(ComponentLabel *component);
+            void removeFromComponents();
 
             // based on given component and relative position (dx, dy), calculates position of closest input/output
             // returns false if none is found (component has no inputs or outputs that match click position), else true

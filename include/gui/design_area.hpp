@@ -7,6 +7,7 @@
 #include <QTimer>
 #include <QStatusBar>
 #include <QFileDialog>
+#include <QUndoStack>
 
 #include <vector>
 #include <unordered_set>
@@ -24,10 +25,16 @@ namespace logicsim
 {
     namespace gui
     {
+        class InsertComponentCommand;
+        class DeleteComponentsCommand;
+
         class DesignArea : public QWidget
         {
             Q_OBJECT
         public:
+            friend class InsertComponentCommand;
+            friend class DeleteComponentsCommand;
+
             explicit DesignArea(QWidget *parent = nullptr);
 
             void mousePressEvent(QMouseEvent *ev);
@@ -61,6 +68,9 @@ namespace logicsim
             // writes current circuit to file
             bool writeToFile(bool new_file = false);
             void readFromFile(QString filepath);
+
+            void undoAction();
+            void redoAction();
 
         protected:
             // removes all components from selected
@@ -106,8 +116,14 @@ namespace logicsim
 
             QString _filepath;
 
-            void _add_component(ComponentLabel *component);
+            void _connect_component(ComponentLabel *label, bool first_time = true);
+            void _disconnect_component(ComponentLabel *label);
             void _delete_components(std::unordered_map<std::string, ComponentLabel *> components);
+
+            QUndoStack *_undo_stack;
+
+            bool _moved_components = false;
+            std::vector<QPoint> _init_comp_positions;
 
             /* Signals and slots often transmit position information
              * Such information is referred to as global, if its frame of reference
@@ -128,7 +144,9 @@ namespace logicsim
             // triggered by moved of ComponentLabel
             // moves selected components by dx, dy
             void moveSelectedComponents(int dx, int dy);
-
+            // triggered by moveFinished of ComponentLabel
+            // adds move to undo stack
+            void finishMove();
             // triggered by wireSource of ComponentLabel
             // sets component as source of wire, with source position dx,dy
             void getWireSource(ComponentLabel *component, int dx, int dy);
