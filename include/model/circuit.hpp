@@ -36,14 +36,6 @@ namespace logicsim
 
                 bool empty() const;
 
-                // Write circuit to file
-                // Only writes components that have been added to the circuit
-                // Components that are inputs to existing components must also be in the circuit
-                bool write(const std::string &filename) const;
-
-                // Read circuit from file
-                void read(const std::string &filename);
-
             protected:
                 unsigned int _total_ticks = 0;
                 std::vector<component::Component *> _components;

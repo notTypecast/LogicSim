@@ -5,6 +5,7 @@
 #include <QMessageBox>
 
 #include <vector>
+#include <unordered_map>
 
 #include "gui/design_area.hpp"
 #include "gui/resource_loader.hpp"
@@ -23,8 +24,14 @@ namespace logicsim
 
             DesignArea *currentDesignArea() const;
 
+            void keyPressEvent(QKeyEvent *ev);
+
+            bool setSimulationMode();
+
         protected:
-            std::vector<DesignArea *> _design_areas;
+            DesignArea *_designArea(int idx) const;
+            bool _removeDesignArea(DesignArea *design_area);
+            void _setupTab(DesignArea *design_area);
 
             QStatusBar *_status_bar;
 
@@ -32,9 +39,14 @@ namespace logicsim
 
             void _saveFile(bool new_file);
 
+            // maps full file directory to design area
+            std::unordered_map<QString, DesignArea *> _open_files;
+            // maps file name to design areas (tabs) with that file name
+            std::unordered_map<QString, std::vector<DesignArea *>> _open_filenames;
+
         public slots:
             void addDesignArea();
-            void removeDesignArea();
+            bool removeDesignArea();
             void openFile();
             void saveFile();
             void saveFileAs();
@@ -46,7 +58,6 @@ namespace logicsim
             void setSelectMode();
             void setWireMode();
             void setInsertMode();
-            void setSimulationMode();
             void stopSimulationMode();
             void pauseSimulation();
             void stepSimulation();

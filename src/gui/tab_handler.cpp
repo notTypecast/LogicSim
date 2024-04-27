@@ -13,62 +13,75 @@ namespace logicsim
 
         void TabHandler::setStatusBar(QStatusBar *status_bar)
         {
-            _design_areas.push_back(findChild<DesignArea *>("tab_1"));
-            _design_areas[0]->setStatusBar(status_bar);
-            setCurrentWidget(_design_areas[0]);
-            _status_bar = status_bar;            
+            _status_bar = status_bar;
+            DesignArea *design_area = static_cast<DesignArea *>(widget(0));
+            design_area->setStatusBar(status_bar);
             _selected_idx = 0;
+        }
+
+        void TabHandler::keyPressEvent(QKeyEvent *ev)
+        {
+            currentDesignArea()->keyPressEvent(ev);
+        }
+
+        DesignArea *TabHandler::_designArea(int idx) const
+        {
+            return static_cast<DesignArea *>(widget(idx));
         }
 
         DesignArea *TabHandler::currentDesignArea() const
         {
-            return _design_areas[_selected_idx];
+            return _designArea(_selected_idx);
         }
 
         void TabHandler::addDesignArea()
         {
             DesignArea *new_area = new DesignArea(this);
             new_area->setStatusBar(_status_bar);
-            _design_areas.push_back(new_area);
 
             addTab(new_area, "Untitled*");
             setCurrentWidget(new_area);
         }
 
-        void TabHandler::removeDesignArea()
+        bool TabHandler::removeDesignArea()
         {
-            removeDesignArea(_selected_idx);
+            return removeDesignArea(_selected_idx);
         }
 
         bool TabHandler::removeDesignArea(int idx)
         {
-            if (_design_areas.size() == 1)
+            return _removeDesignArea(_designArea(idx));
+        }
+
+        bool TabHandler::_removeDesignArea(DesignArea *design_area)
+        {
+            if (count() == 1)
             {
                 return false;
             }
 
-            if (!_design_areas[idx]->empty() && false) // TODO: && circuit modified
+            if (!design_area->empty() && false) // TODO: && circuit modified
             {
                 QMessageBox save_dialog;
                 save_dialog.setText("Circuit modified");
 
                 QString info_str = "Save changes";
-                QString filename = _design_areas[idx]->filename();
+                QString filepath = design_area->filepath();
 
-                if (!filename.isEmpty())
+                if (!filepath.isEmpty())
                 {
-                    QFileInfo info(filename);
+                    QFileInfo info(filepath);
                     info_str += " to " + info.fileName();
                 }
 
-                filename += '?';
+                filepath += '?';
 
                 save_dialog.setInformativeText(info_str);
 
                 switch (save_dialog.exec())
                 {
                 case QMessageBox::Save:
-                    _design_areas[idx]->writeToFile();
+                    design_area->writeToFile();
                     break;
                 case QMessageBox::Discard:
                     break;
@@ -77,41 +90,93 @@ namespace logicsim
                 }
             }
 
-            delete _design_areas[idx];
-            _design_areas.erase(std::next(_design_areas.begin(), idx));
-            removeTab(idx);
+            if (_selected_idx == count() - 1)
+            {
+                --_selected_idx;
+            }
+            QString filepath = design_area->filepath();
+            _open_files.erase(filepath);
+
+            QFileInfo info(filepath);
+            QString filename = info.fileName();
+            _open_filenames[filename].erase(std::remove(_open_filenames[filename].begin(), _open_filenames[filename].end(), design_area), _open_filenames[filename].end());
+            if (_open_filenames[filename].size() == 1)
+            {
+                DesignArea *area_left = _open_filenames[filename][0];
+                QFileInfo info2(area_left->filepath());
+                setTabText(indexOf(area_left), info2.fileName());
+            }
+
+            delete design_area; // also removes tab
 
             return true;
         }
 
+        void TabHandler::_setupTab(DesignArea *design_area)
+        {
+            QString filepath = design_area->filepath();
+            _open_files[filepath] = design_area;
+
+            const QFileInfo info(design_area->filepath());
+            const QString filename = info.fileName();
+
+            if (_open_filenames.find(filename) != _open_filenames.end())
+            {
+                setTabText(_selected_idx, filepath);
+                if (_open_filenames[filename].size() == 1)
+                {
+                    DesignArea *first = _open_filenames[filename][0];
+                    setTabText(indexOf(first), first->filepath());
+                }
+            }
+            else
+            {
+                _open_filenames[filename] = std::vector<DesignArea *>();
+                setTabText(_selected_idx, filename);
+            }
+
+            _open_filenames[filename].push_back(design_area);
+        }
+
         void TabHandler::openFile()
         {
-            QString filename = QFileDialog::getOpenFileName(this, "Open File", "../LogicSim/saves/", "LogicSim Circuit files (*.lsc)");
+            const QString filepath = QFileDialog::getOpenFileName(this, "Open File", "../LogicSim/saves/", "LogicSim Circuit files (*.lsc)");
 
-            if (filename.isEmpty())
+            if (filepath.isEmpty())
             {
                 return;
             }
 
-            bool add = !_design_areas[_selected_idx]->empty();
+            if (_open_files.find(filepath) != _open_files.end())
+            {
+                setCurrentWidget(_open_files[filepath]);
+                return;
+            }
+
+            DesignArea *design_area = currentDesignArea();
+            bool add = !(design_area->empty() && design_area->filepath().isEmpty());
             if (add)
             {
                 addDesignArea();
             }
 
+            // update in case new was added
+            design_area = currentDesignArea();
+
             try {
-                _design_areas[_selected_idx]->readFromFile(filename);
-                const QFileInfo info(_design_areas[_selected_idx]->filename());
-                setTabText(_selected_idx, info.fileName());
+                design_area->readFromFile(filepath);
             }
             catch (std::invalid_argument)
             {
                 // TODO: show fail message
+                std::cout << "Failed to open" << std::endl;
                 if (add)
                 {
                     removeDesignArea();
                 }
+                return;
             }
+            _setupTab(design_area);
         }
 
         void TabHandler::saveFile()
@@ -126,11 +191,26 @@ namespace logicsim
 
         void TabHandler::_saveFile(bool new_file)
         {
-            // TODO show fail message if failed
-            if (_design_areas[_selected_idx]->writeToFile(new_file))
+            bool success;
+            DesignArea *design_area = currentDesignArea();
+            bool tab_setup = new_file ||  design_area->filepath().isEmpty();
+            try {
+                success = design_area->writeToFile(new_file);
+            }
+            catch (std::invalid_argument) {
+                return;
+            }
+
+            if (!success)
             {
-                const QFileInfo info(_design_areas[_selected_idx]->filename());
-                setTabText(_selected_idx, info.fileName());
+                // TODO show fail message
+                std::cout << "Failed to save" << std::endl;
+                return;
+            }
+
+            if (tab_setup)
+            {
+                _setupTab(design_area);
             }
         }
 
@@ -140,15 +220,18 @@ namespace logicsim
             {
                 return;
             }
-            if (static_cast<size_t>(_selected_idx) < _design_areas.size())
+
+            DesignArea *design_area = currentDesignArea();
+            if (_selected_idx < count())
             {
-                _design_areas[_selected_idx]->pauseState();
+                design_area->pauseState();
             }
+            DesignArea *new_design_area = _designArea(idx);
 
-            setCurrentWidget(_design_areas[idx]);
-            bool running_sim = _design_areas[idx]->continueState();
+            setCurrentIndex(idx);
+            bool running_sim = new_design_area->continueState();
 
-            if (_design_areas[idx]->mode() != TOOL::SIMULATE)
+            if (new_design_area->mode() != TOOL::SIMULATE)
             {
                 emit designTabChosen();
             }
@@ -161,13 +244,13 @@ namespace logicsim
 
         void TabHandler::setSelectMode()
         {
-            _design_areas[currentIndex()]->setMode(TOOL::SELECT);
+            currentDesignArea()->setMode(TOOL::SELECT);
             emit designToolChanged(TOOL::SELECT);
         }
 
         void TabHandler::setWireMode()
         {
-            _design_areas[currentIndex()]->setMode(TOOL::WIRE);
+            currentDesignArea()->setMode(TOOL::WIRE);
             emit designToolChanged(TOOL::WIRE);
         }
 
@@ -175,38 +258,38 @@ namespace logicsim
         {
             COMPONENT comp_type = static_cast<COMPONENT>(QObject::sender()->property("component-type").value<int>());
             QVariant res_idx = QObject::sender()->property("resource-idx");
-            _design_areas[currentIndex()]->setMode(TOOL::INSERT, comp_type, res_idx.isValid() ? res_idx.value<int>() : 0);
+            currentDesignArea()->setMode(TOOL::INSERT, comp_type, res_idx.isValid() ? res_idx.value<int>() : 0);
             emit designToolChanged(TOOL::INSERT, comp_type);
         }
 
-        void TabHandler::setSimulationMode()
+        bool TabHandler::setSimulationMode()
         {
-            _design_areas[currentIndex()]->setMode(TOOL::SIMULATE);
+            return currentDesignArea()->setMode(TOOL::SIMULATE);
         }
 
         void TabHandler::stopSimulationMode()
         {
-            _design_areas[currentIndex()]->stopSimulationMode();
+            currentDesignArea()->stopSimulationMode();
         }
 
         void TabHandler::pauseSimulation()
         {
-            _design_areas[currentIndex()]->pauseSimulation();
+            currentDesignArea()->pauseSimulation();
         }
 
         void TabHandler::stepSimulation()
         {
-            _design_areas[currentIndex()]->stepSimulation();
+            currentDesignArea()->stepSimulation();
         }
 
         void TabHandler::continueSimulation()
         {
-            _design_areas[currentIndex()]->continueSimulation();
+            currentDesignArea()->continueSimulation();
         }
 
         void TabHandler::resetSimulation()
         {
-            _design_areas[currentIndex()]->resetSimulation();
+            currentDesignArea()->resetSimulation();
         }
     }
 }

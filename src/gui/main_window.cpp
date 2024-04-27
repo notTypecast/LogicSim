@@ -113,7 +113,6 @@ namespace logicsim
 
             // Simulation actions
             _tool_group->addAction(_ui->actionStart);
-            QObject::connect(_ui->actionStart, SIGNAL (triggered()), _ui->tabHandler, SLOT (setSimulationMode()));
             QObject::connect(_ui->actionStart, SIGNAL (triggered()), this, SLOT (setSimulationMenu()));
 
             QObject::connect(_ui->actionStop, SIGNAL (triggered()), _ui->tabHandler, SLOT (stopSimulationMode()));
@@ -152,6 +151,10 @@ namespace logicsim
 
         void MainWindow::setSimulationMenu(bool running)
         {
+            if (!_ui->tabHandler->setSimulationMode())
+            {
+                return;
+            }
             _sim_paused = !running;
             _setSimulationMenu(true);
         }

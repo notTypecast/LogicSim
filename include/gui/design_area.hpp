@@ -37,7 +37,7 @@ namespace logicsim
             void keyPressEvent(QKeyEvent *ev);
 
             TOOL mode() const;
-            void setMode(TOOL tool, COMPONENT comp_type = COMPONENT::NONE, int res_idx = 0);
+            bool setMode(TOOL tool, COMPONENT comp_type = COMPONENT::NONE, int res_idx = 0);
             void stopSimulationMode();
             void pauseSimulation();
             void stepSimulation();
@@ -57,10 +57,10 @@ namespace logicsim
             // whether circuit is empty
             bool empty() const;
 
-            QString filename() const;
+            QString filepath() const;
             // writes current circuit to file
             bool writeToFile(bool new_file = false);
-            void readFromFile(QString filename);
+            void readFromFile(QString filepath);
 
         protected:
             // removes all components from selected
@@ -104,7 +104,7 @@ namespace logicsim
             QString _ticks_label_text;
             bool _state_sim_paused;
 
-            QString _filename;
+            QString _filepath;
 
             void _add_component(ComponentLabel *component);
             void _delete_components(std::unordered_map<std::string, ComponentLabel *> components);

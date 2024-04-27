@@ -331,8 +331,8 @@ namespace logicsim
             QObject::connect(_properties_popup, SIGNAL (optionIndex(int, int)), this, SLOT (setResourceByIdx(int)));
             QObject::connect(_properties_popup, SIGNAL (optionValue(QString, int)), this, SLOT (setParams(QString)));
 
-            QRect main_geometry = (static_cast<QWidget *>(parentWidget()->parent()->parent()))->geometry();
-            _properties_popup->move(main_geometry.x() + x() + width(), main_geometry.y() + y());
+            QPoint w_pos = parentWidget()->mapToGlobal(pos());
+            _properties_popup->move(w_pos.x() + width(), w_pos.y());
             _properties_popup->show();
         }
 

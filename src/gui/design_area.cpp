@@ -364,10 +364,8 @@ namespace logicsim
             return _selected_tool;
         }
 
-        void DesignArea::setMode(TOOL tool, COMPONENT comp_type, int res_idx)
+        bool DesignArea::setMode(TOOL tool, COMPONENT comp_type, int res_idx)
         {
-            _selected_tool = tool;
-
             switch (tool)
             {
             case TOOL::INSERT:
@@ -390,7 +388,7 @@ namespace logicsim
                 {
                     // invalid circuit popup
                     std::cout << "Invalid circuit" << std::endl;
-                    return;
+                    return false;
                 }
                 _ticks_label->show();
                 _ticks_label_text = "Ticks: 0";
@@ -404,7 +402,9 @@ namespace logicsim
                 break;
             }
 
+            _selected_tool = tool;
             emit modeChanged(tool);
+            return true;
         }
 
         void DesignArea::stopSimulationMode()
@@ -451,28 +451,28 @@ namespace logicsim
             return _circuit_model.empty();
         }
 
-        QString DesignArea::filename() const
+        QString DesignArea::filepath() const
         {
-            return _filename;
+            return _filepath;
         }
 
         bool DesignArea::writeToFile(bool new_file)
         {
             std::ofstream file;
 
-            if (_filename.isEmpty() || new_file)
+            if (_filepath.isEmpty() || new_file)
             {
-                QString filename = QFileDialog::getSaveFileName(this, "Save File", "../LogicSim/saves/untitled.lsc", "LogicSim Circuit files (*.lsc)");
-                if (filename.isEmpty())
+                QString filepath = QFileDialog::getSaveFileName(this, "Save File", "../LogicSim/saves/untitled.lsc", "LogicSim Circuit files (*.lsc)");
+                if (filepath.isEmpty())
                 {
-                    return true;
+                    throw std::invalid_argument("");
                 }
-                _filename = filename;
-                file.open(_filename.toStdString());
+                _filepath = filepath;
+                file.open(_filepath.toStdString());
             }
             else
             {
-                file.open(_filename.toStdString());
+                file.open(_filepath.toStdString());
             }
 
             file << std::to_string(_freq) << "\n";
@@ -484,11 +484,11 @@ namespace logicsim
             return !file.fail();
         }
 
-        void DesignArea::readFromFile(QString filename)
+        void DesignArea::readFromFile(QString filepath)
         {
             // TODO: defensive programming for changing file values
-            _filename = filename;
-            std::ifstream file(_filename.toStdString());
+            _filepath = filepath;
+            std::ifstream file(_filepath.toStdString());
 
             if (file.fail())
             {
