@@ -1,10 +1,11 @@
 #include "gui/component_label.hpp"
+#include "gui/undo_commands.hpp"
 #include <iostream>
 namespace logicsim
 {
     namespace gui
     {
-        ComponentLabel::ComponentLabel(COMPONENT comp_type, int resource_idx, QWidget *parent): QLabel{parent}
+        ComponentLabel::ComponentLabel(COMPONENT comp_type, int resource_idx, QUndoStack *stack, QWidget *parent): QLabel{parent}, _undo_stack(stack)
         {
             _comp_type = comp_type;
             _input_wires = std::vector<Wire *>(resources::comp_io_rel_pos[comp_type].first.size(), nullptr);
@@ -389,8 +390,29 @@ namespace logicsim
                 break;
             }
 
-            QObject::connect(_properties_popup, SIGNAL (optionIndex(int, int)), this, SLOT (setResourceByIdx(int)));
-            QObject::connect(_properties_popup, SIGNAL (optionValue(QString, int)), this, SLOT (setParams(QString)));
+            QObject::connect(_properties_popup, &Properties::optionIndex, this, [this](int idx, int /*group*/)
+            {
+                _property_command = new ChangeComponentPropertyCommand(this, _resource_idx, idx);
+            });
+            QObject::connect(_properties_popup, &Properties::optionValue, this, [this](QString params, int /*group*/)
+            {
+                if (_property_command == nullptr)
+                {
+                    _property_command = new ChangeComponentPropertyCommand(this);
+                }
+                QString prev_params = QString::fromStdString(_component_model->param_string());
+                if (prev_params != params)
+                {
+                    _property_command->setParams(prev_params, params);
+                    _undo_stack->push(_property_command);
+                }
+                else
+                {
+                    delete _property_command;
+                }
+                _property_command = nullptr;
+                emit performPropertyUndoAction();
+            });
 
             QPoint w_pos = parentWidget()->mapToGlobal(pos());
             _properties_popup->move(w_pos.x() + width(), w_pos.y());

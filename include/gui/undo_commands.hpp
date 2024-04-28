@@ -71,6 +71,35 @@ namespace logicsim
             std::vector<QPoint> _init_positions;
             std::vector<QPoint> _final_positions;
         };
+
+        class ChangeComponentPropertyCommand : public QUndoCommand
+        {
+        public:
+            ChangeComponentPropertyCommand(ComponentLabel *component, int prev_res_idx = -1, int _res_idx = -1);
+
+            void setParams(const QString &prev_params, const QString &params);
+
+            void redo();
+            void undo();
+
+        protected:
+            ComponentLabel *_component;
+            int _prev_res_idx, _res_idx;
+            QString _prev_params, _params;
+        };
+
+        class ChangeSimulationPropertiesCommand : public QUndoCommand
+        {
+        public:
+            ChangeSimulationPropertiesCommand(DesignArea *design_area, int prev_freq, int freq);
+
+            void redo();
+            void undo();
+
+        protected:
+            DesignArea *_design_area;
+            int _prev_freq, _freq;
+        };
     }
 }
 

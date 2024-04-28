@@ -14,15 +14,9 @@ namespace logicsim
         {
             if (ev->key() == Qt::Key_Delete)
             {
-                /*)
-                for (const auto & component: _selected_components)
-                {
-                    _circuit_model.remove_component(*(component->component_model()));
-                    delete component;
-                }
-                */
                 DeleteComponentsCommand *delete_command = new DeleteComponentsCommand(this, _selected_components);
                 _undo_stack->push(delete_command);
+                emit newUndoActionPerformed(false, _undo_stack->canUndo(), _undo_stack->canRedo());
                 _selected_components.clear();
             }
         }
@@ -49,6 +43,7 @@ namespace logicsim
             {
                 InsertComponentCommand *insert_command = new InsertComponentCommand(this, ev);
                 _undo_stack->push(insert_command);
+                emit newUndoActionPerformed(false, _undo_stack->canUndo(), _undo_stack->canRedo());
                 addSelected(insert_command->component());
                 break;
             }
@@ -140,11 +135,9 @@ namespace logicsim
 
         void DesignArea::setFrequency(unsigned int freq)
         {
-            _freq = freq;
-            if (_timer != nullptr)
-            {
-                _timer->setInterval(1000 / freq);
-            }
+            ChangeSimulationPropertiesCommand *sim_prop_command = new ChangeSimulationPropertiesCommand(this, _freq, freq);
+            _undo_stack->push(sim_prop_command);
+            emit newUndoActionPerformed(false, true, false);
         }
 
         unsigned int DesignArea::frequency() const
@@ -216,6 +209,7 @@ namespace logicsim
             QObject::connect(label, SIGNAL (wireReleased()), this, SLOT (setWireDest()));
             QObject::connect(this, SIGNAL (evaluate()), label, SLOT (evaluate()));
             QObject::connect(this, SIGNAL (writeComponent(std::ofstream &)), label, SLOT (writeComponent(std::ofstream &)));
+            QObject::connect(label, SIGNAL (performPropertyUndoAction()), this, SLOT (propertyUndoActionPerformed()));
         }
 
         void DesignArea::_disconnect_component(ComponentLabel *label)
@@ -238,6 +232,7 @@ namespace logicsim
             QObject::disconnect(label, SIGNAL (wireReleased()), this, SLOT (setWireDest()));
             QObject::disconnect(this, SIGNAL (evaluate()), label, SLOT (evaluate()));
             QObject::disconnect(this, SIGNAL (writeComponent(std::ofstream &)), label, SLOT (writeComponent(std::ofstream &)));
+            QObject::disconnect(label, SIGNAL (performPropertyUndoAction()), this, SLOT (propertyUndoActionPerformed()));
         }
 
         void DesignArea::addSelected(ComponentLabel *component, bool ctrl)
@@ -323,6 +318,7 @@ namespace logicsim
 
             MoveComponentsCommand *move_command = new MoveComponentsCommand(_selected_components, _init_comp_positions, final_positions);
             _undo_stack->push(move_command);
+            emit newUndoActionPerformed(false, _undo_stack->canUndo(), _undo_stack->canRedo());
         }
 
         void DesignArea::getWireSource(ComponentLabel *component, int dx, int dy)
@@ -389,6 +385,7 @@ namespace logicsim
 
             InsertWireCommand *wire_command = new InsertWireCommand(_wire);
             _undo_stack->push(wire_command);
+            emit newUndoActionPerformed(false, _undo_stack->canUndo(), _undo_stack->canRedo());
 
             if (!wire_command->connected())
             {
@@ -595,7 +592,7 @@ namespace logicsim
                     res_idx = 0;
                 }
 
-                ComponentLabel *component = new ComponentLabel(resources::ctype_to_component_t.at(ctype), res_idx, this);
+                ComponentLabel *component = new ComponentLabel(resources::ctype_to_component_t.at(ctype), res_idx, _undo_stack, this);
                 _connect_component(component);
                 components[id_str] = component;
 
@@ -745,18 +742,25 @@ namespace logicsim
 
         void DesignArea::undoAction()
         {
-            if (_selected_tool != TOOL::SIMULATE)
+            if (_selected_tool != TOOL::SIMULATE && _undo_stack->canUndo())
             {
                 _undo_stack->undo();
+                emit newUndoActionPerformed(true, _undo_stack->canUndo(), _undo_stack->canRedo());
             }
         }
 
         void DesignArea::redoAction()
         {
-            if (_selected_tool != TOOL::SIMULATE)
+            if (_selected_tool != TOOL::SIMULATE && _undo_stack->canRedo())
             {
                 _undo_stack->redo();
+                emit newUndoActionPerformed(false, _undo_stack->canUndo(), _undo_stack->canRedo());
             }
+        }
+
+        void DesignArea::propertyUndoActionPerformed()
+        {
+            emit newUndoActionPerformed(false, true, false);
         }
     }
 }

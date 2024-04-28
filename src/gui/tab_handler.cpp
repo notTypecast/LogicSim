@@ -14,9 +14,7 @@ namespace logicsim
         void TabHandler::setStatusBar(QStatusBar *status_bar)
         {
             _status_bar = status_bar;
-            DesignArea *design_area = static_cast<DesignArea *>(widget(0));
-            design_area->setStatusBar(status_bar);
-            _selected_idx = 0;
+            addDesignArea();
         }
 
         void TabHandler::keyPressEvent(QKeyEvent *ev)
@@ -39,8 +37,13 @@ namespace logicsim
             DesignArea *new_area = new DesignArea(this);
             new_area->setStatusBar(_status_bar);
 
+            QObject::connect(new_area, SIGNAL (newUndoActionPerformed(bool, bool, bool)), this, SLOT (performUndoAction(bool, bool, bool)));
+
             addTab(new_area, "Untitled*");
             setCurrentWidget(new_area);
+
+            _file_undo_state[new_area] = {false, 0, false, false};
+            emit undoActionPerformed(false, false);
         }
 
         bool TabHandler::removeDesignArea()
@@ -55,13 +58,14 @@ namespace logicsim
 
         bool TabHandler::_removeDesignArea(DesignArea *design_area)
         {
-            if (count() == 1)
+            if (count() == 1 && design_area->empty() && !std::get<0>(_file_undo_state[design_area]))
             {
-                return false;
+                return true;
             }
 
-            if (!design_area->empty() && false) // TODO: && circuit modified
+            if (!design_area->empty() && std::get<1>(_file_undo_state[design_area]) != 0)
             {
+                // TODO: improve visually & fix position
                 QMessageBox save_dialog;
                 save_dialog.setText("Circuit modified");
 
@@ -74,9 +78,11 @@ namespace logicsim
                     info_str += " to " + info.fileName();
                 }
 
-                filepath += '?';
+                info_str += '?';
 
                 save_dialog.setInformativeText(info_str);
+
+                save_dialog.setStandardButtons(QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
 
                 switch (save_dialog.exec())
                 {
@@ -90,7 +96,9 @@ namespace logicsim
                 }
             }
 
-            if (_selected_idx == count() - 1)
+            _file_undo_state.erase(design_area);
+
+            if (_selected_idx == count() - 1 && _selected_idx != 0)
             {
                 --_selected_idx;
             }
@@ -100,14 +108,28 @@ namespace logicsim
             QFileInfo info(filepath);
             QString filename = info.fileName();
             _open_filenames[filename].erase(std::remove(_open_filenames[filename].begin(), _open_filenames[filename].end(), design_area), _open_filenames[filename].end());
-            if (_open_filenames[filename].size() == 1)
+            switch (_open_filenames[filename].size())
+            {
+            case 1:
             {
                 DesignArea *area_left = _open_filenames[filename][0];
                 QFileInfo info2(area_left->filepath());
                 setTabText(indexOf(area_left), info2.fileName());
+                break;
+            }
+            case 0:
+                _open_filenames.erase(filename);
+                break;
+            default:
+                break;
             }
 
             delete design_area; // also removes tab
+
+            if (count() == 0)
+            {
+                addDesignArea();
+            }
 
             return true;
         }
@@ -162,6 +184,7 @@ namespace logicsim
 
             // update in case new was added
             design_area = currentDesignArea();
+            _file_undo_state[design_area] = {true, 0, false, false};
 
             try {
                 design_area->readFromFile(filepath);
@@ -211,12 +234,18 @@ namespace logicsim
             if (tab_setup)
             {
                 _setupTab(design_area);
+                _file_undo_state[design_area] = {true, 0, false, false};
+            }
+            if (std::get<1>(_file_undo_state[design_area]) != 0)
+            {
+                std::get<1>(_file_undo_state[design_area]) = 0;
+                _removeUnsavedIcon();
             }
         }
 
         void TabHandler::changeArea(int idx)
         {
-            if (_selected_idx == idx)
+            if (_selected_idx == idx || idx < 0)
             {
                 return;
             }
@@ -226,9 +255,11 @@ namespace logicsim
             {
                 design_area->pauseState();
             }
-            DesignArea *new_design_area = _designArea(idx);
 
+            DesignArea *new_design_area = _designArea(idx);
+            _selected_idx = idx;
             setCurrentIndex(idx);
+
             bool running_sim = new_design_area->continueState();
 
             if (new_design_area->mode() != TOOL::SIMULATE)
@@ -239,7 +270,7 @@ namespace logicsim
             {
                 emit simulationTabChosen(running_sim);
             }
-            _selected_idx = idx;
+            emit undoActionPerformed(std::get<2>(_file_undo_state[new_design_area]), std::get<3>(_file_undo_state[new_design_area]));
         }
 
         void TabHandler::setSelectMode()
@@ -300,6 +331,74 @@ namespace logicsim
         void TabHandler::redoAction()
         {
             currentDesignArea()->redoAction();
+        }
+
+        void TabHandler::performUndoAction(bool was_undo, bool undo_enabled, bool redo_enabled)
+        {
+            emit undoActionPerformed(undo_enabled, redo_enabled);
+            DesignArea *design_area = currentDesignArea();
+
+            std::tuple<bool, int, bool, bool> &state = _file_undo_state[design_area];
+
+            std::get<2>(state) = undo_enabled;
+            std::get<3>(state) = redo_enabled;
+
+            if (was_undo)
+            {
+                if (--std::get<1>(state) == 0)
+                {
+                    _removeUnsavedIcon();
+                }
+                else if (std::get<1>(state) == -1)
+                {
+                    _addUnsavedIcon();
+                }
+            }
+            else
+            {
+                if (++std::get<1>(state) == 0)
+                {
+                    _removeUnsavedIcon();
+                }
+                else if (std::get<1>(state) == 1)
+                {
+                    _addUnsavedIcon();
+                }
+            }
+        }
+
+        void TabHandler::_addUnsavedIcon()
+        {
+            if (!std::get<0>(_file_undo_state[currentDesignArea()]))
+            {
+                return;
+            }
+            setTabText(_selected_idx, tabText(_selected_idx) + '*');
+        }
+
+        void TabHandler::_removeUnsavedIcon()
+        {
+            if (!std::get<0>(_file_undo_state[currentDesignArea()]))
+            {
+                return;
+            }
+            QString tab_text = tabText(_selected_idx);
+            tab_text.chop(1);
+            setTabText(_selected_idx, tab_text);
+        }
+
+        bool TabHandler::saveAndCloseAll()
+        {
+            for (int i = count() - 1; i >= 0; --i)
+            {
+                setCurrentIndex(i);
+                if (!removeDesignArea(i))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }

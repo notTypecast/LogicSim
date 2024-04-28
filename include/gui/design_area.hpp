@@ -27,6 +27,7 @@ namespace logicsim
     {
         class InsertComponentCommand;
         class DeleteComponentsCommand;
+        class ChangeSimulationPropertiesCommand;
 
         class DesignArea : public QWidget
         {
@@ -34,6 +35,7 @@ namespace logicsim
         public:
             friend class InsertComponentCommand;
             friend class DeleteComponentsCommand;
+            friend class ChangeSimulationPropertiesCommand;
 
             explicit DesignArea(QWidget *parent = nullptr);
 
@@ -164,6 +166,8 @@ namespace logicsim
             // triggered by timer
             void executeTick();
 
+            void propertyUndoActionPerformed();
+
         signals:
             // emitted when the mode is changed
             void modeChanged(TOOL tool);
@@ -179,6 +183,8 @@ namespace logicsim
             void resetResource();
             // emitted when writing to file
             void writeComponent(std::ofstream &file) const;
+            // emitted when an undo action is redone/undone
+            void newUndoActionPerformed(bool was_undo, bool undo_enabled, bool redo_enabled);
         };
     }
 }

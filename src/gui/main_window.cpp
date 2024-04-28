@@ -22,6 +22,7 @@ namespace logicsim
             QObject::connect(_ui->tabHandler, SIGNAL (designToolChanged(TOOL, COMPONENT)), this, SLOT (setLastDesignTool(TOOL, COMPONENT)));
             QObject::connect(_ui->tabHandler, SIGNAL (designTabChosen()), this, SLOT (setDesignMenu()));
             QObject::connect(_ui->tabHandler, SIGNAL (simulationTabChosen(bool)), this, SLOT (setSimulationMenu(bool)));
+            QObject::connect(_ui->tabHandler, SIGNAL (undoActionPerformed(bool, bool)), this, SLOT (setUndoActionState(bool, bool)));
 
             // File menu
             _ui->actionNew->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_N));
@@ -39,15 +40,16 @@ namespace logicsim
             _ui->actionSave_As->setShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_S));
             QObject::connect(_ui->actionSave_As, SIGNAL (triggered()), _ui->tabHandler, SLOT (saveFileAs()));
 
+            QObject::connect(_ui->actionExit, SIGNAL (triggered()), this, SLOT (quit()));
+
             // Edit menu
             _ui->actionUndo->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Z));
             QObject::connect(_ui->actionUndo, SIGNAL (triggered()), _ui->tabHandler, SLOT (undoAction()));
+            _ui->actionUndo->setEnabled(false);
 
-            _ui->actionRedo->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Y));
+            _ui->actionRedo->setShortcuts({QKeySequence(Qt::CTRL + Qt::Key_Y), QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_Z)});
             QObject::connect(_ui->actionRedo, SIGNAL (triggered()), _ui->tabHandler, SLOT (redoAction()));
-
-            // TODO: map to function that closes all tabs (thus prompting to save all unsaved tabs)
-            QObject::connect(_ui->actionExit, &QAction::triggered, &QApplication::quit);
+            _ui->actionRedo->setEnabled(false);
 
             // group tools for exclusive seleciton
             _tool_group = new QActionGroup(this);
@@ -269,6 +271,28 @@ namespace logicsim
         void MainWindow::setSimulationFrequency(QString freq)
         {
             _ui->tabHandler->currentDesignArea()->setFrequency(freq.toInt());
+        }
+
+        void MainWindow::setUndoActionState(bool undo_enabled, bool redo_enabled)
+        {
+            _ui->actionUndo->setEnabled(undo_enabled);
+            _ui->actionRedo->setEnabled(redo_enabled);
+        }
+
+        void MainWindow::closeEvent(QCloseEvent *ev)
+        {
+            quit();
+            ev->ignore();
+        }
+
+        void MainWindow::quit()
+        {
+            if (!_ui->tabHandler->saveAndCloseAll())
+            {
+                return;
+            }
+
+            QApplication::quit();
         }
     }
 }

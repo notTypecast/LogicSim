@@ -460,13 +460,8 @@
        </palette>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>-1</number>
       </property>
-      <widget class="logicsim::gui::DesignArea" name="tab_1">
-       <attribute name="title">
-        <string>Untitled*</string>
-       </attribute>
-      </widget>
      </widget>
     </item>
    </layout>
@@ -881,12 +876,6 @@
    <class>logicsim::gui::TabHandler</class>
    <extends>QTabWidget</extends>
    <header>include/gui/tab_handler.hpp</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>logicsim::gui::DesignArea</class>
-   <extends>QWidget</extends>
-   <header>include/gui/design_area.hpp</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

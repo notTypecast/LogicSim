@@ -25,6 +25,8 @@ namespace logicsim
             explicit MainWindow(QWidget *parent = nullptr);
             ~MainWindow();
 
+            void closeEvent(QCloseEvent *ev);
+
         protected:
             Ui::MainWindow *_ui;
             QActionGroup *_tool_group;
@@ -49,6 +51,10 @@ namespace logicsim
 
             void simulationProperties();
             void setSimulationFrequency(QString freq);
+
+            void setUndoActionState(bool undo_enabled, bool redo_enabled);
+
+            void quit();
         };
 
     }

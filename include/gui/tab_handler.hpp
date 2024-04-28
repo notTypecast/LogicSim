@@ -28,6 +28,8 @@ namespace logicsim
 
             bool setSimulationMode();
 
+            bool saveAndCloseAll();
+
         protected:
             DesignArea *_designArea(int idx) const;
             bool _removeDesignArea(DesignArea *design_area);
@@ -39,10 +41,16 @@ namespace logicsim
 
             void _saveFile(bool new_file);
 
+            // maps each tab to its undo state
+            // state consists of 4 values: {is saved, undo counter, undo enabled, redo enabled}
+            std::unordered_map<DesignArea *, std::tuple<bool, int, bool, bool>> _file_undo_state;
             // maps full file directory to design area
             std::unordered_map<QString, DesignArea *> _open_files;
             // maps file name to design areas (tabs) with that file name
             std::unordered_map<QString, std::vector<DesignArea *>> _open_filenames;
+
+            void _addUnsavedIcon();
+            void _removeUnsavedIcon();
 
         public slots:
             void addDesignArea();
@@ -66,10 +74,17 @@ namespace logicsim
             void continueSimulation();
             void resetSimulation();
 
+            // triggered by a design area when an action which changes the undo stack is performed
+            // any action that changes the circuit counts as a redo
+            void performUndoAction(bool was_undo, bool undo_enabled, bool redo_enabled);
+
         signals:
             void designToolChanged(TOOL tool, COMPONENT comp_type = COMPONENT::NONE);
             void designTabChosen();
             void simulationTabChosen(bool running_sim);
+
+            // signal to inform main window of undo/redo actions, to update edit menu
+            void undoActionPerformed(bool undo_enabled, bool redo_enabled);
         };
     }
 }

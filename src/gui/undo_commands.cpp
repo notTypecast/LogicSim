@@ -6,7 +6,7 @@ namespace logicsim
     namespace gui
     {
         // InsertComponentCommand
-        InsertComponentCommand::InsertComponentCommand(DesignArea *design_area, QMouseEvent *ev) : _design_area(design_area), _component(new ComponentLabel(_design_area->_insert_component, _design_area->_insert_resource_idx, _design_area))
+        InsertComponentCommand::InsertComponentCommand(DesignArea *design_area, QMouseEvent *ev) : _design_area(design_area), _component(new ComponentLabel(_design_area->_insert_component, _design_area->_insert_resource_idx, _design_area->_undo_stack, _design_area))
         {
             _component->move(ev->x() - _component->width()/2, ev->y() - _component->height()/2);
         }
@@ -130,6 +130,65 @@ namespace logicsim
                     _moved_components[i]->border()->move(_init_positions[i].x(), _init_positions[i].y());
                 }
                 _moved_components[i]->moveWires();
+            }
+        }
+
+        // ChangeComponentPropertyCommand
+        ChangeComponentPropertyCommand::ChangeComponentPropertyCommand(ComponentLabel *component, int prev_res_idx, int res_idx) : _component(component), _prev_res_idx(prev_res_idx), _res_idx(res_idx)
+        {
+        }
+
+        void ChangeComponentPropertyCommand::setParams(const QString &prev_params, const QString &params)
+        {
+            _prev_params = prev_params;
+            _params = params;
+        }
+
+        void ChangeComponentPropertyCommand::redo()
+        {
+            if (_res_idx != -1)
+            {
+                _component->_resource_idx = _res_idx;
+                QPixmap &res = resources::comp_images.at(_component->_comp_type)[_res_idx];
+                _component->setPixmap(res);
+                _component->resize(res.width(), res.height());
+            }
+            _component->_component_model->set_params(_params.toStdString());
+        }
+
+        void ChangeComponentPropertyCommand::undo()
+        {
+            if (_prev_res_idx != -1)
+            {
+                _component->_resource_idx = _prev_res_idx;
+                QPixmap &res = resources::comp_images.at(_component->_comp_type)[_prev_res_idx];
+                _component->setPixmap(res);
+                _component->resize(res.width(), res.height());
+            }
+
+            _component->_component_model->set_params(_prev_params.toStdString());
+        }
+
+        // ChangeSimulationPropertiesCommand
+        ChangeSimulationPropertiesCommand::ChangeSimulationPropertiesCommand(DesignArea *design_area, int prev_freq, int freq) : _design_area(design_area), _prev_freq(prev_freq), _freq(freq)
+        {
+        }
+
+        void ChangeSimulationPropertiesCommand::redo()
+        {
+            _design_area->_freq = _freq;
+            if (_design_area->_timer != nullptr)
+            {
+                _design_area->_timer->setInterval(1000 / _freq);
+            }
+        }
+
+        void ChangeSimulationPropertiesCommand::undo()
+        {
+            _design_area->_freq = _prev_freq;
+            if (_design_area->_timer != nullptr)
+            {
+                _design_area->_timer->setInterval(1000 / _prev_freq);
             }
         }
     }

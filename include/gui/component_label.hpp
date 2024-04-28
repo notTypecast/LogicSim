@@ -3,6 +3,7 @@
 
 #include <QLabel>
 #include <QMouseEvent>
+#include <QUndoStack>
 
 #include <vector>
 #include <string>
@@ -21,11 +22,15 @@ namespace logicsim
 {
     namespace gui
     {
+        class ChangeComponentPropertyCommand;
+
         class ComponentLabel : public QLabel
         {
+            friend class ChangeComponentPropertyCommand;
+
             Q_OBJECT
         public:
-            explicit ComponentLabel(COMPONENT comp_type, int resource_idx, QWidget *parent = nullptr);
+            explicit ComponentLabel(COMPONENT comp_type, int resource_idx, QUndoStack *stack, QWidget *parent = nullptr);
             ~ComponentLabel();
 
             COMPONENT comp_type() const;
@@ -78,6 +83,10 @@ namespace logicsim
 
             void _setupProperties();
 
+            QUndoStack *_undo_stack;
+
+            ChangeComponentPropertyCommand *_property_command = nullptr;
+
         public slots:
             // called on object creation
             // triggered by properties popup
@@ -117,6 +126,8 @@ namespace logicsim
             void wireSnapFound(ComponentLabel *component, int x, int y);
             // emitted when a wire being created is released
             void wireReleased();
+            // emitted when a property value is changed
+            void performPropertyUndoAction();
 
         };
     }
