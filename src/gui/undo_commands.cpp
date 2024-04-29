@@ -1,6 +1,6 @@
 #include "gui/undo_commands.hpp"
+#include "gui/clipboard.hpp"
 #include <iostream>
-#include <unistd.h>
 namespace logicsim
 {
     namespace gui
@@ -9,6 +9,10 @@ namespace logicsim
         InsertComponentCommand::InsertComponentCommand(DesignArea *design_area, QMouseEvent *ev) : _design_area(design_area), _component(new ComponentLabel(_design_area->_insert_component, _design_area->_insert_resource_idx, _design_area->_undo_stack, _design_area))
         {
             _component->move(ev->x() - _component->width()/2, ev->y() - _component->height()/2);
+        }
+
+        InsertComponentCommand::InsertComponentCommand(DesignArea *design_area, ComponentLabel *component_label) : _design_area(design_area), _component(component_label)
+        {
         }
 
         InsertComponentCommand::~InsertComponentCommand()
@@ -37,6 +41,7 @@ namespace logicsim
             {
                 _component->setBorder(nullptr);
                 _design_area->_selected_components.erase(comp_iter);
+                emit _design_area->newSelection(!_design_area->_selected_components.empty(), !_design_area->_clipboard->empty());
             }
         }
 
@@ -71,7 +76,7 @@ namespace logicsim
         }
 
         // InsertWireCommand
-        InsertWireCommand::InsertWireCommand(Wire *wire) : _wire(wire)
+        InsertWireCommand::InsertWireCommand(DesignArea *design_area, Wire *wire) : _design_area(design_area), _wire(wire)
         {
         }
 
@@ -88,6 +93,11 @@ namespace logicsim
             _conn_success = _wire->saveInComponents();
             _wire->show();
             _disconnected = false;
+            _design_area->_connect_wire(_wire, _first_time);
+            if (_first_time)
+            {
+                _first_time = false;
+            }
         }
 
         void InsertWireCommand::undo()
@@ -95,6 +105,7 @@ namespace logicsim
             _wire->removeFromComponents();
             _wire->hide();
             _disconnected = true;
+            _design_area->_disconnect_wire(_wire);
         }
 
         bool InsertWireCommand::connected() const
@@ -103,7 +114,7 @@ namespace logicsim
         }
 
         // DeleteWireCommand
-        DeleteWireCommand::DeleteWireCommand(Wire *wire) : _wire(wire)
+        DeleteWireCommand::DeleteWireCommand(DesignArea *design_area, Wire *wire) : _design_area(design_area), _wire(wire)
         {
         }
 
@@ -111,12 +122,14 @@ namespace logicsim
         {
             _wire->removeFromComponents();
             _wire->hide();
+            _design_area->_disconnect_wire(_wire);
         }
 
         void DeleteWireCommand::undo()
         {
             _wire->saveInComponents();
             _wire->show();
+            _design_area->_connect_wire(_wire);
         }
 
         // MoveComponentsCommand

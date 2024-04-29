@@ -159,6 +159,11 @@ namespace logicsim
             return _conns[1].component;
         }
 
+        ComponentLabel *Wire::oppositeComponent(ComponentLabel *component) const
+        {
+            return _conns[component == _conns[0].component].component;
+        }
+
         int Wire::getComponent1x() const
         {
             return _conns[0].component->x();
@@ -241,7 +246,7 @@ namespace logicsim
 
             if (resources::getComponentIOPositionVector(component->comp_type(), is_input).empty())
             {
-                return false;
+                is_input = !is_input;
             }
 
             int distance = std::numeric_limits<int>::max();

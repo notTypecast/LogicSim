@@ -17,11 +17,6 @@ namespace logicsim
             addDesignArea();
         }
 
-        void TabHandler::keyPressEvent(QKeyEvent *ev)
-        {
-            currentDesignArea()->keyPressEvent(ev);
-        }
-
         DesignArea *TabHandler::_designArea(int idx) const
         {
             return static_cast<DesignArea *>(widget(idx));
@@ -38,6 +33,7 @@ namespace logicsim
             new_area->setStatusBar(_status_bar);
 
             QObject::connect(new_area, SIGNAL (newUndoActionPerformed(bool, bool, bool)), this, SLOT (performUndoAction(bool, bool, bool)));
+            QObject::connect(new_area, SIGNAL (newSelection(bool, bool)), this, SLOT (performSelectionAction(bool, bool)));
 
             addTab(new_area, "Untitled*");
             setCurrentWidget(new_area);
@@ -65,7 +61,7 @@ namespace logicsim
 
             if (!design_area->empty() && std::get<1>(_file_undo_state[design_area]) != 0)
             {
-                // TODO: improve visually & fix position
+                // TODO: improve visually
                 QMessageBox save_dialog;
                 save_dialog.setText("Circuit modified");
 
@@ -83,6 +79,11 @@ namespace logicsim
                 save_dialog.setInformativeText(info_str);
 
                 save_dialog.setStandardButtons(QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+
+                save_dialog.setWindowFlags(Qt::Window);
+                QPoint window_pos = mapToGlobal(pos());
+                QSize dialog_size = save_dialog.sizeHint();
+                save_dialog.move(window_pos.x() + width()/2 - dialog_size.width()/2, window_pos.y() + height()/2 - dialog_size.height()/2);
 
                 switch (save_dialog.exec())
                 {
@@ -405,6 +406,28 @@ namespace logicsim
             }
 
             return true;
+        }
+
+        void TabHandler::cutAction()
+        {
+            currentDesignArea()->cutAction();
+        }
+        void TabHandler::copyAction()
+        {
+            currentDesignArea()->copyAction();
+        }
+        void TabHandler::pasteAction()
+        {
+            currentDesignArea()->pasteAction();
+        }
+        void TabHandler::deleteAction()
+        {
+            currentDesignArea()->deleteAction();
+        }
+
+        void TabHandler::performSelectionAction(bool have_select, bool have_clipboard)
+        {
+            emit selectionActionPerformed(have_select, have_clipboard);
         }
     }
 }

@@ -27,7 +27,11 @@ namespace logicsim
     {
         class InsertComponentCommand;
         class DeleteComponentsCommand;
+        class InsertWireCommand;
+        class DeleteWireCommand;
         class ChangeSimulationPropertiesCommand;
+
+        class Clipboard;
 
         class DesignArea : public QWidget
         {
@@ -35,15 +39,18 @@ namespace logicsim
         public:
             friend class InsertComponentCommand;
             friend class DeleteComponentsCommand;
+            friend class InsertWireCommand;
+            friend class DeleteWireCommand;
             friend class ChangeSimulationPropertiesCommand;
 
+            friend class Clipboard;
+
             explicit DesignArea(QWidget *parent = nullptr);
+            ~DesignArea();
 
             void mousePressEvent(QMouseEvent *ev);
             void mouseReleaseEvent(QMouseEvent *ev);
             void mouseMoveEvent(QMouseEvent *ev);
-
-            void keyPressEvent(QKeyEvent *ev);
 
             TOOL mode() const;
             bool setMode(TOOL tool, COMPONENT comp_type = COMPONENT::NONE, int res_idx = 0);
@@ -73,6 +80,11 @@ namespace logicsim
 
             void undoAction();
             void redoAction();
+
+            void cutAction();
+            void copyAction();
+            void pasteAction();
+            void deleteAction();
 
         protected:
             // removes all components from selected
@@ -122,6 +134,9 @@ namespace logicsim
             void _disconnect_component(ComponentLabel *label);
             void _delete_components(std::unordered_map<std::string, ComponentLabel *> components);
 
+            void _connect_wire(Wire *wire, bool first_time = true);
+            void _disconnect_wire(Wire *wire);
+
             QUndoStack *_undo_stack;
 
             bool _moved_components = false;
@@ -129,6 +144,8 @@ namespace logicsim
 
             std::vector<std::pair<Wire *, int>> _proximity_wire_dist;
             Wire *_marked_wire = nullptr;
+
+            Clipboard *_clipboard;
 
             /* Signals and slots often transmit position information
              * Such information is referred to as global, if its frame of reference
@@ -194,6 +211,8 @@ namespace logicsim
             void newUndoActionPerformed(bool was_undo, bool undo_enabled, bool redo_enabled);
             // emitted when mouse is moved during wire remove mode
             void wireProximityCheck(int x, int y);
+            // emitted when selections change, to update edit menu
+            void newSelection(bool have_selected, bool have_clipboard);
         };
     }
 }

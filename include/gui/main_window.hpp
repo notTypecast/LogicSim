@@ -53,6 +53,7 @@ namespace logicsim
             void setSimulationFrequency(QString freq);
 
             void setUndoActionState(bool undo_enabled, bool redo_enabled);
+            void setSelectActionState(bool have_select, bool have_clipboard);
 
             void quit();
         };

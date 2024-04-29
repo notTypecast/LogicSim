@@ -60,6 +60,7 @@ namespace logicsim
             std::pair<ComponentLabel *, int> outputComponentInfo() const;
             ComponentLabel *component1() const;
             ComponentLabel *component2() const;
+            ComponentLabel *oppositeComponent(ComponentLabel *component) const;
 
             // returns position of component 1
             int getComponent1x() const;

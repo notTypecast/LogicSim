@@ -41,11 +41,8 @@ namespace logicsim
             {
                 for (const auto &wire: output)
                 {
-                    if (wire != nullptr)
-                    {
-                        wire->removeFromOppositeComponent(this);
-                        delete wire;
-                    }
+                    wire->removeFromOppositeComponent(this);
+                    delete wire;
                 }
             }
 
@@ -69,11 +66,8 @@ namespace logicsim
             {
                 for (const auto &wire: output)
                 {
-                    if (wire != nullptr)
-                    {
-                        wire->removeFromOppositeComponent(this);
-                        wire->hide();
-                    }
+                    wire->removeFromOppositeComponent(this);
+                    wire->hide();
                 }
             }
 
@@ -143,6 +137,20 @@ namespace logicsim
         int ComponentLabel::resourceIdx() const
         {
             return _resource_idx;
+        }
+
+        QString ComponentLabel::params() const
+        {
+            return QString::fromStdString(_component_model->param_string());
+        }
+
+        const std::vector<Wire *> ComponentLabel::inputWires() const
+        {
+            return _input_wires;
+        }
+        const std::vector<std::vector<Wire *>> ComponentLabel::outputWires() const
+        {
+            return _output_wires;
         }
 
         void ComponentLabel::setParams(QString param_string)

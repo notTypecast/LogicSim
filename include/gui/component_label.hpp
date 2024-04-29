@@ -41,6 +41,10 @@ namespace logicsim
             QLabel *border() const;
 
             int resourceIdx() const;
+            QString params() const;
+
+            const std::vector<Wire *> inputWires() const;
+            const std::vector<std::vector<Wire *>> outputWires() const;
 
             // keep wire connected to this component
             // is_input: whether wire is input connection

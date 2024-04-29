@@ -24,8 +24,6 @@ namespace logicsim
 
             DesignArea *currentDesignArea() const;
 
-            void keyPressEvent(QKeyEvent *ev);
-
             bool setSimulationMode();
 
             bool saveAndCloseAll();
@@ -60,6 +58,10 @@ namespace logicsim
             void saveFileAs();
             void undoAction();
             void redoAction();
+            void cutAction();
+            void copyAction();
+            void pasteAction();
+            void deleteAction();
 
         protected slots:
             void changeArea(int idx);
@@ -78,6 +80,7 @@ namespace logicsim
             // triggered by a design area when an action which changes the undo stack is performed
             // any action that changes the circuit counts as a redo
             void performUndoAction(bool was_undo, bool undo_enabled, bool redo_enabled);
+            void performSelectionAction(bool have_select, bool have_clipboard);
 
         signals:
             void designToolChanged(TOOL tool, COMPONENT comp_type = COMPONENT::NONE);
@@ -86,6 +89,7 @@ namespace logicsim
 
             // signal to inform main window of undo/redo actions, to update edit menu
             void undoActionPerformed(bool undo_enabled, bool redo_enabled);
+            void selectionActionPerformed(bool have_select, bool have_clipboard);
         };
     }
 }

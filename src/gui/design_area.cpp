@@ -1,5 +1,6 @@
 #include "gui/design_area.hpp"
 #include "gui/undo_commands.hpp"
+#include "gui/clipboard.hpp"
 #include <iostream>
 namespace logicsim
 {
@@ -8,17 +9,13 @@ namespace logicsim
         DesignArea::DesignArea(QWidget *parent): QWidget(parent)
         {
             _undo_stack = new QUndoStack(this);
+            _clipboard = new Clipboard(this);
         }
 
-        void DesignArea::keyPressEvent(QKeyEvent *ev)
+        DesignArea::~DesignArea()
         {
-            if (ev->key() == Qt::Key_Delete)
-            {
-                DeleteComponentsCommand *delete_command = new DeleteComponentsCommand(this, _selected_components);
-                _undo_stack->push(delete_command);
-                emit newUndoActionPerformed(false, _undo_stack->canUndo(), _undo_stack->canRedo());
-                _selected_components.clear();
-            }
+            delete _undo_stack;
+            delete _clipboard;
         }
 
         void DesignArea::mousePressEvent(QMouseEvent *ev)
@@ -42,7 +39,7 @@ namespace logicsim
                 {
                     break;
                 }
-                DeleteWireCommand *delete_wire = new DeleteWireCommand(_marked_wire);
+                DeleteWireCommand *delete_wire = new DeleteWireCommand(this, _marked_wire);
                 _undo_stack->push(delete_wire);
                 emit newUndoActionPerformed(false, _undo_stack->canUndo(), _undo_stack->canRedo());
                 break;
@@ -282,6 +279,23 @@ namespace logicsim
             QObject::disconnect(label, SIGNAL (performPropertyUndoAction()), this, SLOT (propertyUndoActionPerformed()));
         }
 
+        void DesignArea::_connect_wire(Wire *wire, bool first_time)
+        {
+            if (first_time)
+            {
+                QObject::connect(this, SIGNAL (modeChanged(TOOL)), wire, SLOT (changeMode(TOOL)));
+            }
+            QObject::connect(this, SIGNAL (wireProximityCheck(int, int)), wire, SLOT (checkProximity(int, int)));
+            QObject::connect(wire, SIGNAL (proximityConfirmed(Wire *, int)), this, SLOT (getProximityWireDistance(Wire *, int)));
+        }
+
+        void DesignArea::_disconnect_wire(Wire *wire)
+        {
+            QObject::disconnect(this, SIGNAL (wireProximityCheck(int, int)), wire, SLOT (checkProximity(int, int)));
+            QObject::disconnect(wire, SIGNAL (proximityConfirmed(Wire *, int)), this, SLOT (getProximityWireDistance(Wire *, int)));
+        }
+
+
         void DesignArea::addSelected(ComponentLabel *component, bool ctrl)
         {
             auto comp_iter = std::find(_selected_components.begin(), _selected_components.end(), component);
@@ -291,6 +305,11 @@ namespace logicsim
                 {
                     component->setBorder(nullptr);
                     _selected_components.erase(comp_iter);
+
+                    if (_selected_components.empty())
+                    {
+                        emit newSelection(false, !_clipboard->empty());
+                    }
                 }
 
                 return;
@@ -319,6 +338,8 @@ namespace logicsim
             border->show();
 
             component->setBorder(border);
+
+            emit newSelection(true, !_clipboard->empty());
         }
 
         void DesignArea::_unselectAll()
@@ -328,6 +349,7 @@ namespace logicsim
                 component->setBorder(nullptr);
             }
             _selected_components.clear();
+            emit newSelection(false, !_clipboard->empty());
         }
 
         void DesignArea::moveSelectedComponents(int dx, int dy)
@@ -372,9 +394,6 @@ namespace logicsim
         {
             std::get<0>(_wire_snap_closest) = nullptr;
             _wire = new Wire(this);
-            QObject::connect(this, SIGNAL (wireProximityCheck(int, int)), _wire, SLOT (checkProximity(int, int)));
-            QObject::connect(_wire, SIGNAL (proximityConfirmed(Wire *, int)), this, SLOT (getProximityWireDistance(Wire *, int)));
-            QObject::connect(this, SIGNAL (modeChanged(TOOL)), _wire, SLOT (changeMode(TOOL)));
             bool set = _wire->setComponent1(component, dx, dy);
             if (!set)
             {
@@ -433,7 +452,7 @@ namespace logicsim
 
             _wire->setComponent2(dest_component, std::get<1>(_wire_snap_closest) - dest_component->x(), std::get<2>(_wire_snap_closest) - dest_component->y());
 
-            InsertWireCommand *wire_command = new InsertWireCommand(_wire);
+            InsertWireCommand *wire_command = new InsertWireCommand(this, _wire);
             _undo_stack->push(wire_command);
 
             if (!wire_command->connected())
@@ -778,9 +797,7 @@ namespace logicsim
                     }
 
                     Wire *wire = new Wire(this);
-                    QObject::connect(this, SIGNAL (wireProximityCheck(int, int)), wire, SLOT (checkProximity(int, int)));
-                    QObject::connect(wire, SIGNAL (proximityConfirmed(Wire *, int)), this, SLOT (getProximityWireDistance(Wire *, int)));
-                    QObject::connect(this, SIGNAL (modeChanged(TOOL)), wire, SLOT (changeMode(TOOL)));
+                    _connect_wire(wire);
                     wire->setComponent1(components[input.first], true, i);
                     wire->setComponent2(components[input_id_str], false, output_idx);
                     wire->saveInComponents();
@@ -795,9 +812,9 @@ namespace logicsim
                     _delete_components(components);
                     throw std::invalid_argument("Invalid file format: missing inputs for component " + input.first);
                 }
-
-                setMode(TOOL::SELECT);
             }
+
+            setMode(_selected_tool);
         }
 
         void DesignArea::_delete_components(std::unordered_map<std::string, ComponentLabel *> components)
@@ -834,6 +851,69 @@ namespace logicsim
         void DesignArea::getProximityWireDistance(Wire *wire, int distance)
         {
             _proximity_wire_dist.push_back({wire, distance});
+        }
+
+        void DesignArea::cutAction()
+        {
+            switch (_selected_tool)
+            {
+            case SELECT:
+                if (!_selected_components.empty())
+                {
+                    _clipboard->copy(_selected_components);
+                    deleteAction();
+                }
+                break;
+            default:
+                break;
+            }
+        }
+        void DesignArea::copyAction()
+        {
+            switch (_selected_tool)
+            {
+            case SELECT:
+                if (!_selected_components.empty())
+                {
+                    _clipboard->copy(_selected_components);
+                    emit newSelection(true, !_clipboard->empty());
+                }
+                break;
+            default:
+                break;
+            }
+        }
+        void DesignArea::pasteAction()
+        {
+            switch (_selected_tool)
+            {
+            case SELECT:
+                if (!_clipboard->empty())
+                {
+                    _clipboard->paste();
+                    emit setMode(TOOL::SELECT);
+                }
+                break;
+            default:
+                break;
+            }
+        }
+        void DesignArea::deleteAction()
+        {
+            switch (_selected_tool)
+            {
+            case SELECT:
+            {
+                DeleteComponentsCommand *delete_command = new DeleteComponentsCommand(this, _selected_components);
+                _undo_stack->push(delete_command);
+                _selected_components.clear();
+                emit newUndoActionPerformed(false, _undo_stack->canUndo(), _undo_stack->canRedo());
+                emit newSelection(false, !_clipboard->empty());
+                break;
+            }
+            default:
+                break;
+            }
         }
     }
 }

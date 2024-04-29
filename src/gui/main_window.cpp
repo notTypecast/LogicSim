@@ -23,6 +23,7 @@ namespace logicsim
             QObject::connect(_ui->tabHandler, SIGNAL (designTabChosen()), this, SLOT (setDesignMenu()));
             QObject::connect(_ui->tabHandler, SIGNAL (simulationTabChosen(bool)), this, SLOT (setSimulationMenu(bool)));
             QObject::connect(_ui->tabHandler, SIGNAL (undoActionPerformed(bool, bool)), this, SLOT (setUndoActionState(bool, bool)));
+            QObject::connect(_ui->tabHandler, SIGNAL (selectionActionPerformed(bool, bool)), this, SLOT (setSelectActionState(bool, bool)));
 
             // File menu
             _ui->actionNew->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_N));
@@ -45,11 +46,21 @@ namespace logicsim
             // Edit menu
             _ui->actionUndo->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Z));
             QObject::connect(_ui->actionUndo, SIGNAL (triggered()), _ui->tabHandler, SLOT (undoAction()));
-            _ui->actionUndo->setEnabled(false);
 
             _ui->actionRedo->setShortcuts({QKeySequence(Qt::CTRL + Qt::Key_Y), QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_Z)});
             QObject::connect(_ui->actionRedo, SIGNAL (triggered()), _ui->tabHandler, SLOT (redoAction()));
-            _ui->actionRedo->setEnabled(false);
+
+            _ui->actionCut->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_X));
+            QObject::connect(_ui->actionCut, SIGNAL (triggered()), _ui->tabHandler, SLOT (cutAction()));
+
+            _ui->actionCopy->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_C));
+            QObject::connect(_ui->actionCopy, SIGNAL (triggered()), _ui->tabHandler, SLOT (copyAction()));
+
+            _ui->actionPaste->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_V));
+            QObject::connect(_ui->actionPaste, SIGNAL (triggered()), _ui->tabHandler, SLOT (pasteAction()));
+
+            _ui->actionDelete->setShortcut(QKeySequence(Qt::Key_Delete));
+            QObject::connect(_ui->actionDelete, SIGNAL (triggered()), _ui->tabHandler, SLOT (deleteAction()));
 
             // group tools for exclusive seleciton
             _tool_group = new QActionGroup(this);
@@ -284,6 +295,14 @@ namespace logicsim
         {
             _ui->actionUndo->setEnabled(undo_enabled);
             _ui->actionRedo->setEnabled(redo_enabled);
+        }
+
+        void MainWindow::setSelectActionState(bool have_select, bool have_clipboard)
+        {
+            _ui->actionCut->setEnabled(have_select);
+            _ui->actionCopy->setEnabled(have_select);
+            _ui->actionPaste->setEnabled(have_clipboard);
+            _ui->actionDelete->setEnabled(have_select);
         }
 
         void MainWindow::closeEvent(QCloseEvent *ev)

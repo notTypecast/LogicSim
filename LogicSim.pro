@@ -26,6 +26,7 @@ SOURCES += \
     src/gui/wire.cpp \
     src/gui/properties.cpp \
     src/gui/undo_commands.cpp \
+    src/gui/clipboard.cpp \
 
 HEADERS += \
     include/model/circuit.hpp \
@@ -43,7 +44,8 @@ HEADERS += \
     include/gui/resource_loader.hpp \
     include/gui/wire.hpp \
     include/gui/properties.hpp \
-    include/gui/undo_commands.hpp
+    include/gui/undo_commands.hpp \
+    include/gui/clipboard.hpp \
 
 DISTFILES += \
     saves/flip_flop.lsc \

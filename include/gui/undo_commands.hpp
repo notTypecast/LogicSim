@@ -15,6 +15,7 @@ namespace logicsim
         {
         public:
             InsertComponentCommand(DesignArea *design_area, QMouseEvent *ev);
+            InsertComponentCommand(DesignArea *design_area, ComponentLabel *component);
             ~InsertComponentCommand();
 
             void redo();
@@ -44,7 +45,7 @@ namespace logicsim
         class InsertWireCommand : public QUndoCommand
         {
         public:
-            InsertWireCommand(Wire *wire);
+            InsertWireCommand(DesignArea *design_area, Wire *wire);
             ~InsertWireCommand();
 
             void redo();
@@ -53,20 +54,23 @@ namespace logicsim
             bool connected() const;
 
         protected:
+            DesignArea *_design_area;
             Wire *_wire;
             bool _conn_success;
             bool _disconnected = false;
+            bool _first_time = true;
         };
 
         class DeleteWireCommand : public QUndoCommand
         {
         public:
-            DeleteWireCommand(Wire *wire);
+            DeleteWireCommand(DesignArea *design_area, Wire *wire);
 
             void redo();
             void undo();
 
         protected:
+            DesignArea *_design_area;
             Wire *_wire;
         };
 
