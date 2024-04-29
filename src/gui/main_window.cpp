@@ -107,6 +107,9 @@ namespace logicsim
             _tool_group->addAction(_ui->actionWire);
             QObject::connect(_ui->actionWire, SIGNAL (triggered()), _ui->tabHandler, SLOT (setWireMode()));
 
+            _tool_group->addAction(_ui->actionWire_Remove);
+            QObject::connect(_ui->actionWire_Remove, SIGNAL (triggered()), _ui->tabHandler, SLOT (setWireRemoveMode()));
+
             for (const auto &triplet : _insert_actions)
             {
                 QAction *action = std::get<0>(triplet);
@@ -188,6 +191,10 @@ namespace logicsim
             case WIRE:
                 _ui->actionWire->setChecked(true);
                 emit _ui->actionWire->triggered();
+                break;
+            case WIRE_REMOVE:
+                _ui->actionWire_Remove->setChecked(true);
+                emit _ui->actionWire_Remove->triggered();
                 break;
             case SELECT:
             default:

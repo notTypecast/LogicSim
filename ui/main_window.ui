@@ -547,6 +547,7 @@
     </property>
     <addaction name="actionSelect"/>
     <addaction name="actionWire"/>
+    <addaction name="actionWire_Remove"/>
    </widget>
    <widget class="QMenu" name="menuSimulation">
     <property name="title">
@@ -868,6 +869,14 @@
   <action name="actionRedo">
    <property name="text">
     <string>Redo</string>
+   </property>
+  </action>
+  <action name="actionWire_Remove">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Wire Remove</string>
    </property>
   </action>
  </widget>

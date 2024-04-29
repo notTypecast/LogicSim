@@ -8,8 +8,8 @@ namespace logicsim
         ComponentLabel::ComponentLabel(COMPONENT comp_type, int resource_idx, QUndoStack *stack, QWidget *parent): QLabel{parent}, _undo_stack(stack)
         {
             _comp_type = comp_type;
-            _input_wires = std::vector<Wire *>(resources::comp_io_rel_pos[comp_type].first.size(), nullptr);
-            _output_wires = std::vector<std::vector<Wire *>>(resources::comp_io_rel_pos[comp_type].second.size(), std::vector<Wire *>());
+            _input_wires = std::vector<Wire *>(resources::comp_io_rel_pos.at(comp_type).first.size(), nullptr);
+            _output_wires = std::vector<std::vector<Wire *>>(resources::comp_io_rel_pos.at(comp_type).second.size(), std::vector<Wire *>());
 
             setResourceByIdx(resource_idx);
 
@@ -175,6 +175,10 @@ namespace logicsim
         {
             if (is_input)
             {
+                if (wire != _input_wires[idx])
+                {
+                    return;
+                }
                 _input_wires[idx] = nullptr;
                 dynamic_cast<model::component::NInputComponent *>(_component_model)->remove_input(idx);
             }
@@ -219,6 +223,9 @@ namespace logicsim
                 ev->accept();
                 emit wireMoved(ev->x(), ev->y());
                 break;
+            case WIRE_REMOVE:
+                ev->ignore();
+                break;
             default:
                 break;
             }
@@ -240,6 +247,9 @@ namespace logicsim
             case WIRE:
                 ev->accept();
                 emit wireSource(this, ev->x(), ev->y());
+                break;
+            case WIRE_REMOVE:
+                ev->ignore();
                 break;
             case SIMULATE:
                 ev->accept();
@@ -306,6 +316,9 @@ namespace logicsim
             case WIRE:
                 ev->accept();
                 emit wireReleased();
+                break;
+            case WIRE_REMOVE:
+                ev->ignore();
                 break;
             case SIMULATE:
                 ev->accept();

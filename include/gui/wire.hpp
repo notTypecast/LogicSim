@@ -22,10 +22,11 @@ namespace logicsim
             int x, y; // global coordinates of wire node that connects to component
         };
 
-        class Wire
+        class Wire : public QWidget
         {
+            Q_OBJECT
         public:
-            Wire(QWidget *parent);
+            explicit Wire(QWidget *parent = nullptr);
             ~Wire();
 
             // sets source component, based on relative position of click (dx, dy)
@@ -72,6 +73,9 @@ namespace logicsim
             void removeFromOppositeComponent(ComponentLabel *component);
             void removeFromComponents();
 
+            void markForDeletion();
+            void unmarkForDeletion();
+
             // based on given component and relative position (dx, dy), calculates position of closest input/output
             // returns false if none is found (component has no inputs or outputs that match click position), else true
             // if found, writes position of input/output to x and y in global coordinates, and writes bool is_input
@@ -79,17 +83,30 @@ namespace logicsim
             static bool calculateWireTargetPos(ComponentLabel *component, int dx, int dy, int &x, int &y, bool &is_input, int &io_idx);
 
         protected:
-            QWidget *_parent;
             // made up of 3 parts
             QLabel *_hwire1 = nullptr;
             QLabel *_vwire = nullptr;
             QLabel *_hwire2 = nullptr;
+
+            // deletion marking
+            QLabel *_hwire1_up = nullptr, *_hwire1_down = nullptr;
+            QLabel *_vwire_left = nullptr, *_vwire_right = nullptr;
+            QLabel *_hwire2_up = nullptr, *_hwire2_down = nullptr;
 
             WireConnection _conns[2];
 
             bool _setComponent(int idx, ComponentLabel *component, int dx, int dy);
             bool _setComponent(int idx, ComponentLabel *component, bool is_input, int io_idx);
             void _updatePosition(int idx);
+
+            bool _updated_markings = false;
+
+        public slots:
+            void checkProximity(int x, int y);
+            void changeMode(TOOL tool);
+
+        signals:
+            void proximityConfirmed(Wire *wire, int distance);
         };
     }
 }

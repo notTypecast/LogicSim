@@ -36,8 +36,17 @@ namespace logicsim
                 }
                 break;
 
-            case WIRE:
+            case WIRE_REMOVE:
+            {
+                if (_marked_wire == nullptr)
+                {
+                    break;
+                }
+                DeleteWireCommand *delete_wire = new DeleteWireCommand(_marked_wire);
+                _undo_stack->push(delete_wire);
+                emit newUndoActionPerformed(false, _undo_stack->canUndo(), _undo_stack->canRedo());
                 break;
+            }
 
             case INSERT:
             {
@@ -120,6 +129,44 @@ namespace logicsim
                 _selected_components[0]->border()->move(x, y);
                 break;
             }
+
+            case WIRE_REMOVE:
+                emit wireProximityCheck(ev->x(), ev->y());
+                if (!_proximity_wire_dist.empty())
+                {
+                    Wire *closest_wire;
+                    int min_distance = std::numeric_limits<int>::max();
+                    for (const auto &pair : _proximity_wire_dist)
+                    {
+                        if (pair.second < min_distance)
+                        {
+                            closest_wire = pair.first;
+                            min_distance = pair.second;
+                        }
+                    }
+                    _proximity_wire_dist.clear();
+
+                    if (closest_wire != _marked_wire)
+                    {
+                        if (_marked_wire != nullptr)
+                        {
+                            _marked_wire->unmarkForDeletion();
+                        }
+                        _marked_wire = closest_wire;
+                        closest_wire->markForDeletion();
+                    }
+                }
+                else
+                {
+                    if (_marked_wire != nullptr)
+                    {
+                        _marked_wire->unmarkForDeletion();
+                        _marked_wire = nullptr;
+                    }
+                }
+
+                break;
+
             default:
                 break;
             }
@@ -325,6 +372,9 @@ namespace logicsim
         {
             std::get<0>(_wire_snap_closest) = nullptr;
             _wire = new Wire(this);
+            QObject::connect(this, SIGNAL (wireProximityCheck(int, int)), _wire, SLOT (checkProximity(int, int)));
+            QObject::connect(_wire, SIGNAL (proximityConfirmed(Wire *, int)), this, SLOT (getProximityWireDistance(Wire *, int)));
+            QObject::connect(this, SIGNAL (modeChanged(TOOL)), _wire, SLOT (changeMode(TOOL)));
             bool set = _wire->setComponent1(component, dx, dy);
             if (!set)
             {
@@ -385,13 +435,16 @@ namespace logicsim
 
             InsertWireCommand *wire_command = new InsertWireCommand(_wire);
             _undo_stack->push(wire_command);
-            emit newUndoActionPerformed(false, _undo_stack->canUndo(), _undo_stack->canRedo());
 
             if (!wire_command->connected())
             {
                 _wire = nullptr;
                 _undo_stack->undo();
                 wire_command->setObsolete(true);
+            }
+            else
+            {
+                emit newUndoActionPerformed(false, _undo_stack->canUndo(), _undo_stack->canRedo());
             }
         }
 
@@ -418,6 +471,9 @@ namespace logicsim
                 _insert_resource_idx = res_idx;
                 break;
             }
+            case TOOL::WIRE_REMOVE:
+                setMouseTracking(true);
+                break;
             case TOOL::SIMULATE:
                 for (const auto &component : _selected_components)
                 {
@@ -444,6 +500,15 @@ namespace logicsim
                 break;
             default:
                 break;
+            }
+
+            if (tool != TOOL::WIRE_REMOVE)
+            {
+                setMouseTracking(false);
+                if (_marked_wire != nullptr)
+                {
+                    _marked_wire = nullptr;
+                }
             }
 
             _selected_tool = tool;
@@ -713,6 +778,9 @@ namespace logicsim
                     }
 
                     Wire *wire = new Wire(this);
+                    QObject::connect(this, SIGNAL (wireProximityCheck(int, int)), wire, SLOT (checkProximity(int, int)));
+                    QObject::connect(wire, SIGNAL (proximityConfirmed(Wire *, int)), this, SLOT (getProximityWireDistance(Wire *, int)));
+                    QObject::connect(this, SIGNAL (modeChanged(TOOL)), wire, SLOT (changeMode(TOOL)));
                     wire->setComponent1(components[input.first], true, i);
                     wire->setComponent2(components[input_id_str], false, output_idx);
                     wire->saveInComponents();
@@ -761,6 +829,11 @@ namespace logicsim
         void DesignArea::propertyUndoActionPerformed()
         {
             emit newUndoActionPerformed(false, true, false);
+        }
+
+        void DesignArea::getProximityWireDistance(Wire *wire, int distance)
+        {
+            _proximity_wire_dist.push_back({wire, distance});
         }
     }
 }

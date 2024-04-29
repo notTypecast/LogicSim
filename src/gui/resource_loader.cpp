@@ -9,7 +9,7 @@ namespace logicsim
         {        
             const std::vector<std::pair<double, double>> &getComponentIOPositionVector(COMPONENT comp_type, bool is_input)
             {
-                return is_input ? comp_io_rel_pos[comp_type].first : comp_io_rel_pos[comp_type].second;
+                return is_input ? comp_io_rel_pos.at(comp_type).first : comp_io_rel_pos.at(comp_type).second;
             }
 
             const std::pair<int, int> getComponentIORelativePos(ComponentLabel *component, bool is_input, int idx)
@@ -17,15 +17,15 @@ namespace logicsim
                 if (is_input)
                 {
                     return {
-                        static_cast<int>(comp_io_rel_pos[component->comp_type()].first[idx].first * component->width()),
-                        static_cast<int>(comp_io_rel_pos[component->comp_type()].first[idx].second * component->height())
+                        static_cast<int>(comp_io_rel_pos.at(component->comp_type()).first[idx].first * component->width()),
+                        static_cast<int>(comp_io_rel_pos.at(component->comp_type()).first[idx].second * component->height())
                     };
                 }
                 else
                 {
                     return {
-                        static_cast<int>(comp_io_rel_pos[component->comp_type()].second[idx].first * component->width()),
-                        static_cast<int>(comp_io_rel_pos[component->comp_type()].second[idx].second * component->height())
+                        static_cast<int>(comp_io_rel_pos.at(component->comp_type()).second[idx].first * component->width()),
+                        static_cast<int>(comp_io_rel_pos.at(component->comp_type()).second[idx].second * component->height())
                     };
                 }
             }
@@ -56,6 +56,24 @@ namespace logicsim
                     return hwire->scaled(size, WIRE_THICKNESS);
                 case VERTICAL:
                     return vwire->scaled(WIRE_THICKNESS, size);
+                }
+            }
+
+            QPixmap getWireMarking(LINE_TYPE line_type, int size, bool dir_ul)
+            {
+                switch (line_type)
+                {
+                case HORIZONTAL:
+                default:
+                {
+                    QPixmap *pixmap = dir_ul ? hwire_up : hwire_down;
+                    return pixmap->scaled(size, WIRE_MARKING_THICKNESS, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+                }
+                case VERTICAL:
+                {
+                    QPixmap *pixmap = dir_ul ? vwire_left : vwire_right;
+                    return pixmap->scaled(WIRE_MARKING_THICKNESS, size, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+                }
                 }
             }
 
@@ -116,6 +134,10 @@ namespace logicsim
                 vselline = new QPixmap(IMG_PATH + "vselline.png");
                 hwire = new QPixmap(IMG_PATH + "hwire.png");
                 vwire = new QPixmap(IMG_PATH + "vwire.png");
+                hwire_up = new QPixmap(IMG_PATH + "hwire_mark_up.png");
+                hwire_down = new QPixmap(IMG_PATH + "hwire_mark_down.png");
+                vwire_left = new QPixmap(IMG_PATH + "vwire_mark_left.png");
+                vwire_right = new QPixmap(IMG_PATH + "vwire_mark_right.png");
             }
 
             void deallocate()
@@ -125,6 +147,10 @@ namespace logicsim
                 delete vselline;
                 delete hwire;
                 delete vwire;
+                delete hwire_up;
+                delete hwire_down;
+                delete vwire_left;
+                delete vwire_right;
             }
         }
     }

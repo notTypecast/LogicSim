@@ -127,6 +127,9 @@ namespace logicsim
             bool _moved_components = false;
             std::vector<QPoint> _init_comp_positions;
 
+            std::vector<std::pair<Wire *, int>> _proximity_wire_dist;
+            Wire *_marked_wire = nullptr;
+
             /* Signals and slots often transmit position information
              * Such information is referred to as global, if its frame of reference
              * is the origin point of DesignArea; in that case, it is denoted (x, y)
@@ -161,12 +164,16 @@ namespace logicsim
             // triggered by wireReleased of ComponentLabel
             // sets final position of wire target as dx, dy away from the wire source position
             void setWireDest();
+            // triggered by performPropertyUndoAction of ComponentLabel
+            void propertyUndoActionPerformed();
+            // triggered by proximityConfirmed of Wire
+            void getProximityWireDistance(Wire *wire, int distance);
 
             // Simulation
             // triggered by timer
             void executeTick();
 
-            void propertyUndoActionPerformed();
+
 
         signals:
             // emitted when the mode is changed
@@ -185,6 +192,8 @@ namespace logicsim
             void writeComponent(std::ofstream &file) const;
             // emitted when an undo action is redone/undone
             void newUndoActionPerformed(bool was_undo, bool undo_enabled, bool redo_enabled);
+            // emitted when mouse is moved during wire remove mode
+            void wireProximityCheck(int x, int y);
         };
     }
 }

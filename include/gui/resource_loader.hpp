@@ -27,6 +27,7 @@ namespace logicsim
         {
             SELECT,
             WIRE,
+            WIRE_REMOVE,
             INSERT,
             SIMULATE
         };
@@ -59,7 +60,7 @@ namespace logicsim
             DFLIPFLOP
         };
 
-        inline std::unordered_map<COMPONENT, std::string> comp_type_to_ctype = {
+        inline const std::unordered_map<COMPONENT, std::string> comp_type_to_ctype = {
             {BUFFER, "BUFFER"},
             {NOT_GATE, "NOT"},
             {AND_GATE, "AND"},
@@ -85,9 +86,11 @@ namespace logicsim
             {TFLIPFLOP, "TFLIPFLOP"}
         };
 
+        inline const int WIRE_REMOVE_DISTANCE_THRESHOLD = 40;
+
         namespace resources
         {
-            inline std::unordered_map<std::string, COMPONENT> ctype_to_component_t = {
+            inline const std::unordered_map<std::string, COMPONENT> ctype_to_component_t = {
                 {"AND", COMPONENT::AND_GATE},
                 {"OR", COMPONENT::OR_GATE},
                 {"XOR", COMPONENT::XOR_GATE},
@@ -113,14 +116,14 @@ namespace logicsim
                 {"8IN_7SEGMENT", COMPONENT::_7SEG_8IN}
             };
 
-            inline std::unordered_set<COMPONENT> components_with_properties =
+            inline const std::unordered_set<COMPONENT> components_with_properties =
             {
                 COMPONENT::CONSTANT,
                 COMPONENT::SWITCH,
                 COMPONENT::OSCILLATOR
             };
 
-            inline QString IMG_PATH = "../LogicSim/res/";
+            inline const QString IMG_PATH = "../LogicSim/res/";
 
             // images for each component
             // initialized when load is called, because QPixmap cannot be created here
@@ -129,8 +132,9 @@ namespace logicsim
             inline QPixmap *border;
             inline QPixmap *hselline, *vselline;
             inline QPixmap *hwire, *vwire;
+            inline QPixmap *hwire_up, *hwire_down, *vwire_left, *vwire_right;
 
-            inline std::unordered_map<size_t, size_t> _7seg_5in_res_map =
+            inline const std::unordered_map<size_t, size_t> _7seg_5in_res_map =
             {
                 {119, 1},
                 {65, 2},
@@ -167,7 +171,7 @@ namespace logicsim
             };
 
             // ranges apply to both rows and columns, because keypad is symmetric
-            inline std::vector<std::pair<double, double>> keypad_rel_pos_range =
+            inline const std::vector<std::pair<double, double>> keypad_rel_pos_range =
             {
                 {0.14, 0.29},
                 {0.33, 0.48},
@@ -175,7 +179,7 @@ namespace logicsim
                 {0.71, 0.86}
             };
 
-            inline std::unordered_map<COMPONENT, std::pair<std::vector<std::pair<double, double>>, std::vector<std::pair<double, double>>>> comp_io_rel_pos =
+            inline const std::unordered_map<COMPONENT, std::pair<std::vector<std::pair<double, double>>, std::vector<std::pair<double, double>>>> comp_io_rel_pos =
             {
                 {COMPONENT::BUFFER, {{{0.04, 0.48}}, {{0.9, 0.48}}}},
                 {COMPONENT::NOT_GATE, {{{0.04, 0.48}}, {{0.9, 0.48}}}},
@@ -210,6 +214,7 @@ namespace logicsim
 
             const int LINE_THICKNESS = 1;
             const int WIRE_THICKNESS = 2;
+            const int WIRE_MARKING_THICKNESS = WIRE_THICKNESS/2;
 
             const std::vector<std::pair<double, double>> &getComponentIOPositionVector(COMPONENT comp_type, bool is_input);
             const std::pair<int, int> getComponentIORelativePos(ComponentLabel *component, bool is_input, int idx);
@@ -217,6 +222,7 @@ namespace logicsim
             QPixmap getBorder(int width, int height);
             QPixmap getLine(LINE_TYPE line_type, int size);
             QPixmap getWire(LINE_TYPE line_type, int size);
+            QPixmap getWireMarking(LINE_TYPE line_type, int size, bool dir_ul = true);
             void load();
             void deallocate();
         }

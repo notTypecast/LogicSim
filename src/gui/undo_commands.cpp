@@ -102,6 +102,23 @@ namespace logicsim
             return _conn_success;
         }
 
+        // DeleteWireCommand
+        DeleteWireCommand::DeleteWireCommand(Wire *wire) : _wire(wire)
+        {
+        }
+
+        void DeleteWireCommand::redo()
+        {
+            _wire->removeFromComponents();
+            _wire->hide();
+        }
+
+        void DeleteWireCommand::undo()
+        {
+            _wire->saveInComponents();
+            _wire->show();
+        }
+
         // MoveComponentsCommand
         MoveComponentsCommand::MoveComponentsCommand(std::vector<ComponentLabel *> &moved_components, std::vector<QPoint> init_positions, std::vector<QPoint> final_positions) : _moved_components(moved_components), _init_positions(init_positions), _final_positions(final_positions)
         {

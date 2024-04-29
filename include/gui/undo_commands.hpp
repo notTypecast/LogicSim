@@ -58,6 +58,18 @@ namespace logicsim
             bool _disconnected = false;
         };
 
+        class DeleteWireCommand : public QUndoCommand
+        {
+        public:
+            DeleteWireCommand(Wire *wire);
+
+            void redo();
+            void undo();
+
+        protected:
+            Wire *_wire;
+        };
+
         class MoveComponentsCommand : public QUndoCommand
         {
         public:

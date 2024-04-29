@@ -67,6 +67,7 @@ namespace logicsim
 
             void setSelectMode();
             void setWireMode();
+            void setWireRemoveMode();
             void setInsertMode();
             void stopSimulationMode();
             void pauseSimulation();

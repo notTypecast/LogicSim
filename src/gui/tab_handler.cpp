@@ -285,6 +285,12 @@ namespace logicsim
             emit designToolChanged(TOOL::WIRE);
         }
 
+        void TabHandler::setWireRemoveMode()
+        {
+            currentDesignArea()->setMode(TOOL::WIRE_REMOVE);
+            emit designToolChanged(TOOL::WIRE_REMOVE);
+        }
+
         void TabHandler::setInsertMode()
         {
             COMPONENT comp_type = static_cast<COMPONENT>(QObject::sender()->property("component-type").value<int>());
