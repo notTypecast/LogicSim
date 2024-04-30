@@ -47,6 +47,8 @@ namespace logicsim
             // maps file name to design areas (tabs) with that file name
             std::unordered_map<QString, std::vector<DesignArea *>> _open_filenames;
 
+            bool _wire_color = false;
+
             void _addUnsavedIcon();
             void _removeUnsavedIcon();
 
@@ -62,6 +64,7 @@ namespace logicsim
             void copyAction();
             void pasteAction();
             void deleteAction();
+            void toggleWireColor();
 
         protected slots:
             void changeArea(int idx);

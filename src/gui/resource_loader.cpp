@@ -47,15 +47,21 @@ namespace logicsim
                 }
             }
 
-            QPixmap getWire(LINE_TYPE line_type, int size)
+            QPixmap getWire(LINE_TYPE line_type, int size, bool on)
             {
                 switch (line_type)
                 {
                 case HORIZONTAL:
                 default:
-                    return hwire->scaled(size, WIRE_THICKNESS);
+                {
+                    QPixmap *wire = on ? hwire_on : hwire;
+                    return wire->scaled(size, WIRE_THICKNESS);
+                }
                 case VERTICAL:
-                    return vwire->scaled(WIRE_THICKNESS, size);
+                {
+                    QPixmap *wire = on ? vwire_on : vwire;
+                    return wire->scaled(WIRE_THICKNESS, size);
+                }
                 }
             }
 
@@ -138,6 +144,8 @@ namespace logicsim
                 hwire_down = new QPixmap(IMG_PATH + "hwire_mark_down.png");
                 vwire_left = new QPixmap(IMG_PATH + "vwire_mark_left.png");
                 vwire_right = new QPixmap(IMG_PATH + "vwire_mark_right.png");
+                hwire_on = new QPixmap(IMG_PATH + "hwire_on.png");
+                vwire_on = new QPixmap(IMG_PATH + "vwire_on.png");
             }
 
             void deallocate()
@@ -151,6 +159,8 @@ namespace logicsim
                 delete hwire_down;
                 delete vwire_left;
                 delete vwire_right;
+                delete hwire_on;
+                delete vwire_on;
             }
         }
     }

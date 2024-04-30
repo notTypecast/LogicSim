@@ -84,10 +84,18 @@ namespace logicsim
             static bool calculateWireTargetPos(ComponentLabel *component, int dx, int dy, int &x, int &y, bool &is_input, int &io_idx);
 
         protected:
+            TOOL _current_tool = TOOL::WIRE;
+
             // made up of 3 parts
             QLabel *_hwire1 = nullptr;
             QLabel *_vwire = nullptr;
             QLabel *_hwire2 = nullptr;
+
+            QLabel *_hwire1_on = nullptr;
+            QLabel *_vwire_on = nullptr;
+            QLabel *_hwire2_on = nullptr;
+
+            bool _wire_on = false;
 
             // deletion marking
             QLabel *_hwire1_up = nullptr, *_hwire1_down = nullptr;
@@ -105,6 +113,8 @@ namespace logicsim
         public slots:
             void checkProximity(int x, int y);
             void changeMode(TOOL tool);
+            void evaluate();
+            void uncolor();
 
         signals:
             void proximityConfirmed(Wire *wire, int distance);

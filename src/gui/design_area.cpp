@@ -287,14 +287,16 @@ namespace logicsim
             }
             QObject::connect(this, SIGNAL (wireProximityCheck(int, int)), wire, SLOT (checkProximity(int, int)));
             QObject::connect(wire, SIGNAL (proximityConfirmed(Wire *, int)), this, SLOT (getProximityWireDistance(Wire *, int)));
+            QObject::connect(this, SIGNAL (evaluateWire()), wire, SLOT (evaluate()));
+            QObject::connect(this, SIGNAL (disableColorWires()), wire, SLOT (uncolor()));
         }
 
         void DesignArea::_disconnect_wire(Wire *wire)
         {
             QObject::disconnect(this, SIGNAL (wireProximityCheck(int, int)), wire, SLOT (checkProximity(int, int)));
             QObject::disconnect(wire, SIGNAL (proximityConfirmed(Wire *, int)), this, SLOT (getProximityWireDistance(Wire *, int)));
+            QObject::disconnect(this, SIGNAL (evaluateWire()), wire, SLOT (evaluate()));
         }
-
 
         void DesignArea::addSelected(ComponentLabel *component, bool ctrl)
         {
@@ -473,6 +475,10 @@ namespace logicsim
             _ticks_label_text = "Ticks: " + QString::number(_circuit_model.total_ticks());
             _ticks_label->setText(_ticks_label_text);
             emit evaluate();
+            if (_color_wires)
+            {
+                emit evaluateWire();
+            }
         }
 
         TOOL DesignArea::mode() const
@@ -509,13 +515,15 @@ namespace logicsim
                     std::cout << "Invalid circuit" << std::endl;
                     return false;
                 }
+                if (_timer == nullptr)
+                {
+                    _ticks_label_text = "Ticks: 0";
+                    _timer = new QTimer(this);
+                    QObject::connect(_timer, SIGNAL (timeout()), this, SLOT (executeTick()));
+                    _timer->start(1000 / _freq);
+                }
                 _ticks_label->show();
-                _ticks_label_text = "Ticks: 0";
                 _ticks_label->setText(_ticks_label_text);
-
-                _timer = new QTimer(this);
-                QObject::connect(_timer, SIGNAL (timeout()), this, SLOT (executeTick()));
-                _timer->start(1000 / _freq);
                 break;
             default:
                 break;
@@ -913,6 +921,15 @@ namespace logicsim
             }
             default:
                 break;
+            }
+        }
+
+        void DesignArea::setColorWires(bool enabled)
+        {
+            _color_wires = enabled;
+            if (!_color_wires)
+            {
+                emit disableColorWires();
             }
         }
     }

@@ -429,5 +429,14 @@ namespace logicsim
         {
             emit selectionActionPerformed(have_select, have_clipboard);
         }
+
+        void TabHandler::toggleWireColor()
+        {
+            _wire_color = !_wire_color;
+            for (int i = 0; i < count(); ++i)
+            {
+                _designArea(i)->setColorWires(_wire_color);
+            }
+        }
     }
 }

@@ -15,6 +15,14 @@ namespace logicsim
             _vwire->show();
             _hwire2->show();
 
+            _hwire1_on = new QLabel(parent);
+            _vwire_on = new QLabel(parent);
+            _hwire2_on = new QLabel(parent);
+
+            _hwire1_on->hide();
+            _vwire_on->hide();
+            _hwire2_on->hide();
+
             _hwire1_up = new QLabel(parent);
             _hwire1_down = new QLabel(parent);
             _vwire_left = new QLabel(parent);
@@ -35,6 +43,10 @@ namespace logicsim
             delete _hwire1;
             delete _vwire;
             delete _hwire2;
+
+            delete _hwire1_on;
+            delete _vwire_on;
+            delete _hwire2_on;
 
             delete _hwire1_up;
             delete _hwire1_down;
@@ -66,6 +78,9 @@ namespace logicsim
 
         void Wire::repositionDest(int dest_x, int dest_y)
         {
+            // refresh potential loaded colored wires
+            _wire_on = false;
+
             int src_x = _conns[0].x;
             int src_y = _conns[0].y;
 
@@ -364,6 +379,11 @@ namespace logicsim
 
         void Wire::changeMode(TOOL tool)
         {
+            if (_current_tool == TOOL::SIMULATE && tool != TOOL::SIMULATE)
+            {
+                uncolor();
+            }
+
             switch (tool)
             {
             case WIRE_REMOVE:
@@ -412,6 +432,8 @@ namespace logicsim
                 _updated_markings = false;
                 break;
             }
+
+            _current_tool = tool;
         }
 
         void Wire::markForDeletion()
@@ -432,6 +454,54 @@ namespace logicsim
             _vwire_right->hide();
             _hwire2_up->hide();
             _hwire2_down->hide();
+        }
+
+        void Wire::evaluate()
+        {
+            if (!_wire_on)
+            {
+                QPixmap hwire_on = resources::getWire(resources::LINE_TYPE::HORIZONTAL, _hwire1->width(), true);
+
+                _hwire1_on->setPixmap(hwire_on);
+                _hwire1_on->resize(_hwire1->width(), _hwire1->height());
+                _hwire1_on->move(_hwire1->x(), _hwire1->y());
+
+                _vwire_on->setPixmap(resources::getWire(resources::LINE_TYPE::VERTICAL, _vwire->height(), true));
+                _vwire_on->resize(_vwire->width(), _vwire->height());
+                _vwire_on->move(_vwire->x(), _vwire->y());
+
+                _hwire2_on->setPixmap(hwire_on);
+                _hwire2_on->resize(_hwire2->width(), _hwire2->height());
+                _hwire2_on->move(_hwire2->x(), _hwire2->y());
+
+                _wire_on = true;
+            }
+
+            if (_conns[_conns[0].is_input].component->getValue())
+            {
+                _hwire1->hide();
+                _vwire->hide();
+                _hwire2->hide();
+
+                _hwire1_on->show();
+                _vwire_on->show();
+                _hwire2_on->show();
+            }
+            else
+            {
+                uncolor();
+            }
+        }
+
+        void Wire::uncolor()
+        {
+            _hwire1->show();
+            _vwire->show();
+            _hwire2->show();
+
+            _hwire1_on->hide();
+            _vwire_on->hide();
+            _hwire2_on->hide();
         }
     }
 }

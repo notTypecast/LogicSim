@@ -133,6 +133,7 @@ namespace logicsim
             inline QPixmap *hselline, *vselline;
             inline QPixmap *hwire, *vwire;
             inline QPixmap *hwire_up, *hwire_down, *vwire_left, *vwire_right;
+            inline QPixmap *hwire_on, *vwire_on;
 
             inline const std::unordered_map<size_t, size_t> _7seg_5in_res_map =
             {
@@ -221,7 +222,7 @@ namespace logicsim
 
             QPixmap getBorder(int width, int height);
             QPixmap getLine(LINE_TYPE line_type, int size);
-            QPixmap getWire(LINE_TYPE line_type, int size);
+            QPixmap getWire(LINE_TYPE line_type, int size, bool on = false);
             QPixmap getWireMarking(LINE_TYPE line_type, int size, bool dir_ul = true);
             void load();
             void deallocate();

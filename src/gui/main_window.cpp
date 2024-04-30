@@ -62,6 +62,9 @@ namespace logicsim
             _ui->actionDelete->setShortcut(QKeySequence(Qt::Key_Delete));
             QObject::connect(_ui->actionDelete, SIGNAL (triggered()), _ui->tabHandler, SLOT (deleteAction()));
 
+            // View menu
+            QObject::connect(_ui->actionWire_Color, SIGNAL (triggered()), _ui->tabHandler, SLOT (toggleWireColor()));
+
             // group tools for exclusive seleciton
             _tool_group = new QActionGroup(this);
 

@@ -563,5 +563,10 @@ namespace logicsim
 
             file << "\n";
         }
+
+        bool ComponentLabel::getValue()
+        {
+            return _component_model->evaluate();
+        }
     }
 }

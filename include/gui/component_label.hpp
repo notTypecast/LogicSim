@@ -57,6 +57,8 @@ namespace logicsim
             void removeFromCircuit();
             void bringBackToCircuit();
 
+            bool getValue();
+
             void mouseMoveEvent(QMouseEvent *ev);
             void mousePressEvent(QMouseEvent *ev);
             void mouseReleaseEvent(QMouseEvent *ev);

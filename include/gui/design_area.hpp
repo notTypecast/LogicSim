@@ -86,6 +86,8 @@ namespace logicsim
             void pasteAction();
             void deleteAction();
 
+            void setColorWires(bool enabled);
+
         protected:
             // removes all components from selected
             void _unselectAll();
@@ -147,6 +149,8 @@ namespace logicsim
 
             Clipboard *_clipboard;
 
+            bool _color_wires = false;
+
             /* Signals and slots often transmit position information
              * Such information is referred to as global, if its frame of reference
              * is the origin point of DesignArea; in that case, it is denoted (x, y)
@@ -190,8 +194,6 @@ namespace logicsim
             // triggered by timer
             void executeTick();
 
-
-
         signals:
             // emitted when the mode is changed
             void modeChanged(TOOL tool);
@@ -213,6 +215,10 @@ namespace logicsim
             void wireProximityCheck(int x, int y);
             // emitted when selections change, to update edit menu
             void newSelection(bool have_selected, bool have_clipboard);
+            // emitted during simulation, if color wires is enabled
+            void evaluateWire();
+            // emitted to hide all colored wires if color wires is disabled during simulation
+            void disableColorWires();
         };
     }
 }
