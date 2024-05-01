@@ -30,6 +30,12 @@ namespace logicsim
                 }
             }
 
+            QPixmap getComponentResource(COMPONENT comp_type, int res_idx, double scale)
+            {
+                QPixmap &res = resources::comp_images.at(comp_type)[res_idx];
+                return res.scaled(static_cast<int>(scale * res.width()), static_cast<int>(scale * res.height()));
+            }
+
             QPixmap getBorder(int width, int height)
             {
                 return border->scaled(width, height);
@@ -47,7 +53,7 @@ namespace logicsim
                 }
             }
 
-            QPixmap getWire(LINE_TYPE line_type, int size, bool on)
+            QPixmap getWire(LINE_TYPE line_type, int size, double scale, bool on)
             {
                 switch (line_type)
                 {
@@ -55,12 +61,12 @@ namespace logicsim
                 default:
                 {
                     QPixmap *wire = on ? hwire_on : hwire;
-                    return wire->scaled(size, WIRE_THICKNESS);
+                    return wire->scaled(size, static_cast<int>(scale * WIRE_THICKNESS));
                 }
                 case VERTICAL:
                 {
                     QPixmap *wire = on ? vwire_on : vwire;
-                    return wire->scaled(WIRE_THICKNESS, size);
+                    return wire->scaled(static_cast<int>(scale * WIRE_THICKNESS), size);
                 }
                 }
             }

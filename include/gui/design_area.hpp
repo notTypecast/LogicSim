@@ -8,6 +8,7 @@
 #include <QStatusBar>
 #include <QFileDialog>
 #include <QUndoStack>
+#include <QCursor>
 
 #include <vector>
 #include <unordered_set>
@@ -27,6 +28,7 @@ namespace logicsim
     {
         class InsertComponentCommand;
         class DeleteComponentsCommand;
+        class MoveComponentsCommand;
         class InsertWireCommand;
         class DeleteWireCommand;
         class ChangeSimulationPropertiesCommand;
@@ -39,6 +41,7 @@ namespace logicsim
         public:
             friend class InsertComponentCommand;
             friend class DeleteComponentsCommand;
+            friend class MoveComponentsCommand;
             friend class InsertWireCommand;
             friend class DeleteWireCommand;
             friend class ChangeSimulationPropertiesCommand;
@@ -51,6 +54,8 @@ namespace logicsim
             void mousePressEvent(QMouseEvent *ev);
             void mouseReleaseEvent(QMouseEvent *ev);
             void mouseMoveEvent(QMouseEvent *ev);
+            void mouseDoubleClickEvent(QMouseEvent *ev);
+            void wheelEvent(QWheelEvent *ev);
 
             TOOL mode() const;
             bool setMode(TOOL tool, COMPONENT comp_type = COMPONENT::NONE, int res_idx = 0);
@@ -87,6 +92,11 @@ namespace logicsim
             void deleteAction();
 
             void setColorWires(bool enabled);
+
+            void zoomIn(int origin_x, int origin_y);
+            void zoomOut(int origin_x, int origin_y);
+            void resetZoom();
+            double getScale();
 
         protected:
             // removes all components from selected
@@ -151,6 +161,18 @@ namespace logicsim
 
             bool _color_wires = false;
 
+            double _inverse_transformation_translation_x = 0;
+            double _inverse_transformation_translation_y = 0;
+
+            int _init_move_x, _init_move_y;
+
+            int _zoom_level = 5;
+            const double BASE_ZOOM_LEVEL = 5;
+            const double SCALE_FACTOR = 1.2;
+            const double INV_SCALE_FACTOR = 1/SCALE_FACTOR;
+
+            void _zoom(int origin_x, int origin_y, int new_zoom_level);
+
             /* Signals and slots often transmit position information
              * Such information is referred to as global, if its frame of reference
              * is the origin point of DesignArea; in that case, it is denoted (x, y)
@@ -208,7 +230,7 @@ namespace logicsim
             // emitted when simulation is reset
             void resetResource();
             // emitted when writing to file
-            void writeComponent(std::ofstream &file) const;
+            void writeComponent(std::ofstream &file, double inverse_scale_factor, double inverse_translation_x, double inverse_translation_y) const;
             // emitted when an undo action is redone/undone
             void newUndoActionPerformed(bool was_undo, bool undo_enabled, bool redo_enabled);
             // emitted when mouse is moved during wire remove mode
@@ -219,6 +241,10 @@ namespace logicsim
             void evaluateWire();
             // emitted to hide all colored wires if color wires is disabled during simulation
             void disableColorWires();
+            // emitted when a move transformation is performed
+            void transformPosition(int dx, int dy);
+            // emitted when a zoom transformation is performed
+            void transformScale(double size_scale, double pos_scale, double offset_x, double offset_y);
         };
     }
 }

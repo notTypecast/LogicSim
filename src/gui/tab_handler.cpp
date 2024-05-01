@@ -280,6 +280,12 @@ namespace logicsim
             emit designToolChanged(TOOL::SELECT);
         }
 
+        void TabHandler::setMoveMode()
+        {
+            currentDesignArea()->setMode(TOOL::MOVE);
+            emit designToolChanged(TOOL::MOVE);
+        }
+
         void TabHandler::setWireMode()
         {
             currentDesignArea()->setMode(TOOL::WIRE);
@@ -437,6 +443,23 @@ namespace logicsim
             {
                 _designArea(i)->setColorWires(_wire_color);
             }
+        }
+
+        void TabHandler::zoomIn()
+        {
+            DesignArea *design_area = currentDesignArea();
+            design_area->zoomIn(design_area->width()/2, design_area->height()/2);
+        }
+
+        void TabHandler::zoomOut()
+        {
+            DesignArea *design_area = currentDesignArea();
+            design_area->zoomOut(design_area->width()/2, design_area->height()/2);
+        }
+
+        void TabHandler::resetZoom()
+        {
+            currentDesignArea()->resetZoom();
         }
     }
 }

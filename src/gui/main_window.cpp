@@ -65,6 +65,13 @@ namespace logicsim
             // View menu
             QObject::connect(_ui->actionWire_Color, SIGNAL (triggered()), _ui->tabHandler, SLOT (toggleWireColor()));
 
+            QObject::connect(_ui->actionZoom_In, SIGNAL (triggered()), _ui->tabHandler, SLOT (zoomIn()));
+
+            QObject::connect(_ui->actionZoom_Out, SIGNAL (triggered()), _ui->tabHandler, SLOT (zoomOut()));
+
+            QObject::connect(_ui->actionReset_Zoom, SIGNAL (triggered()), _ui->tabHandler, SLOT (resetZoom()));
+
+            // Tools & Insert menu
             // group tools for exclusive seleciton
             _tool_group = new QActionGroup(this);
 
@@ -117,6 +124,9 @@ namespace logicsim
             _tool_group->addAction(_ui->actionSelect);
             _ui->actionSelect->setChecked(true);
             QObject::connect(_ui->actionSelect, SIGNAL (triggered()), _ui->tabHandler, SLOT (setSelectMode()));
+
+            _tool_group->addAction(_ui->actionMove);
+            QObject::connect(_ui->actionMove, SIGNAL (triggered()), _ui->tabHandler, SLOT (setMoveMode()));
 
             _tool_group->addAction(_ui->actionWire);
             QObject::connect(_ui->actionWire, SIGNAL (triggered()), _ui->tabHandler, SLOT (setWireMode()));
@@ -202,6 +212,10 @@ namespace logicsim
                     }
                 }
                 break;
+            case MOVE:
+                _ui->actionMove->setChecked(true);
+                emit _ui->actionMove->triggered();
+                break;
             case WIRE:
                 _ui->actionWire->setChecked(true);
                 emit _ui->actionWire->triggered();
@@ -224,25 +238,20 @@ namespace logicsim
             _ui->actionRedo->setEnabled(!enabled);
 
             _ui->actionSelect->setEnabled(!enabled);
+            _ui->actionMove->setEnabled(!enabled);
             _ui->actionWire->setEnabled(!enabled);
+            _ui->actionWire_Remove->setEnabled(!enabled);
             for (const auto &triplet : _insert_actions)
             {
                 std::get<0>(triplet)->setEnabled(!enabled);
             }
 
             _ui->actionStop->setEnabled(enabled);
-            if (_sim_paused)
-            {
-                _ui->actionStep->setEnabled(enabled);
-                _ui->actionContinue->setEnabled(enabled);
-                _ui->actionPause->setEnabled(!enabled);
-            }
-            else
-            {
-                _ui->actionStep->setEnabled(!enabled);
-                _ui->actionContinue->setEnabled(!enabled);
-                _ui->actionPause->setEnabled(enabled);
-            }
+
+            _ui->actionStep->setEnabled(enabled && _sim_paused);
+            _ui->actionContinue->setEnabled(enabled && _sim_paused);
+            _ui->actionPause->setEnabled(enabled && !_sim_paused);
+
             _ui->actionReset->setEnabled(enabled);
 
             _ui->actionStart->setEnabled(!enabled);

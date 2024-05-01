@@ -33,6 +33,12 @@ namespace logicsim
                 }
                 break;
 
+            case MOVE:
+            case SIMULATE:
+                _init_move_x = ev->x();
+                _init_move_y = ev->y();
+                break;
+
             case WIRE_REMOVE:
             {
                 if (_marked_wire == nullptr)
@@ -53,6 +59,19 @@ namespace logicsim
                 addSelected(insert_command->component());
                 break;
             }
+            default:
+                break;
+            }
+        }
+
+        void DesignArea::mouseDoubleClickEvent(QMouseEvent *ev)
+        {
+            switch (_selected_tool)
+            {
+            case MOVE:
+            case SIMULATE:
+                mousePressEvent(ev);
+                break;
             default:
                 break;
             }
@@ -118,12 +137,25 @@ namespace logicsim
                 break;
             }
 
+            case MOVE:
+            case SIMULATE:
+            {
+                double inv_scale_factor = std::pow(INV_SCALE_FACTOR, _zoom_level - BASE_ZOOM_LEVEL);
+                int dx = ev->x() - _init_move_x;
+                int dy = ev->y() - _init_move_y;
+                _inverse_transformation_translation_x -= inv_scale_factor*dx;
+                _inverse_transformation_translation_y -= inv_scale_factor*dy;
+                emit transformPosition(dx, dy);
+                _init_move_x = ev->x();
+                _init_move_y = ev->y();
+                break;
+            }
+
             case INSERT:
             {
                 int x = ev->x() - _selected_components[0]->width()/2;
                 int y = ev->y() - _selected_components[0]->height()/2;
                 _selected_components[0]->move(x, y);
-                _selected_components[0]->border()->move(x, y);
                 break;
             }
 
@@ -166,6 +198,25 @@ namespace logicsim
 
             default:
                 break;
+            }
+        }
+
+        void DesignArea::wheelEvent(QWheelEvent *ev)
+        {
+            if (!(ev->modifiers() & Qt::ControlModifier))
+            {
+                return;
+            }
+
+            QPoint cursor_pos = mapFromGlobal(QCursor::pos());
+
+            if (ev->angleDelta().y() < 0)
+            {
+                zoomOut(cursor_pos.x(), cursor_pos.y());
+            }
+            else
+            {
+                zoomIn(cursor_pos.x(), cursor_pos.y());
             }
         }
 
@@ -239,6 +290,8 @@ namespace logicsim
                 // connections that aren't disconnected by _disconnect_component
                 QObject::connect(this, SIGNAL (modeChanged(TOOL)), label, SLOT (changeMode(TOOL)));
                 QObject::connect(this, SIGNAL (resetResource()), label, SLOT (resetResource()));
+                QObject::connect(this, SIGNAL (transformPosition(int, int)), label, SLOT (positionTransformationApplied(int, int)));
+                QObject::connect(this, SIGNAL (transformScale(double, double, double, double)), label, SLOT (scaleTransformationApplied(double, double, double, double)));
             }
 
             QObject::connect(label, SIGNAL (selected(ComponentLabel *, bool)), this, SLOT (addSelected(ComponentLabel *, bool)));
@@ -252,7 +305,7 @@ namespace logicsim
             QObject::connect(label, SIGNAL (wireSnapFound(ComponentLabel *, int, int)), this, SLOT (getWireSnapPos(ComponentLabel *, int, int)));
             QObject::connect(label, SIGNAL (wireReleased()), this, SLOT (setWireDest()));
             QObject::connect(this, SIGNAL (evaluate()), label, SLOT (evaluate()));
-            QObject::connect(this, SIGNAL (writeComponent(std::ofstream &)), label, SLOT (writeComponent(std::ofstream &)));
+            QObject::connect(this, SIGNAL (writeComponent(std::ofstream &, double, double, double)), label, SLOT (writeComponent(std::ofstream &, double, double, double)));
             QObject::connect(label, SIGNAL (performPropertyUndoAction()), this, SLOT (propertyUndoActionPerformed()));
         }
 
@@ -284,6 +337,7 @@ namespace logicsim
             if (first_time)
             {
                 QObject::connect(this, SIGNAL (modeChanged(TOOL)), wire, SLOT (changeMode(TOOL)));
+                QObject::connect(this, SIGNAL (transformScale(double, double, double, double)), wire, SLOT (scaleTransformationApplied(double)));
             }
             QObject::connect(this, SIGNAL (wireProximityCheck(int, int)), wire, SLOT (checkProximity(int, int)));
             QObject::connect(wire, SIGNAL (proximityConfirmed(Wire *, int)), this, SLOT (getProximityWireDistance(Wire *, int)));
@@ -305,7 +359,7 @@ namespace logicsim
             {
                 if (ctrl)
                 {
-                    component->setBorder(nullptr);
+                    component->hideBorder();
                     _selected_components.erase(comp_iter);
 
                     if (_selected_components.empty())
@@ -332,14 +386,7 @@ namespace logicsim
         {
             _selected_components.push_back(component);
 
-            QLabel *border = new QLabel(this);
-            border->setPixmap(resources::getBorder(component->width(), component->height()));
-            border->setAttribute(Qt::WA_TransparentForMouseEvents);
-
-            border->move(component->x(), component->y());
-            border->show();
-
-            component->setBorder(border);
+            component->showBorder();
 
             emit newSelection(true, !_clipboard->empty());
         }
@@ -348,7 +395,7 @@ namespace logicsim
         {
             for (const auto &component: _selected_components)
             {
-                component->setBorder(nullptr);
+                component->hideBorder();
             }
             _selected_components.clear();
             emit newSelection(false, !_clipboard->empty());
@@ -368,8 +415,6 @@ namespace logicsim
             for (const auto &component : _selected_components)
             {
                 component->move(dx + component->x(), dy + component->y());
-                component->border()->move(component->x(), component->y());
-                component->moveWires();
             }
         }
 
@@ -387,7 +432,7 @@ namespace logicsim
                 final_positions[i] = _selected_components[i]->pos();
             }
 
-            MoveComponentsCommand *move_command = new MoveComponentsCommand(_selected_components, _init_comp_positions, final_positions);
+            MoveComponentsCommand *move_command = new MoveComponentsCommand(this, _selected_components, _init_comp_positions, final_positions);
             _undo_stack->push(move_command);
             emit newUndoActionPerformed(false, _undo_stack->canUndo(), _undo_stack->canRedo());
         }
@@ -395,7 +440,7 @@ namespace logicsim
         void DesignArea::getWireSource(ComponentLabel *component, int dx, int dy)
         {
             std::get<0>(_wire_snap_closest) = nullptr;
-            _wire = new Wire(this);
+            _wire = new Wire(getScale(), this);
             bool set = _wire->setComponent1(component, dx, dy);
             if (!set)
             {
@@ -502,14 +547,14 @@ namespace logicsim
             case TOOL::SIMULATE:
                 for (const auto &component : _selected_components)
                 {
-                    component->border()->hide();
+                    component->hideBorder();
                 }
 
                 try
                 {
                     _circuit_model.check();
                 }
-                catch (model::component::null_input)
+                catch (const model::component::null_input &)
                 {
                     // invalid circuit popup
                     std::cout << "Invalid circuit" << std::endl;
@@ -529,7 +574,7 @@ namespace logicsim
                 break;
             }
 
-            if (tool != TOOL::WIRE_REMOVE)
+            if (_selected_tool == TOOL::WIRE_REMOVE && tool != TOOL::WIRE_REMOVE)
             {
                 setMouseTracking(false);
                 if (_marked_wire != nullptr)
@@ -556,7 +601,7 @@ namespace logicsim
 
             for (const auto &component : _selected_components)
             {
-                component->border()->show();
+                component->showBorder();
             }
         }
 
@@ -613,7 +658,7 @@ namespace logicsim
 
             file << std::to_string(_freq) << "\n";
 
-            emit writeComponent(file);
+            emit writeComponent(file, std::pow(INV_SCALE_FACTOR, _zoom_level - BASE_ZOOM_LEVEL), _inverse_transformation_translation_x, _inverse_transformation_translation_y);
 
             file.close();
 
@@ -684,7 +729,7 @@ namespace logicsim
                     res_idx = 0;
                 }
 
-                ComponentLabel *component = new ComponentLabel(resources::ctype_to_component_t.at(ctype), res_idx, _undo_stack, this);
+                ComponentLabel *component = new ComponentLabel(resources::ctype_to_component_t.at(ctype), res_idx, getScale(), _undo_stack, this);
                 _connect_component(component);
                 components[id_str] = component;
 
@@ -702,7 +747,7 @@ namespace logicsim
                 try {
                     x = std::stoi(splitter2.next());
                 }
-                catch (std::invalid_argument) {
+                catch (const std::invalid_argument &) {
                     _delete_components(components);
                     throw std::invalid_argument("Invalid file format: line " + std::to_string(i) + " bad coordinate");
                 }
@@ -716,7 +761,7 @@ namespace logicsim
                 try {
                     y = std::stoi(splitter2.next());
                 }
-                catch (std::invalid_argument) {
+                catch (const std::invalid_argument &) {
                     _delete_components(components);
                     throw std::invalid_argument("Invalid file format: line " + std::to_string(i) + " bad coordinate");
                 }
@@ -804,7 +849,7 @@ namespace logicsim
                         throw std::invalid_argument("Invalid file format: too many fields for input of " + input.first);
                     }
 
-                    Wire *wire = new Wire(this);
+                    Wire *wire = new Wire(getScale(), this);
                     _connect_wire(wire);
                     wire->setComponent1(components[input.first], true, i);
                     wire->setComponent2(components[input_id_str], false, output_idx);
@@ -931,6 +976,48 @@ namespace logicsim
             {
                 emit disableColorWires();
             }
+        }
+
+        void DesignArea::zoomIn(int origin_x, int origin_y)
+        {
+            if (_zoom_level < 15)
+            {
+                _zoom(origin_x, origin_y, _zoom_level + 1);
+            }
+        }
+
+        void DesignArea::zoomOut(int origin_x, int origin_y)
+        {
+            if (_zoom_level > 2)
+            {
+                _zoom(origin_x, origin_y, _zoom_level - 1);
+            }
+        }
+
+        void DesignArea::resetZoom()
+        {
+            _zoom(width()/2, height()/2, BASE_ZOOM_LEVEL);
+        }
+
+        void DesignArea::_zoom(int origin_x, int origin_y, int new_zoom_level)
+        {
+            double size_scale_factor = std::pow(SCALE_FACTOR, new_zoom_level - BASE_ZOOM_LEVEL);
+            double scale_factor = std::pow(SCALE_FACTOR, new_zoom_level - _zoom_level);
+            double prev_inv_scale_factor = std::pow(INV_SCALE_FACTOR, _zoom_level - BASE_ZOOM_LEVEL);
+
+            QPoint origin_point = QPoint(origin_x, origin_y);
+
+            _inverse_transformation_translation_x += prev_inv_scale_factor * (origin_x - origin_x/scale_factor);
+            _inverse_transformation_translation_y += prev_inv_scale_factor * (origin_y - origin_y/scale_factor);
+
+            emit transformScale(size_scale_factor, scale_factor, -scale_factor*origin_point.x() + origin_point.x(), -scale_factor*origin_point.y() + origin_point.y());
+
+            _zoom_level = new_zoom_level;
+        }
+
+        double DesignArea::getScale()
+        {
+            return std::pow(SCALE_FACTOR, _zoom_level - BASE_ZOOM_LEVEL);
         }
     }
 }

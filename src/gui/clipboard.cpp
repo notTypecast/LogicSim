@@ -57,7 +57,7 @@ namespace logicsim
 
             for (size_t i = 0; i < _component_reprs.size(); ++i)
             {
-                components[i] = new ComponentLabel(_component_reprs[i].comp_type, _component_reprs[i].res_idx, _design_area->_undo_stack, _design_area);
+                components[i] = new ComponentLabel(_component_reprs[i].comp_type, _component_reprs[i].res_idx, _design_area->getScale(), _design_area->_undo_stack, _design_area);
                 components[i]->setParams(_component_reprs[i].params);
                 components[i]->move(_component_reprs[i].x, _component_reprs[i].y + PASTE_OFFSET_Y);
 
@@ -75,7 +75,7 @@ namespace logicsim
                 {
                     if (_component_reprs[i].inputs[j].first != nullptr)
                     {
-                        Wire *wire = new Wire(_design_area);
+                        Wire *wire = new Wire(_design_area->getScale(), _design_area);
                         wire->setComponent1(components[i], true, j);
                         wire->setComponent2(component_map[_component_reprs[i].inputs[j].first], false, _component_reprs[i].inputs[j].second);
                         wire->reposition();

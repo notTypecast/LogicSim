@@ -5,13 +5,19 @@ namespace logicsim
 {
     namespace gui
     {
-        ComponentLabel::ComponentLabel(COMPONENT comp_type, int resource_idx, QUndoStack *stack, QWidget *parent): QLabel{parent}, _undo_stack(stack)
+        ComponentLabel::ComponentLabel(COMPONENT comp_type, int resource_idx, double scale, QUndoStack *stack, QWidget *parent): QLabel{parent}, _comp_type(comp_type), _undo_stack(stack), _scale(scale)
         {
-            _comp_type = comp_type;
             _input_wires = std::vector<Wire *>(resources::comp_io_rel_pos.at(comp_type).first.size(), nullptr);
             _output_wires = std::vector<std::vector<Wire *>>(resources::comp_io_rel_pos.at(comp_type).second.size(), std::vector<Wire *>());
 
             setResourceByIdx(resource_idx);
+
+            _border = new QLabel(this);
+            _border->setPixmap(resources::getBorder(width(), height()));
+            _border->resize(width(), height());
+            _border->setAttribute(Qt::WA_TransparentForMouseEvents);
+            _border->move(0, 0);
+            _border->hide();
 
             _component_model = model::ctype_map.at(comp_type_to_ctype.at(comp_type))();
 
@@ -112,24 +118,20 @@ namespace logicsim
             return _component_model;
         }
 
-        void ComponentLabel::setBorder(QLabel *border)
+        void ComponentLabel::showBorder()
         {
-            if (_border != nullptr)
-            {
-                delete _border;
-            }
-            _border = border;
+            _border->show();
         }
 
-        QLabel *ComponentLabel::border() const
+        void ComponentLabel::hideBorder()
         {
-            return _border;
+            _border->hide();
         }
 
         void ComponentLabel::setResourceByIdx(int idx)
         {
             _resource_idx = idx;
-            QPixmap &res = resources::comp_images.at(_comp_type)[_resource_idx];
+            QPixmap res = resources::getComponentResource(_comp_type, _resource_idx, _scale);
             setPixmap(res);
             resize(res.width(), res.height());
         }
@@ -142,6 +144,11 @@ namespace logicsim
         QString ComponentLabel::params() const
         {
             return QString::fromStdString(_component_model->param_string());
+        }
+
+        QPoint ComponentLabel::getNativeCoordinates(double inverse_scale_factor, double inverse_translation_x, double inverse_translation_y)
+        {
+            return QPoint(inverse_scale_factor*x() + inverse_translation_x, inverse_scale_factor*y() + inverse_translation_y);
         }
 
         const std::vector<Wire *> ComponentLabel::inputWires() const
@@ -244,6 +251,8 @@ namespace logicsim
             switch (_current_tool)
             {
             case INSERT:
+            case MOVE:
+            case WIRE_REMOVE:
                 ev->ignore();
                 break;
             case SELECT:
@@ -255,9 +264,6 @@ namespace logicsim
             case WIRE:
                 ev->accept();
                 emit wireSource(this, ev->x(), ev->y());
-                break;
-            case WIRE_REMOVE:
-                ev->ignore();
                 break;
             case SIMULATE:
                 ev->accept();
@@ -304,7 +310,7 @@ namespace logicsim
                 default:
                     break;
                 }
-
+                break;
             default:
                 break;
             }
@@ -356,11 +362,18 @@ namespace logicsim
                 _setupProperties();
                 break;
             case SIMULATE:
+            case MOVE:
                 mousePressEvent(ev);
                 break;
             default:
                 break;
             }
+        }
+
+        void ComponentLabel::move(int pos_x, int pos_y)
+        {
+            QLabel::move(pos_x, pos_y);
+            moveWires();
         }
 
         void ComponentLabel::_setupProperties()
@@ -502,7 +515,7 @@ namespace logicsim
                 switch (_comp_type)
                 {
                 case LED:
-                    setPixmap(resources::comp_images.at(_comp_type)[_component_model->evaluate()]);
+                    setResourceByIdx(_component_model->evaluate());
                     break;
                 case _7SEG_5IN:
                 {
@@ -511,8 +524,7 @@ namespace logicsim
                     {
                         evals[(7 + i) % 8] = _component_model->evaluate(i);
                     }
-
-                    setPixmap(resources::comp_images.at(_comp_type)[resources::_7seg_5in_res_map.at(utils::get_int_from_bools(evals))]);
+                    setResourceByIdx(resources::_7seg_5in_res_map.at(utils::get_int_from_bools(evals)));
                     break;
                 }
                 case _7SEG_8IN:
@@ -522,7 +534,7 @@ namespace logicsim
                     {
                         evals[(7 + i) % 8] = _component_model->evaluate(i);
                     }
-                    setPixmap(resources::comp_images.at(_comp_type)[utils::get_int_from_bools(evals)]);
+                    setResourceByIdx(utils::get_int_from_bools(evals));
                     break;
                 }
                 default:
@@ -540,9 +552,10 @@ namespace logicsim
             setResourceByIdx(_base_resource_idx);
         }
 
-        void ComponentLabel::writeComponent(std::ofstream &file)
+        void ComponentLabel::writeComponent(std::ofstream &file, double inverse_scale_factor, double inverse_translation_x, double inverse_translation_y)
         {
-            file << _component_model->id() << ';' << _component_model->ctype() << ';' << _component_model->param_string() << ';' << std::to_string(x()) << ',' << std::to_string(y()) << ';';
+            QPoint native = getNativeCoordinates(inverse_scale_factor, inverse_translation_x, inverse_translation_y);
+            file << _component_model->id() << ';' << _component_model->ctype() << ';' << _component_model->param_string() << ';' << std::to_string(native.x()) << ',' << std::to_string(native.y()) << ';';
 
             std::vector<std::pair<unsigned int, unsigned int>> input_ids = _component_model->input_ids();
             for (size_t i = 0; i < input_ids.size(); ++i)
@@ -567,6 +580,23 @@ namespace logicsim
         bool ComponentLabel::getValue()
         {
             return _component_model->evaluate();
+        }
+
+        void ComponentLabel::positionTransformationApplied(int dx, int dy)
+        {
+            move(x() + dx, y() + dy);
+        }
+
+        void ComponentLabel::scaleTransformationApplied(double size_scale, double pos_scale, double offset_x, double offset_y)
+        {
+            _scale = size_scale;
+            setResourceByIdx(_resource_idx);
+            _border->setPixmap(resources::getBorder(width(), height()));
+            _border->resize(width(), height());
+            // TODO: rounding can cause slight changes in native position when inverse transforming
+            // possibly keep positions as doubles as well, and use those to inverse transform
+            QLabel::move(std::round(pos_scale*x() + offset_x), std::round(pos_scale*y() + offset_y));
+            moveWires();
         }
     }
 }

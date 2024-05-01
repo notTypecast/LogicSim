@@ -30,21 +30,24 @@ namespace logicsim
 
             Q_OBJECT
         public:
-            explicit ComponentLabel(COMPONENT comp_type, int resource_idx, QUndoStack *stack, QWidget *parent = nullptr);
+            explicit ComponentLabel(COMPONENT comp_type, int resource_idx, double scale, QUndoStack *stack, QWidget *parent = nullptr);
             ~ComponentLabel();
 
             COMPONENT comp_type() const;
 
             model::component::Component *component_model() const;
 
-            void setBorder(QLabel *border);
-            QLabel *border() const;
+            void showBorder();
+            void hideBorder();
 
             int resourceIdx() const;
             QString params() const;
 
             const std::vector<Wire *> inputWires() const;
             const std::vector<std::vector<Wire *>> outputWires() const;
+
+            // returns pre-transformation coordinates
+            QPoint getNativeCoordinates(double inverse_scale_factor, double inverse_translation_x, double inverse_translation_y);
 
             // keep wire connected to this component
             // is_input: whether wire is input connection
@@ -64,6 +67,8 @@ namespace logicsim
             void mouseReleaseEvent(QMouseEvent *ev);
             void mouseDoubleClickEvent(QMouseEvent *ev);
 
+            void move(int pos_x, int pos_y);
+
         protected:
             int _resource_idx = 0;
             COMPONENT _comp_type;
@@ -76,7 +81,7 @@ namespace logicsim
             // used for keeping movement relative to initial mouse press when selected
             int _press_x, _press_y;
             TOOL _current_tool = TOOL::INSERT;
-            QLabel *_border = nullptr;
+            QLabel *_border;
 
             Properties *_properties_popup = nullptr;
 
@@ -92,6 +97,8 @@ namespace logicsim
             QUndoStack *_undo_stack;
 
             ChangeComponentPropertyCommand *_property_command = nullptr;
+
+            double _scale;
 
         public slots:
             // called on object creation
@@ -113,7 +120,11 @@ namespace logicsim
             // triggered by resetResource of DesignArea
             void resetResource();
             // triggered by writeComponent of DesignArea
-            void writeComponent(std::ofstream &file);
+            void writeComponent(std::ofstream &file, double inverse_scale_factor, double inverse_translation_x, double inverse_translation_y);
+            // triggered by transformPosition of DesignArea
+            void positionTransformationApplied(int dx, int dy);
+            // triggered by transformScale of DesignArea
+            void scaleTransformationApplied(double size_scale, double pos_scale, double offset_x, double offset_y);
 
         signals:
             // emitted when a mouse press registers on component during select mode

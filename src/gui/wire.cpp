@@ -5,8 +5,10 @@ namespace logicsim
 {
     namespace gui
     {
-    Wire::Wire(QWidget *parent) : QWidget{parent}
+    Wire::Wire(double scale, QWidget *parent) : QWidget{parent}
         {
+            _scale = SCALE_SCALING_FACTOR * scale;
+
             _hwire1 = new QLabel(parent);
             _vwire = new QLabel(parent);
             _hwire2 = new QLabel(parent);
@@ -85,17 +87,18 @@ namespace logicsim
             int src_y = _conns[0].y;
 
             int hwire_size = std::abs(src_x - dest_x) / 2;
-            int vwire_size = std::abs(src_y - dest_y) + resources::WIRE_THICKNESS;
+            int vwire_size = std::abs(src_y - dest_y) + static_cast<int>(_scale * resources::WIRE_THICKNESS);
 
-            _hwire1->resize(hwire_size, resources::WIRE_THICKNESS);
-            _hwire2->resize(hwire_size, resources::WIRE_THICKNESS);
-            _vwire->resize(resources::WIRE_THICKNESS, vwire_size);
+            QPixmap hwire = resources::getWire(resources::LINE_TYPE::HORIZONTAL, hwire_size, _scale);
+            QPixmap vwire = resources::getWire(resources::LINE_TYPE::VERTICAL, vwire_size, _scale);
 
-            QPixmap hwire = resources::getWire(resources::LINE_TYPE::HORIZONTAL, hwire_size);
+            _hwire1->resize(hwire.width(), hwire.height());
+            _hwire2->resize(hwire.width(), hwire.height());
+            _vwire->resize(vwire.width(), vwire.height());
 
             _hwire1->setPixmap(hwire);
             _hwire2->setPixmap(hwire);
-            _vwire->setPixmap(resources::getWire(resources::LINE_TYPE::VERTICAL, vwire_size));
+            _vwire->setPixmap(vwire);
 
             if (src_x > dest_x)
             {
@@ -135,6 +138,11 @@ namespace logicsim
             _updatePosition(0);
             _updatePosition(1);
             repositionDest(_conns[1].x, _conns[1].y);
+            if (_current_tool == TOOL::SIMULATE)
+            {
+                _wire_on = false;
+                _createColorWire();
+            }
         }
 
         void Wire::hide()
@@ -458,24 +466,7 @@ namespace logicsim
 
         void Wire::evaluate()
         {
-            if (!_wire_on)
-            {
-                QPixmap hwire_on = resources::getWire(resources::LINE_TYPE::HORIZONTAL, _hwire1->width(), true);
-
-                _hwire1_on->setPixmap(hwire_on);
-                _hwire1_on->resize(_hwire1->width(), _hwire1->height());
-                _hwire1_on->move(_hwire1->x(), _hwire1->y());
-
-                _vwire_on->setPixmap(resources::getWire(resources::LINE_TYPE::VERTICAL, _vwire->height(), true));
-                _vwire_on->resize(_vwire->width(), _vwire->height());
-                _vwire_on->move(_vwire->x(), _vwire->y());
-
-                _hwire2_on->setPixmap(hwire_on);
-                _hwire2_on->resize(_hwire2->width(), _hwire2->height());
-                _hwire2_on->move(_hwire2->x(), _hwire2->y());
-
-                _wire_on = true;
-            }
+            _createColorWire();
 
             if (_conns[_conns[0].is_input].component->getValue())
             {
@@ -493,6 +484,28 @@ namespace logicsim
             }
         }
 
+        void Wire::_createColorWire()
+        {
+            if (!_wire_on)
+            {
+                QPixmap hwire_on = resources::getWire(resources::LINE_TYPE::HORIZONTAL, _hwire1->width(), _scale, true);
+
+                _hwire1_on->setPixmap(hwire_on);
+                _hwire1_on->resize(_hwire1->width(), _hwire1->height());
+                _hwire1_on->move(_hwire1->x(), _hwire1->y());
+
+                _vwire_on->setPixmap(resources::getWire(resources::LINE_TYPE::VERTICAL, _vwire->height(), _scale, true));
+                _vwire_on->resize(_vwire->width(), _vwire->height());
+                _vwire_on->move(_vwire->x(), _vwire->y());
+
+                _hwire2_on->setPixmap(hwire_on);
+                _hwire2_on->resize(_hwire2->width(), _hwire2->height());
+                _hwire2_on->move(_hwire2->x(), _hwire2->y());
+
+                _wire_on = true;
+            }
+        }
+
         void Wire::uncolor()
         {
             _hwire1->show();
@@ -502,6 +515,12 @@ namespace logicsim
             _hwire1_on->hide();
             _vwire_on->hide();
             _hwire2_on->hide();
+        }
+
+        void Wire::scaleTransformationApplied(double size_scale)
+        {
+            _scale = SCALE_SCALING_FACTOR * size_scale;
+            reposition();
         }
     }
 }

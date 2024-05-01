@@ -26,7 +26,7 @@ namespace logicsim
         {
             Q_OBJECT
         public:
-            explicit Wire(QWidget *parent = nullptr);
+            explicit Wire(double scale, QWidget *parent = nullptr);
             ~Wire();
 
             // sets source component, based on relative position of click (dx, dy)
@@ -110,11 +110,17 @@ namespace logicsim
 
             bool _updated_markings = false;
 
+            void _createColorWire();
+
+            double _scale;
+            const double SCALE_SCALING_FACTOR = 1.2;
+
         public slots:
             void checkProximity(int x, int y);
             void changeMode(TOOL tool);
             void evaluate();
             void uncolor();
+            void scaleTransformationApplied(double size_scale);
 
         signals:
             void proximityConfirmed(Wire *wire, int distance);

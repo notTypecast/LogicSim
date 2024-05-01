@@ -65,12 +65,16 @@ namespace logicsim
             void pasteAction();
             void deleteAction();
             void toggleWireColor();
+            void zoomIn();
+            void zoomOut();
+            void resetZoom();
 
         protected slots:
             void changeArea(int idx);
             bool removeDesignArea(int idx);
 
             void setSelectMode();
+            void setMoveMode();
             void setWireMode();
             void setWireRemoveMode();
             void setInsertMode();

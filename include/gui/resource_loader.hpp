@@ -9,6 +9,7 @@
 #include <bitset>
 #include <sstream>
 #include <iomanip>
+#include <functional>
 
 #include "model/mapped_data.hpp"
 #include "model/component.hpp"
@@ -26,6 +27,7 @@ namespace logicsim
         enum TOOL
         {
             SELECT,
+            MOVE,
             WIRE,
             WIRE_REMOVE,
             INSERT,
@@ -87,6 +89,28 @@ namespace logicsim
         };
 
         inline const int WIRE_REMOVE_DISTANCE_THRESHOLD = 40;
+
+        // trasnform native to real coordinates
+        inline const std::function<std::pair<int, int>(int, int, int, int)> MOVE_TRANSFORM = [](int offset_x, int offset_y, int x, int y)
+        {
+            return std::make_pair(x + offset_x, y + offset_y);
+        };
+        // transform real to native coordinates
+        inline const std::function<std::pair<int, int>(int, int, int, int)> MOVE_TRANSFORM_INV = [](int offset_x, int offset_y, int x, int y)
+        {
+            return std::make_pair(x - offset_x, y - offset_y);
+        };
+
+        /*
+        inline const std::function<std::pair<int, int>(double, double, double, int, int)> SCALE_TRANSFORM = [](double scale_factor, double offset_x, double offset_y, int x, int y)
+        {
+            return std::make_pair(scale_factor*x + offset_x, scale_factor*y + offset_y);
+        };
+
+        inline const std::function<std::pair<int, int>(double, double, double, int, int)> SCALE_TRANSFORM_INV = [](double scale_factor, double offset_x, double offset_y, int x, int y)
+        {
+            return std::make_pair((x + offset_x)/scale_factor, (y + offset_y)/scale_factor);
+        };*/
 
         namespace resources
         {
@@ -220,9 +244,10 @@ namespace logicsim
             const std::vector<std::pair<double, double>> &getComponentIOPositionVector(COMPONENT comp_type, bool is_input);
             const std::pair<int, int> getComponentIORelativePos(ComponentLabel *component, bool is_input, int idx);
 
+            QPixmap getComponentResource(COMPONENT comp_type, int res_idx, double scale);
             QPixmap getBorder(int width, int height);
             QPixmap getLine(LINE_TYPE line_type, int size);
-            QPixmap getWire(LINE_TYPE line_type, int size, bool on = false);
+            QPixmap getWire(LINE_TYPE line_type, int size, double scale, bool on = false);
             QPixmap getWireMarking(LINE_TYPE line_type, int size, bool dir_ul = true);
             void load();
             void deallocate();

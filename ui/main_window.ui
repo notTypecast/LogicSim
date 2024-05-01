@@ -546,6 +546,7 @@
      <string>Tools</string>
     </property>
     <addaction name="actionSelect"/>
+    <addaction name="actionMove"/>
     <addaction name="actionWire"/>
     <addaction name="actionWire_Remove"/>
    </widget>
@@ -954,6 +955,14 @@
   <action name="actionReset_Zoom">
    <property name="text">
     <string>Reset Zoom</string>
+   </property>
+  </action>
+  <action name="actionMove">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Move</string>
    </property>
   </action>
  </widget>

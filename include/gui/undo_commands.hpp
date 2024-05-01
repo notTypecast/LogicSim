@@ -77,12 +77,13 @@ namespace logicsim
         class MoveComponentsCommand : public QUndoCommand
         {
         public:
-            MoveComponentsCommand(std::vector<ComponentLabel *> &moved_components, std::vector<QPoint> init_positions, std::vector<QPoint> final_positions);
+            MoveComponentsCommand(DesignArea *_design_area, std::vector<ComponentLabel *> &moved_components, std::vector<QPoint> init_positions, std::vector<QPoint> final_positions);
 
             void redo();
             void undo();
 
         protected:
+            DesignArea *_design_area;
             std::vector<ComponentLabel *> _moved_components;
             std::vector<QPoint> _init_positions;
             std::vector<QPoint> _final_positions;
