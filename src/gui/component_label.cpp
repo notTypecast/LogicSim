@@ -577,9 +577,9 @@ namespace logicsim
             file << "\n";
         }
 
-        bool ComponentLabel::getValue()
+        bool ComponentLabel::getValue(int output_idx)
         {
-            return _component_model->evaluate();
+            return _component_model->evaluate(output_idx);
         }
 
         void ComponentLabel::positionTransformationApplied(int dx, int dy)

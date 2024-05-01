@@ -90,28 +90,6 @@ namespace logicsim
 
         inline const int WIRE_REMOVE_DISTANCE_THRESHOLD = 40;
 
-        // trasnform native to real coordinates
-        inline const std::function<std::pair<int, int>(int, int, int, int)> MOVE_TRANSFORM = [](int offset_x, int offset_y, int x, int y)
-        {
-            return std::make_pair(x + offset_x, y + offset_y);
-        };
-        // transform real to native coordinates
-        inline const std::function<std::pair<int, int>(int, int, int, int)> MOVE_TRANSFORM_INV = [](int offset_x, int offset_y, int x, int y)
-        {
-            return std::make_pair(x - offset_x, y - offset_y);
-        };
-
-        /*
-        inline const std::function<std::pair<int, int>(double, double, double, int, int)> SCALE_TRANSFORM = [](double scale_factor, double offset_x, double offset_y, int x, int y)
-        {
-            return std::make_pair(scale_factor*x + offset_x, scale_factor*y + offset_y);
-        };
-
-        inline const std::function<std::pair<int, int>(double, double, double, int, int)> SCALE_TRANSFORM_INV = [](double scale_factor, double offset_x, double offset_y, int x, int y)
-        {
-            return std::make_pair((x + offset_x)/scale_factor, (y + offset_y)/scale_factor);
-        };*/
-
         namespace resources
         {
             inline const std::unordered_map<std::string, COMPONENT> ctype_to_component_t = {

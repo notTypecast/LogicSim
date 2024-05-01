@@ -60,7 +60,7 @@ namespace logicsim
             void removeFromCircuit();
             void bringBackToCircuit();
 
-            bool getValue();
+            bool getValue(int output_idx);
 
             void mouseMoveEvent(QMouseEvent *ev);
             void mousePressEvent(QMouseEvent *ev);

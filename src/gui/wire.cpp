@@ -468,7 +468,8 @@ namespace logicsim
         {
             _createColorWire();
 
-            if (_conns[_conns[0].is_input].component->getValue())
+            int conn_idx = _conns[0].is_input;
+            if (_conns[conn_idx].component->getValue(_conns[conn_idx].idx))
             {
                 _hwire1->hide();
                 _vwire->hide();
