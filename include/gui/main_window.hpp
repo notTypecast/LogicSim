@@ -5,6 +5,7 @@
 #include <QMainWindow>
 #include <QActionGroup>
 #include <QString>
+#include <QButtonGroup>
 
 #include "gui/properties.hpp"
 #include "gui/resource_loader.hpp"
@@ -38,6 +39,13 @@ namespace logicsim
             TOOL _last_design_tool = TOOL::SELECT;
             COMPONENT _last_insert_comp = COMPONENT::NONE;
 
+            QFrame *_toolbar;
+            void _setupToolbar();
+
+            QPushButton *_select_button, *_move_button, *_wire_button, *_wire_remove_button;
+            std::vector<QPushButton *> _insert_buttons;
+            QPushButton *_start_sim_button, *_stop_sim_button, *_pause_sim_button, *_step_sim_button, *_reset_sim_button;
+
         protected slots:
             void addDesignArea();
 
@@ -56,6 +64,8 @@ namespace logicsim
             void setSelectActionState(bool have_select, bool have_clipboard);
 
             void quit();
+
+            void toggleToolbar();
         };
 
     }

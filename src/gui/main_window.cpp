@@ -12,6 +12,38 @@ namespace logicsim
 
             _ui->setupUi(this);
 
+            _insert_actions =
+            {
+                {_ui->actionBuffer, COMPONENT::BUFFER, -1},
+                {_ui->actionNOT, COMPONENT::NOT_GATE, -1},
+                {_ui->actionAND, COMPONENT::AND_GATE, -1},
+                {_ui->actionOR, COMPONENT::OR_GATE, -1},
+                {_ui->actionXOR, COMPONENT::XOR_GATE, -1},
+                {_ui->actionNAND, COMPONENT::NAND_GATE, -1},
+                {_ui->actionNOR, COMPONENT::NOR_GATE, -1},
+                {_ui->actionXNOR, COMPONENT::XNOR_GATE, -1},
+                {_ui->actionConstant_0, COMPONENT::CONSTANT, 0},
+                {_ui->actionConstant_1, COMPONENT::CONSTANT, 1},
+                {_ui->actionSwitch, COMPONENT::SWITCH, 0},
+                {_ui->actionOscillator, COMPONENT::OSCILLATOR, -1},
+                {_ui->actionKeypad, COMPONENT::KEYPAD, -1},
+                {_ui->actionLED, COMPONENT::LED, -1},
+                {_ui->action7_Segment_Display_5_input, COMPONENT::_7SEG_5IN, -1},
+                {_ui->action7_Segment_Display_8_input, COMPONENT::_7SEG_8IN, -1},
+                {_ui->actionSR_Latch, COMPONENT::SRLATCH, -1},
+                {_ui->actionJK_Latch, COMPONENT::JKLATCH, -1},
+                {_ui->actionT_Latch, COMPONENT::TLATCH, -1},
+                {_ui->actionD_Latch, COMPONENT::DLATCH, -1},
+                {_ui->actionSR_Flip_Flop, COMPONENT::SRFLIPFLOP, -1},
+                {_ui->actionJK_Flip_Flop, COMPONENT::JKFLIPFLOP, -1},
+                {_ui->actionT_Flip_Flop, COMPONENT::TFLIPFLOP, -1},
+                {_ui->actionD_Flip_Flop, COMPONENT::DFLIPFLOP, -1},
+            };
+
+            _setupToolbar();
+
+            showMaximized();
+
             // initialize status bar and pass to tab handler
             QLabel *ticks_label = new QLabel(_ui->statusbar);
             ticks_label->setObjectName("perm-label");
@@ -63,6 +95,8 @@ namespace logicsim
             QObject::connect(_ui->actionDelete, SIGNAL (triggered()), _ui->tabHandler, SLOT (deleteAction()));
 
             // View menu
+            QObject::connect(_ui->actionToolbar, SIGNAL (triggered()), this, SLOT (toggleToolbar()));
+
             QObject::connect(_ui->actionWire_Color, SIGNAL (triggered()), _ui->tabHandler, SLOT (toggleWireColor()));
 
             QObject::connect(_ui->actionZoom_In, SIGNAL (triggered()), _ui->tabHandler, SLOT (zoomIn()));
@@ -91,34 +125,6 @@ namespace logicsim
                     last_action = action;
                 }
             });
-
-            _insert_actions =
-            {
-                {_ui->actionBuffer, COMPONENT::BUFFER, -1},
-                {_ui->actionNOT, COMPONENT::NOT_GATE, -1},
-                {_ui->actionAND, COMPONENT::AND_GATE, -1},
-                {_ui->actionOR, COMPONENT::OR_GATE, -1},
-                {_ui->actionXOR, COMPONENT::XOR_GATE, -1},
-                {_ui->actionNAND, COMPONENT::NAND_GATE, -1},
-                {_ui->actionNOR, COMPONENT::NOR_GATE, -1},
-                {_ui->actionXNOR, COMPONENT::XNOR_GATE, -1},
-                {_ui->actionConstant_0, COMPONENT::CONSTANT, 0},
-                {_ui->actionConstant_1, COMPONENT::CONSTANT, 1},
-                {_ui->actionSwitch, COMPONENT::SWITCH, 0},
-                {_ui->actionOscillator, COMPONENT::OSCILLATOR, -1},
-                {_ui->actionKeypad, COMPONENT::KEYPAD, -1},
-                {_ui->actionLED, COMPONENT::LED, -1},
-                {_ui->action7_Segment_Display_5_input, COMPONENT::_7SEG_5IN, -1},
-                {_ui->action7_Segment_Display_8_input, COMPONENT::_7SEG_8IN, -1},
-                {_ui->actionSR_Latch, COMPONENT::SRLATCH, -1},
-                {_ui->actionJK_Latch, COMPONENT::JKLATCH, -1},
-                {_ui->actionT_Latch, COMPONENT::TLATCH, -1},
-                {_ui->actionD_Latch, COMPONENT::DLATCH, -1},
-                {_ui->actionSR_Flip_Flop, COMPONENT::SRFLIPFLOP, -1},
-                {_ui->actionJK_Flip_Flop, COMPONENT::JKFLIPFLOP, -1},
-                {_ui->actionT_Flip_Flop, COMPONENT::TFLIPFLOP, -1},
-                {_ui->actionD_Flip_Flop, COMPONENT::DFLIPFLOP, -1},
-            };
 
             // Design actions
             _tool_group->addAction(_ui->actionSelect);
@@ -238,29 +244,43 @@ namespace logicsim
             _ui->actionRedo->setEnabled(!enabled);
 
             _ui->actionSelect->setEnabled(!enabled);
+            _select_button->setEnabled(!enabled);
             _ui->actionMove->setEnabled(!enabled);
+            _move_button->setEnabled(!enabled);
             _ui->actionWire->setEnabled(!enabled);
+            _wire_button->setEnabled(!enabled);
             _ui->actionWire_Remove->setEnabled(!enabled);
+            _wire_remove_button->setEnabled(!enabled);
             for (const auto &triplet : _insert_actions)
             {
                 std::get<0>(triplet)->setEnabled(!enabled);
             }
+            for (const auto &button : _insert_buttons)
+            {
+                button->setEnabled(!enabled);
+            }
 
             _ui->actionStop->setEnabled(enabled);
+            _stop_sim_button->setEnabled(enabled);
 
             _ui->actionStep->setEnabled(enabled && _sim_paused);
+            _step_sim_button->setEnabled(enabled && _sim_paused);
             _ui->actionContinue->setEnabled(enabled && _sim_paused);
             _ui->actionPause->setEnabled(enabled && !_sim_paused);
+            _pause_sim_button->setEnabled(enabled);
 
             _ui->actionReset->setEnabled(enabled);
+            _reset_sim_button->setEnabled(enabled);
 
             _ui->actionStart->setEnabled(!enabled);
+            _start_sim_button->setEnabled(!enabled);
         }
 
         void MainWindow::enableContinue()
         {
             _ui->actionContinue->setEnabled(true);
             _ui->actionStep->setEnabled(true);
+            _step_sim_button->setEnabled(true);
             _ui->actionPause->setEnabled(false);
             _sim_paused = true;
         }
@@ -269,6 +289,7 @@ namespace logicsim
         {
             _ui->actionPause->setEnabled(true);
             _ui->actionStep->setEnabled(false);
+            _step_sim_button->setEnabled(false);
             _ui->actionContinue->setEnabled(false);
             _sim_paused = false;
         }
@@ -331,6 +352,201 @@ namespace logicsim
             }
 
             QApplication::quit();
+        }
+
+        void MainWindow::_setupToolbar()
+        {
+            _toolbar = new QFrame(this);
+            _toolbar->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
+            _toolbar->setMinimumWidth(150);
+            _toolbar->setMaximumWidth(150);
+            _toolbar->setFrameShape(QFrame::StyledPanel);
+            _toolbar->setFrameShadow(QFrame::Sunken);
+            _toolbar->setLineWidth(1);
+
+            QGridLayout *grid = new QGridLayout;
+            grid->setAlignment(Qt::AlignTop);
+            _toolbar->setLayout(grid);
+
+            QSize button_size(40, 40);
+
+            QButtonGroup *button_group = new QButtonGroup(_toolbar);
+
+            _select_button = new QPushButton(_toolbar);
+            _select_button->setIcon(*resources::select_icon);
+            _select_button->setFixedSize(button_size);
+            _select_button->setCheckable(true);
+            _select_button->setChecked(true);
+            QObject::connect(_select_button, SIGNAL (pressed()), _ui->actionSelect, SLOT (trigger()));
+            QObject::connect(_ui->actionSelect, &QAction::triggered, [this]()
+            {
+                _select_button->setChecked(true);
+            });
+            grid->addWidget(_select_button, 0, 0);
+            button_group->addButton(_select_button);
+
+
+            _move_button = new QPushButton(_toolbar);
+            _move_button->setIcon(*resources::move_icon);
+            _move_button->setFixedSize(button_size);
+            _move_button->setCheckable(true);
+            QObject::connect(_move_button, SIGNAL (pressed()), _ui->actionMove, SLOT (trigger()));
+            QObject::connect(_ui->actionMove, &QAction::triggered, [this]()
+            {
+                _move_button->setChecked(true);
+            });
+            grid->addWidget(_move_button, 0, 1);
+            button_group->addButton(_move_button);
+
+            _wire_button = new QPushButton(_toolbar);
+            _wire_button->setIcon(*resources::wire_icon);
+            _wire_button->setFixedSize(button_size);
+            _wire_button->setCheckable(true);
+            QObject::connect(_wire_button, SIGNAL (pressed()), _ui->actionWire, SLOT (trigger()));
+            QObject::connect(_ui->actionWire, &QAction::triggered, [this]()
+            {
+                _wire_button->setChecked(true);
+            });
+            grid->addWidget(_wire_button, 0, 2);
+            button_group->addButton(_wire_button);
+
+            _wire_remove_button = new QPushButton(_toolbar);
+            _wire_remove_button->setIcon(*resources::wire_remove_icon);
+            _wire_remove_button->setFixedSize(button_size);
+            _wire_remove_button->setCheckable(true);
+            QObject::connect(_wire_remove_button, SIGNAL (pressed()), _ui->actionWire_Remove, SLOT (trigger()));
+            QObject::connect(_ui->actionWire_Remove, &QAction::triggered, [this]()
+            {
+                _wire_remove_button->setChecked(true);
+            });
+            grid->addWidget(_wire_remove_button, 1, 0);
+            button_group->addButton(_wire_remove_button);
+
+            QFrame *hline1 = new QFrame(_toolbar);
+            hline1->setFrameShape(QFrame::HLine);
+            hline1->setFrameShadow(QFrame::Sunken);
+            grid->addWidget(hline1, 2, 0, 1, 3);
+
+            const std::vector<COMPONENT> split_after = {COMPONENT::XNOR_GATE, COMPONENT::KEYPAD, COMPONENT::_7SEG_8IN};
+
+            size_t curr_cmp = 0;
+            int row = 3, col = 0;
+            for (const auto &triplet : _insert_actions)
+            {
+                QPushButton *button = new QPushButton(_toolbar);
+                int idx = std::get<2>(triplet);
+                button->setIcon(*(resources::comp_icons.at(std::get<1>(triplet))[idx == -1 ? 0 : idx]));
+                button->setIconSize(QSize(30, 30));
+                button->setFixedSize(button_size);
+                button->setCheckable(true);
+                QObject::connect(button, SIGNAL (pressed()), std::get<0>(triplet), SLOT (trigger()));
+                QObject::connect(std::get<0>(triplet), &QAction::triggered, [button]()
+                {
+                    button->setChecked(true);
+                });
+                grid->addWidget(button, row, col);
+                button_group->addButton(button);
+                row = row + col / 2;
+                col = (col + 1) % 3;
+
+                _insert_buttons.push_back(button);
+
+                if (std::get<1>(triplet) == split_after[curr_cmp])
+                {
+                    if (++curr_cmp == split_after.size())
+                    {
+                        break;
+                    }
+                    QFrame *hline = new QFrame(_toolbar);
+                    hline->setFrameShape(QFrame::HLine);
+                    hline->setFrameShadow(QFrame::Sunken);
+                    if (col == 0)
+                    {
+                        grid->addWidget(hline, row, col, 1, 3);
+                    }
+                    else
+                    {
+                        grid->addWidget(hline, ++row, 0, 1, 3);
+                        col = 0;
+                    }
+                    ++row;
+                }
+            }
+
+            if (col != 0)
+            {
+                ++row;
+                col = 0;
+            }
+
+            QFrame *hline2 = new QFrame(_toolbar);
+            hline2->setFrameShape(QFrame::HLine);
+            hline2->setFrameShadow(QFrame::Sunken);
+            grid->addWidget(hline2, ++row, col, 1, 3);
+
+            _start_sim_button = new QPushButton(_toolbar);
+            _start_sim_button->setIcon(*resources::start_sim_icon);
+            _start_sim_button->setFixedSize(button_size);
+            QObject::connect(_start_sim_button, SIGNAL (pressed()), _ui->actionStart, SLOT (trigger()));
+            grid->addWidget(_start_sim_button, ++row, col++);
+            button_group->addButton(_start_sim_button);
+
+            _stop_sim_button = new QPushButton(_toolbar);
+            _stop_sim_button->setIcon(*resources::stop_sim_icon);
+            _stop_sim_button->setFixedSize(button_size);
+            QObject::connect(_stop_sim_button, SIGNAL (pressed()), _ui->actionStop, SLOT (trigger()));
+            grid->addWidget(_stop_sim_button, row, col++);
+            _stop_sim_button->setEnabled(false);
+
+            _pause_sim_button = new QPushButton(_toolbar);
+            _pause_sim_button->setIcon(*resources::pause_sim_icon);
+            _pause_sim_button->setFixedSize(button_size);
+            _pause_sim_button->setCheckable(true);
+            QObject::connect(_pause_sim_button, &QPushButton::toggled, [this](int checked)
+            {
+                if (checked)
+                {
+                    enablePause();
+                    _ui->actionPause->trigger();
+                }
+                else
+                {
+                    enableContinue();
+                    _ui->actionContinue->trigger();
+                }
+            });
+            grid->addWidget(_pause_sim_button, row, col);
+            _pause_sim_button->setEnabled(false);
+
+            col = 0;
+
+            _step_sim_button = new QPushButton(_toolbar);
+            _step_sim_button->setIcon(*resources::step_sim_icon);
+            _step_sim_button->setFixedSize(button_size);
+            QObject::connect(_step_sim_button, SIGNAL (pressed()), _ui->actionStep, SLOT (trigger()));
+            grid->addWidget(_step_sim_button, ++row, col++);
+            _step_sim_button->setEnabled(false);
+
+            _reset_sim_button = new QPushButton(_toolbar);
+            _reset_sim_button->setIcon(*resources::reset_sim_icon);
+            _reset_sim_button->setFixedSize(button_size);
+            QObject::connect(_reset_sim_button, SIGNAL (pressed()), _ui->actionReset, SLOT (trigger()));
+            grid->addWidget(_reset_sim_button, row, col++);
+            _reset_sim_button->setEnabled(false);
+
+            _ui->horizontalLayout->insertWidget(0, _toolbar);
+        }
+
+        void MainWindow::toggleToolbar()
+        {
+            if (_toolbar->isHidden())
+            {
+                _toolbar->show();
+            }
+            else
+            {
+                _toolbar->hide();
+            }
         }
     }
 }

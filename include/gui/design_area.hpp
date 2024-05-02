@@ -142,7 +142,7 @@ namespace logicsim
 
             QString _filepath;
 
-            void _connect_component(ComponentLabel *label, bool first_time = true);
+            void _connect_component(ComponentLabel *label, bool first_time = false);
             void _disconnect_component(ComponentLabel *label);
             void _delete_components(std::unordered_map<std::string, ComponentLabel *> components);
 
@@ -161,6 +161,9 @@ namespace logicsim
 
             bool _color_wires = false;
 
+            double _transformation_translation_x = 0;
+            double _transformation_translation_y = 0;
+
             double _inverse_transformation_translation_x = 0;
             double _inverse_transformation_translation_y = 0;
 
@@ -168,8 +171,8 @@ namespace logicsim
 
             int _zoom_level = 5;
             const double BASE_ZOOM_LEVEL = 5;
-            const double SCALE_FACTOR = 1.2;
-            const double INV_SCALE_FACTOR = 1/SCALE_FACTOR;
+            const double BASE_SCALE_FACTOR = 1.2;
+            const double INV_BASE_SCALE_FACTOR = 1/BASE_SCALE_FACTOR;
 
             void _zoom(int origin_x, int origin_y, int new_zoom_level);
 

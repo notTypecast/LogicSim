@@ -112,6 +112,8 @@ namespace logicsim
 
             void _createColorWire();
 
+            void _updateWireMarkings();
+
             double _scale;
             const double SCALE_SCALING_FACTOR = 1.2;
 
@@ -121,6 +123,7 @@ namespace logicsim
             void evaluate();
             void uncolor();
             void scaleTransformationApplied(double size_scale);
+            void updateColorWire();
 
         signals:
             void proximityConfirmed(Wire *wire, int distance);

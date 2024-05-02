@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string>LogicSim</string>
   </property>
-  <widget class="QWidget" name="centralwidget">
+  <widget class="QWidget" name="mainview">
    <layout class="QHBoxLayout" name="horizontalLayout">
     <item>
      <widget class="logicsim::gui::TabHandler" name="tabHandler">
@@ -579,6 +579,8 @@
     <property name="title">
      <string>View</string>
     </property>
+    <addaction name="actionToolbar"/>
+    <addaction name="separator"/>
     <addaction name="actionWire_Color"/>
     <addaction name="separator"/>
     <addaction name="actionZoom_In"/>
@@ -963,6 +965,17 @@
    </property>
    <property name="text">
     <string>Move</string>
+   </property>
+  </action>
+  <action name="actionToolbar">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Toolbar</string>
    </property>
   </action>
  </widget>

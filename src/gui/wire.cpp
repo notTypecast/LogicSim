@@ -395,46 +395,7 @@ namespace logicsim
             switch (tool)
             {
             case WIRE_REMOVE:
-                if (!_updated_markings)
-                {
-                    QPixmap hup = resources::getWireMarking(resources::LINE_TYPE::HORIZONTAL, _hwire1->width());
-                    QPixmap hdown = resources::getWireMarking(resources::LINE_TYPE::HORIZONTAL, _hwire1->width(), false);
-                    QPixmap &hup_ext = hup, &hdown_ext = hdown;
-                    int ext_size = 0;
-                    int move_size = 0;
-
-                    bool dir = _hwire1->y() < _hwire2->y();
-                    bool eq = _hwire1->y() == _hwire2->y();
-
-                    if (!eq)
-                    {
-                        ext_size = resources::WIRE_MARKING_THICKNESS + resources::WIRE_THICKNESS;
-                        move_size = resources::WIRE_MARKING_THICKNESS;
-                        hup_ext = resources::getWireMarking(resources::LINE_TYPE::HORIZONTAL, _hwire1->width() + ext_size);
-                        hdown_ext = resources::getWireMarking(resources::LINE_TYPE::HORIZONTAL, _hwire1->width() + ext_size, false);
-                    }
-
-                    _hwire1_up->setPixmap(dir ? hup_ext : hup);
-                    _hwire1_up->resize(_hwire1->width() + (dir ? ext_size : 0), resources::WIRE_MARKING_THICKNESS);
-                    _hwire1_up->move(_hwire1->x(), _hwire1->y() - resources::WIRE_MARKING_THICKNESS);
-                    _hwire1_down->setPixmap(!dir ? hdown_ext : hdown);
-                    _hwire1_down->resize(_hwire1->width() + (!dir ? ext_size : 0), resources::WIRE_MARKING_THICKNESS);
-                    _hwire1_down->move(_hwire1->x(), _hwire1->y() + resources::WIRE_THICKNESS);
-                    _vwire_left->setPixmap(resources::getWireMarking(resources::LINE_TYPE::VERTICAL, _vwire->height()));
-                    _vwire_left->resize(resources::WIRE_MARKING_THICKNESS, _vwire->height());
-                    _vwire_left->move(_vwire->x() - resources::WIRE_MARKING_THICKNESS, _vwire->y());
-                    _vwire_right->setPixmap(resources::getWireMarking(resources::LINE_TYPE::VERTICAL, _vwire->height(), false));
-                    _vwire_right->resize(resources::WIRE_MARKING_THICKNESS, _vwire->height());
-                    _vwire_right->move(_vwire->x() + resources::WIRE_THICKNESS, _vwire->y());
-                    _hwire2_up->setPixmap(!dir ? hup_ext : hup);
-                    _hwire2_up->resize(_hwire2->width() + (!dir ? ext_size : 0), resources::WIRE_MARKING_THICKNESS);
-                    _hwire2_up->move(_hwire2->x() - (!dir ? move_size : 0), _hwire2->y() - resources::WIRE_MARKING_THICKNESS);
-                    _hwire2_down->setPixmap(dir ? hdown_ext : hdown);
-                    _hwire2_down->resize(_hwire2->width() + (dir ? ext_size : 0), resources::WIRE_MARKING_THICKNESS);
-                    _hwire2_down->move(_hwire2->x() - (dir ? move_size : 0), _hwire2->y() + resources::WIRE_THICKNESS);
-
-                    _updated_markings = true;
-                }
+                _updateWireMarkings();
                 break;
             default:
                 _updated_markings = false;
@@ -507,6 +468,63 @@ namespace logicsim
             }
         }
 
+        void Wire::_updateWireMarkings()
+        {
+            if (!_updated_markings)
+            {
+                double scale = std::min(1.5*_scale, 2.5);
+                QPixmap hup = resources::getWireMarking(resources::LINE_TYPE::HORIZONTAL, _hwire1->width(), scale);
+                QPixmap hdown = resources::getWireMarking(resources::LINE_TYPE::HORIZONTAL, _hwire1->width(), scale, false);
+                QPixmap hleft = resources::getWireMarking(resources::LINE_TYPE::VERTICAL, _vwire->height(), scale);
+                QPixmap hright = resources::getWireMarking(resources::LINE_TYPE::VERTICAL, _vwire->height(), scale, false);
+                QPixmap hup_ext = hup, hdown_ext = hdown;
+                int ext_size = 0;
+                int move_size = 0;
+
+                bool dir = _hwire1->y() < _hwire2->y();
+                bool eq = _hwire1->y() == _hwire2->y();
+
+                if (!eq)
+                {
+                    ext_size = _hwire1->height() + static_cast<int>(scale * resources::WIRE_MARKING_THICKNESS);
+                    hup_ext = resources::getWireMarking(resources::LINE_TYPE::HORIZONTAL, _hwire1->width() + ext_size, scale);
+                    hdown_ext = resources::getWireMarking(resources::LINE_TYPE::HORIZONTAL, _hwire1->width() + ext_size, scale, false);
+                    move_size = hup_ext.height();
+
+                }
+
+                QPixmap &h1up = dir ? hup_ext : hup;
+                _hwire1_up->setPixmap(h1up);
+                _hwire1_up->resize(h1up.width(), h1up.height());
+                _hwire1_up->move(_hwire1->x(), _hwire1->y() - h1up.height());
+
+                QPixmap &h1down = !dir ? hdown_ext : hdown;
+                _hwire1_down->setPixmap(h1down);
+                _hwire1_down->resize(h1down.width(), h1down.height());
+                _hwire1_down->move(_hwire1->x(), _hwire1->y() + _hwire1->height());
+
+                _vwire_left->setPixmap(hleft);
+                _vwire_left->resize(hleft.width(), hleft.height());
+                _vwire_left->move(_vwire->x() - hleft.width(), _vwire->y());
+
+                _vwire_right->setPixmap(hright);
+                _vwire_right->resize(hright.width(), hright.height());
+                _vwire_right->move(_vwire->x() + _vwire->width(), _vwire->y());
+
+                QPixmap &h2up = !dir ? hup_ext : hup;
+                _hwire2_up->setPixmap(h2up);
+                _hwire2_up->resize(h2up.width(), h2up.height());
+                _hwire2_up->move(_hwire2->x() - (!dir ? move_size : 0), _hwire2->y() - h2up.height());
+
+                QPixmap &h2down = dir ? hdown_ext : hdown;
+                _hwire2_down->setPixmap(h2down);
+                _hwire2_down->resize(h2down.width(), h2down.height());
+                _hwire2_down->move(_hwire2->x() - (dir ? move_size : 0), _hwire2->y() + _hwire2->height());
+
+                _updated_markings = true;
+            }
+        }
+
         void Wire::uncolor()
         {
             _hwire1->show();
@@ -522,6 +540,14 @@ namespace logicsim
         {
             _scale = SCALE_SCALING_FACTOR * size_scale;
             reposition();
+            _updated_markings = false;
+            _updateWireMarkings();
+        }
+
+        void Wire::updateColorWire()
+        {
+            _wire_on = false;
+            evaluate();
         }
     }
 }

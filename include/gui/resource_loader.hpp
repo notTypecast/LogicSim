@@ -137,6 +137,19 @@ namespace logicsim
             inline QPixmap *hwire_up, *hwire_down, *vwire_left, *vwire_right;
             inline QPixmap *hwire_on, *vwire_on;
 
+            inline QIcon *select_icon;
+            inline QIcon *move_icon;
+            inline QIcon *wire_icon;
+            inline QIcon *wire_remove_icon;
+
+            inline std::unordered_map<COMPONENT, std::vector<QIcon *>> comp_icons;
+
+            inline QIcon *start_sim_icon;
+            inline QIcon *stop_sim_icon;
+            inline QIcon *pause_sim_icon;
+            inline QIcon *step_sim_icon;
+            inline QIcon *reset_sim_icon;
+
             inline const std::unordered_map<size_t, size_t> _7seg_5in_res_map =
             {
                 {119, 1},
@@ -226,7 +239,7 @@ namespace logicsim
             QPixmap getBorder(int width, int height);
             QPixmap getLine(LINE_TYPE line_type, int size);
             QPixmap getWire(LINE_TYPE line_type, int size, double scale, bool on = false);
-            QPixmap getWireMarking(LINE_TYPE line_type, int size, bool dir_ul = true);
+            QPixmap getWireMarking(LINE_TYPE line_type, int size, double scale, bool dir_ul = true);
             void load();
             void deallocate();
         }

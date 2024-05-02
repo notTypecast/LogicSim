@@ -77,11 +77,7 @@ namespace logicsim
                 }
             }
 
-            if (_border != nullptr)
-            {
-                delete _border;
-                _border = nullptr;
-            }
+            _border->hide();
         }
 
         void ComponentLabel::bringBackToCircuit()

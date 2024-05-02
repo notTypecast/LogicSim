@@ -1,6 +1,6 @@
 #include "gui/resource_loader.hpp"
 #include "gui/component_label.hpp"
-
+#include <iostream>
 namespace logicsim
 {
     namespace gui
@@ -71,7 +71,7 @@ namespace logicsim
                 }
             }
 
-            QPixmap getWireMarking(LINE_TYPE line_type, int size, bool dir_ul)
+            QPixmap getWireMarking(LINE_TYPE line_type, int size, double scale, bool dir_ul)
             {
                 switch (line_type)
                 {
@@ -79,12 +79,12 @@ namespace logicsim
                 default:
                 {
                     QPixmap *pixmap = dir_ul ? hwire_up : hwire_down;
-                    return pixmap->scaled(size, WIRE_MARKING_THICKNESS, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+                    return pixmap->scaled(size, static_cast<int>(scale * WIRE_MARKING_THICKNESS), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
                 }
                 case VERTICAL:
                 {
                     QPixmap *pixmap = dir_ul ? vwire_left : vwire_right;
-                    return pixmap->scaled(WIRE_MARKING_THICKNESS, size, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+                    return pixmap->scaled(static_cast<int>(scale * WIRE_MARKING_THICKNESS), size, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
                 }
                 }
             }
@@ -152,6 +152,44 @@ namespace logicsim
                 vwire_right = new QPixmap(IMG_PATH + "vwire_mark_right.png");
                 hwire_on = new QPixmap(IMG_PATH + "hwire_on.png");
                 vwire_on = new QPixmap(IMG_PATH + "vwire_on.png");
+
+                select_icon = new QIcon(IMG_PATH + "select_icon.png");
+                move_icon = new QIcon(IMG_PATH + "move_icon.png");
+                wire_icon = new QIcon(IMG_PATH + "wire_icon.png");
+                wire_remove_icon = new QIcon(IMG_PATH + "wire_remove_icon.png");
+
+                comp_icons =
+                {
+                    {COMPONENT::BUFFER, {new QIcon(IMG_PATH + "BUFFER.png")}},
+                    {COMPONENT::NOT_GATE, {new QIcon(IMG_PATH + "NOT.png")}},
+                    {COMPONENT::AND_GATE, {new QIcon(IMG_PATH + "AND.png")}},
+                    {COMPONENT::OR_GATE, {new QIcon(IMG_PATH + "OR.png")}},
+                    {COMPONENT::XOR_GATE, {new QIcon(IMG_PATH + "XOR.png")}},
+                    {COMPONENT::NAND_GATE, {new QIcon(IMG_PATH + "NAND.png")}},
+                    {COMPONENT::NOR_GATE, {new QIcon(IMG_PATH + "NOR.png")}},
+                    {COMPONENT::XNOR_GATE, {new QIcon(IMG_PATH + "XNOR.png")}},
+                    {COMPONENT::CONSTANT, {new QIcon(IMG_PATH + "CONSTANT0.png"), new QIcon(IMG_PATH + "CONSTANT1.png")}},
+                    {COMPONENT::SWITCH, {new QIcon(IMG_PATH + "SWITCH0.png")}},
+                    {COMPONENT::OSCILLATOR, {new QIcon(IMG_PATH + "OSCILLATOR.png")}},
+                    {COMPONENT::KEYPAD, {new QIcon(IMG_PATH + "KEYPAD.png")}},
+                    {COMPONENT::LED, {new QIcon(IMG_PATH + "LED0.png")}},
+                    {COMPONENT::_7SEG_5IN, {new QIcon(IMG_PATH + "7SEG5IN.png")}},
+                    {COMPONENT::_7SEG_8IN, {new QIcon(IMG_PATH + "7SEG8IN.png")}},
+                    {COMPONENT::SRLATCH, {new QIcon(IMG_PATH + "SRLATCH.png")}},
+                    {COMPONENT::JKLATCH, {new QIcon(IMG_PATH + "JKLATCH.png")}},
+                    {COMPONENT::TLATCH, {new QIcon(IMG_PATH + "TLATCH.png")}},
+                    {COMPONENT::DLATCH, {new QIcon(IMG_PATH + "DLATCH.png")}},
+                    {COMPONENT::SRFLIPFLOP, {new QIcon(IMG_PATH + "SRFF.png")}},
+                    {COMPONENT::JKFLIPFLOP, {new QIcon(IMG_PATH + "JKFF.png")}},
+                    {COMPONENT::TFLIPFLOP, {new QIcon(IMG_PATH + "TFF.png")}},
+                    {COMPONENT::DFLIPFLOP, {new QIcon(IMG_PATH + "DFF.png")}},
+                };
+
+                start_sim_icon = new QIcon(IMG_PATH + "start_sim_icon.png");
+                stop_sim_icon = new QIcon(IMG_PATH + "stop_sim_icon.png");
+                pause_sim_icon = new QIcon(IMG_PATH + "pause_sim_icon.png");
+                step_sim_icon = new QIcon(IMG_PATH + "step_sim_icon.png");
+                reset_sim_icon = new QIcon(IMG_PATH + "reset_sim_icon.png");
             }
 
             void deallocate()
@@ -167,6 +205,20 @@ namespace logicsim
                 delete vwire_right;
                 delete hwire_on;
                 delete vwire_on;
+                delete select_icon;
+                delete move_icon;
+                delete wire_icon;
+                delete wire_remove_icon;
+
+                for (const auto &p : comp_icons)
+                {
+                    for (const auto &icon : p.second)
+                    {
+                        delete icon;
+                    }
+                }
+
+                delete start_sim_icon;
             }
         }
     }

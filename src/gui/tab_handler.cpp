@@ -15,6 +15,10 @@ namespace logicsim
         {
             _status_bar = status_bar;
             addDesignArea();
+            if (QCoreApplication::arguments().size() > 1)
+            {
+                currentDesignArea()->readFromFile(QCoreApplication::arguments().at(1));
+            }
         }
 
         DesignArea *TabHandler::_designArea(int idx) const
@@ -63,6 +67,7 @@ namespace logicsim
             {
                 // TODO: improve visually
                 QMessageBox save_dialog;
+                save_dialog.setWindowTitle("Save Changes");
                 save_dialog.setText("Circuit modified");
 
                 QString info_str = "Save changes";
@@ -81,14 +86,24 @@ namespace logicsim
                 save_dialog.setStandardButtons(QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
 
                 save_dialog.setWindowFlags(Qt::Window);
-                QPoint window_pos = mapToGlobal(pos());
+                QPoint window_pos = parentWidget()->parentWidget()->pos();
+                QSize window_size = parentWidget()->parentWidget()->size();
+
                 QSize dialog_size = save_dialog.sizeHint();
-                save_dialog.move(window_pos.x() + width()/2 - dialog_size.width()/2, window_pos.y() + height()/2 - dialog_size.height()/2);
+                save_dialog.move(window_pos.x() + window_size.width()/2 - dialog_size.width()/2, window_pos.y() + window_size.height()/2 - dialog_size.height()/2);
 
                 switch (save_dialog.exec())
                 {
                 case QMessageBox::Save:
-                    design_area->writeToFile();
+                    try
+                    {
+                        design_area->writeToFile();
+                    }
+                    catch (const std::invalid_argument &)
+                    {
+                        return false;
+                    }
+
                     break;
                 case QMessageBox::Discard:
                     break;

@@ -133,23 +133,40 @@ namespace logicsim
         }
 
         // MoveComponentsCommand
-        MoveComponentsCommand::MoveComponentsCommand(DesignArea *design_area, std::vector<ComponentLabel *> &moved_components, std::vector<QPoint> init_positions, std::vector<QPoint> final_positions) : _design_area(design_area), _moved_components(moved_components), _init_positions(init_positions), _final_positions(final_positions)
+        MoveComponentsCommand::MoveComponentsCommand(DesignArea *design_area, std::vector<ComponentLabel *> &moved_components, std::vector<QPoint> init_positions, std::vector<QPoint> final_positions) : _design_area(design_area), _moved_components(moved_components), _init_positions(std::vector<QPoint>(init_positions.size())), _final_positions(std::vector<QPoint>(final_positions.size()))
         {
+            // transform to native coordinates
+            double inv_scale_factor = std::pow(design_area->INV_BASE_SCALE_FACTOR, design_area->_zoom_level - design_area->BASE_ZOOM_LEVEL);
+            for (size_t i = 0; i < moved_components.size(); ++i)
+            {
+                // TODO: possibly keep position as double
+                _init_positions[i].setX(std::round(inv_scale_factor * init_positions[i].x() + design_area->_inverse_transformation_translation_x));
+                _init_positions[i].setY(std::round(inv_scale_factor * init_positions[i].y() + design_area->_inverse_transformation_translation_y));
+
+                _final_positions[i].setX(std::round(inv_scale_factor * final_positions[i].x() + design_area->_inverse_transformation_translation_x));
+                _final_positions[i].setY(std::round(inv_scale_factor * final_positions[i].y() + design_area->_inverse_transformation_translation_y));
+            }
         }
 
         void MoveComponentsCommand::redo()
         {
+            double scale_factor = std::pow(_design_area->BASE_SCALE_FACTOR, _design_area->_zoom_level - _design_area->BASE_ZOOM_LEVEL);
             for (size_t i = 0; i < _moved_components.size(); ++i)
             {
-                _moved_components[i]->move(_final_positions[i].x(), _final_positions[i].y());
+                int transformed_x = std::round(scale_factor * _final_positions[i].x() + _design_area->_transformation_translation_x);
+                int transformed_y = std::round(scale_factor * _final_positions[i].y() + _design_area->_transformation_translation_y);
+                _moved_components[i]->move(transformed_x, transformed_y);
             }
         }
 
         void MoveComponentsCommand::undo()
         {
+            double scale_factor = std::pow(_design_area->BASE_SCALE_FACTOR, _design_area->_zoom_level - _design_area->BASE_ZOOM_LEVEL);
             for (size_t i = 0; i < _moved_components.size(); ++i)
             {
-                _moved_components[i]->move(_init_positions[i].x(), _init_positions[i].y());
+                int transformed_x = std::round(scale_factor * _init_positions[i].x() + _design_area->_transformation_translation_x);
+                int transformed_y = std::round(scale_factor * _init_positions[i].y() + _design_area->_transformation_translation_y);
+                _moved_components[i]->move(transformed_x, transformed_y);
             }
         }
 

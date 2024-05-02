@@ -140,9 +140,11 @@ namespace logicsim
             case MOVE:
             case SIMULATE:
             {
-                double inv_scale_factor = std::pow(INV_SCALE_FACTOR, _zoom_level - BASE_ZOOM_LEVEL);
+                double inv_scale_factor = std::pow(INV_BASE_SCALE_FACTOR, _zoom_level - BASE_ZOOM_LEVEL);
                 int dx = ev->x() - _init_move_x;
                 int dy = ev->y() - _init_move_y;
+                _transformation_translation_x += dx;
+                _transformation_translation_y += dy;
                 _inverse_transformation_translation_x -= inv_scale_factor*dx;
                 _inverse_transformation_translation_y -= inv_scale_factor*dy;
                 emit transformPosition(dx, dy);
@@ -313,10 +315,6 @@ namespace logicsim
         {
             _circuit_model.remove_component(*(label->component_model()));
 
-            // don't disconnect, so component stays up to date on mode
-            // QObject::disconnect(this, SIGNAL (modeChanged(TOOL)), label, SLOT (changeMode(TOOL)));
-            // QObject::disconnect(this, SIGNAL (resetResource()), label, SLOT (resetResource()));
-
             QObject::disconnect(label, SIGNAL (selected(ComponentLabel *, bool)), this, SLOT (addSelected(ComponentLabel *, bool)));
             QObject::disconnect(label, SIGNAL (moved(int, int)), this, SLOT (moveSelectedComponents(int, int)));
             QObject::disconnect(label, SIGNAL (moveFinished()), this, SLOT (finishMove()));
@@ -328,7 +326,7 @@ namespace logicsim
             QObject::disconnect(label, SIGNAL (wireSnapFound(ComponentLabel *, int, int)), this, SLOT (getWireSnapPos(ComponentLabel *, int, int)));
             QObject::disconnect(label, SIGNAL (wireReleased()), this, SLOT (setWireDest()));
             QObject::disconnect(this, SIGNAL (evaluate()), label, SLOT (evaluate()));
-            QObject::disconnect(this, SIGNAL (writeComponent(std::ofstream &)), label, SLOT (writeComponent(std::ofstream &)));
+            QObject::disconnect(this, SIGNAL (writeComponent(std::ofstream &, double, double, double)), label, SLOT (writeComponent(std::ofstream &, double, double, double)));
             QObject::disconnect(label, SIGNAL (performPropertyUndoAction()), this, SLOT (propertyUndoActionPerformed()));
         }
 
@@ -343,6 +341,7 @@ namespace logicsim
             QObject::connect(wire, SIGNAL (proximityConfirmed(Wire *, int)), this, SLOT (getProximityWireDistance(Wire *, int)));
             QObject::connect(this, SIGNAL (evaluateWire()), wire, SLOT (evaluate()));
             QObject::connect(this, SIGNAL (disableColorWires()), wire, SLOT (uncolor()));
+            QObject::connect(this, SIGNAL (resetResource()), wire, SLOT (updateColorWire()));
         }
 
         void DesignArea::_disconnect_wire(Wire *wire)
@@ -350,6 +349,8 @@ namespace logicsim
             QObject::disconnect(this, SIGNAL (wireProximityCheck(int, int)), wire, SLOT (checkProximity(int, int)));
             QObject::disconnect(wire, SIGNAL (proximityConfirmed(Wire *, int)), this, SLOT (getProximityWireDistance(Wire *, int)));
             QObject::disconnect(this, SIGNAL (evaluateWire()), wire, SLOT (evaluate()));
+            QObject::disconnect(this, SIGNAL (disableColorWires()), wire, SLOT (uncolor()));
+            QObject::disconnect(this, SIGNAL (resetResource()), wire, SLOT (updateColorWire()));
         }
 
         void DesignArea::addSelected(ComponentLabel *component, bool ctrl)
@@ -658,7 +659,7 @@ namespace logicsim
 
             file << std::to_string(_freq) << "\n";
 
-            emit writeComponent(file, std::pow(INV_SCALE_FACTOR, _zoom_level - BASE_ZOOM_LEVEL), _inverse_transformation_translation_x, _inverse_transformation_translation_y);
+            emit writeComponent(file, std::pow(INV_BASE_SCALE_FACTOR, _zoom_level - BASE_ZOOM_LEVEL), _inverse_transformation_translation_x, _inverse_transformation_translation_y);
 
             file.close();
 
@@ -730,7 +731,7 @@ namespace logicsim
                 }
 
                 ComponentLabel *component = new ComponentLabel(resources::ctype_to_component_t.at(ctype), res_idx, getScale(), _undo_stack, this);
-                _connect_component(component);
+                _connect_component(component, true);
                 components[id_str] = component;
 
                 component->setParams(QString::fromStdString(params));
@@ -1001,11 +1002,14 @@ namespace logicsim
 
         void DesignArea::_zoom(int origin_x, int origin_y, int new_zoom_level)
         {
-            double size_scale_factor = std::pow(SCALE_FACTOR, new_zoom_level - BASE_ZOOM_LEVEL);
-            double scale_factor = std::pow(SCALE_FACTOR, new_zoom_level - _zoom_level);
-            double prev_inv_scale_factor = std::pow(INV_SCALE_FACTOR, _zoom_level - BASE_ZOOM_LEVEL);
+            double size_scale_factor = std::pow(BASE_SCALE_FACTOR, new_zoom_level - BASE_ZOOM_LEVEL);
+            double scale_factor = std::pow(BASE_SCALE_FACTOR, new_zoom_level - _zoom_level);
+            double prev_inv_scale_factor = std::pow(INV_BASE_SCALE_FACTOR, _zoom_level - BASE_ZOOM_LEVEL);
 
             QPoint origin_point = QPoint(origin_x, origin_y);
+
+            _transformation_translation_x = scale_factor * _transformation_translation_x  - scale_factor*origin_x + origin_x;
+            _transformation_translation_y = scale_factor * _transformation_translation_y - scale_factor*origin_y + origin_y;
 
             _inverse_transformation_translation_x += prev_inv_scale_factor * (origin_x - origin_x/scale_factor);
             _inverse_transformation_translation_y += prev_inv_scale_factor * (origin_y - origin_y/scale_factor);
@@ -1017,7 +1021,7 @@ namespace logicsim
 
         double DesignArea::getScale()
         {
-            return std::pow(SCALE_FACTOR, _zoom_level - BASE_ZOOM_LEVEL);
+            return std::pow(BASE_SCALE_FACTOR, _zoom_level - BASE_ZOOM_LEVEL);
         }
     }
 }
