@@ -6,6 +6,7 @@
 #include <QActionGroup>
 #include <QString>
 #include <QButtonGroup>
+#include <QSettings>
 
 #include "gui/properties.hpp"
 #include "gui/resource_loader.hpp"
@@ -14,7 +15,6 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
-// TODO: keep design
 namespace logicsim
 {
     namespace gui
@@ -45,6 +45,8 @@ namespace logicsim
             QPushButton *_select_button, *_move_button, *_wire_button, *_wire_remove_button;
             std::vector<QPushButton *> _insert_buttons;
             QPushButton *_start_sim_button, *_stop_sim_button, *_pause_sim_button, *_step_sim_button, *_reset_sim_button;
+
+            QSettings *_settings;
 
         protected slots:
             void addDesignArea();

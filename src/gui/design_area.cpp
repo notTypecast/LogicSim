@@ -557,8 +557,15 @@ namespace logicsim
                 }
                 catch (const model::component::null_input &)
                 {
-                    // invalid circuit popup
-                    std::cout << "Invalid circuit" << std::endl;
+                    QMessageBox message_box;
+                    message_box.critical(0, "Error", "Invalid circuit");
+
+                    message_box.setWindowFlags(Qt::Window);
+                    QPoint window_pos = parentWidget()->parentWidget()->parentWidget()->pos();
+                    QSize window_size = parentWidget()->parentWidget()->parentWidget()->size();
+
+                    QSize dialog_size = message_box.sizeHint();
+                    message_box.move(window_pos.x() + window_size.width()/2 - dialog_size.width()/2, window_pos.y() + window_size.height()/2 - dialog_size.height()/2);
                     return false;
                 }
                 if (_timer == nullptr)
@@ -669,8 +676,7 @@ namespace logicsim
         void DesignArea::readFromFile(QString filepath)
         {
             // TODO: defensive programming for changing file values
-            _filepath = filepath;
-            std::ifstream file(_filepath.toStdString());
+            std::ifstream file(filepath.toStdString());
 
             if (file.fail())
             {
@@ -869,6 +875,7 @@ namespace logicsim
             }
 
             setMode(_selected_tool);
+            _filepath = filepath;
         }
 
         void DesignArea::_delete_components(std::unordered_map<std::string, ComponentLabel *> components)
@@ -1022,6 +1029,11 @@ namespace logicsim
         double DesignArea::getScale()
         {
             return std::pow(BASE_SCALE_FACTOR, _zoom_level - BASE_ZOOM_LEVEL);
+        }
+
+        void DesignArea::clearUndoStack()
+        {
+            _undo_stack->clear();
         }
     }
 }

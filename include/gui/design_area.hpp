@@ -9,6 +9,7 @@
 #include <QFileDialog>
 #include <QUndoStack>
 #include <QCursor>
+#include <QMessageBox>
 
 #include <vector>
 #include <unordered_set>
@@ -97,6 +98,8 @@ namespace logicsim
             void zoomOut(int origin_x, int origin_y);
             void resetZoom();
             double getScale();
+
+            void clearUndoStack();
 
         protected:
             // removes all components from selected

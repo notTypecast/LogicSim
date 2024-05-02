@@ -12,6 +12,8 @@ namespace logicsim
 
             _ui->setupUi(this);
 
+            _settings = new QSettings("notTypecast", "LogicSim");
+
             _insert_actions =
             {
                 {_ui->actionBuffer, COMPONENT::BUFFER, -1},
@@ -96,8 +98,20 @@ namespace logicsim
 
             // View menu
             QObject::connect(_ui->actionToolbar, SIGNAL (triggered()), this, SLOT (toggleToolbar()));
+            if (!_settings->value("toolbar", true).toBool())
+            {
+                _ui->actionToolbar->trigger();
+            }
 
-            QObject::connect(_ui->actionWire_Color, SIGNAL (triggered()), _ui->tabHandler, SLOT (toggleWireColor()));
+            QObject::connect(_ui->actionWire_Color, &QAction::triggered, [this]()
+            {
+                _settings->setValue("wire-color", _ui->actionWire_Color->isChecked());
+                _ui->tabHandler->toggleWireColor();
+            });
+            if (_settings->value("wire-color", false).toBool())
+            {
+                _ui->actionWire_Color->trigger();
+            }
 
             QObject::connect(_ui->actionZoom_In, SIGNAL (triggered()), _ui->tabHandler, SLOT (zoomIn()));
 
@@ -176,8 +190,10 @@ namespace logicsim
 
         MainWindow::~MainWindow()
         {
+            delete _settings;
             resources::deallocate();
             delete _ui;
+
         }
 
         void MainWindow::setLastDesignTool(TOOL tool, COMPONENT comp_type)
@@ -547,6 +563,7 @@ namespace logicsim
             {
                 _toolbar->hide();
             }
+            _settings->setValue("toolbar", !_toolbar->isHidden());
         }
     }
 }

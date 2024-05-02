@@ -68,7 +68,7 @@ namespace logicsim
                 // TODO: improve visually
                 QMessageBox save_dialog;
                 save_dialog.setWindowTitle("Save Changes");
-                save_dialog.setText("Circuit modified");
+                save_dialog.setText("Circuit modified.");
 
                 QString info_str = "Save changes";
                 QString filepath = design_area->filepath();
@@ -207,8 +207,15 @@ namespace logicsim
             }
             catch (std::invalid_argument)
             {
-                // TODO: show fail message
-                std::cout << "Failed to open" << std::endl;
+                QMessageBox message_box;
+                message_box.critical(0, "Error", "File could not be opened; it might be corrupted.");
+
+                message_box.setWindowFlags(Qt::Window);
+                QPoint window_pos = parentWidget()->parentWidget()->pos();
+                QSize window_size = parentWidget()->parentWidget()->size();
+
+                QSize dialog_size = message_box.sizeHint();
+                message_box.move(window_pos.x() + window_size.width()/2 - dialog_size.width()/2, window_pos.y() + window_size.height()/2 - dialog_size.height()/2);
                 if (add)
                 {
                     removeDesignArea();
@@ -216,6 +223,10 @@ namespace logicsim
                 return;
             }
             _setupTab(design_area);
+            if (!add)
+            {
+                design_area->clearUndoStack();
+            }
         }
 
         void TabHandler::saveFile()
@@ -242,8 +253,15 @@ namespace logicsim
 
             if (!success)
             {
-                // TODO show fail message
-                std::cout << "Failed to save" << std::endl;
+                QMessageBox message_box;
+                message_box.critical(0, "Error", "File could not be saved.");
+
+                message_box.setWindowFlags(Qt::Window);
+                QPoint window_pos = parentWidget()->parentWidget()->pos();
+                QSize window_size = parentWidget()->parentWidget()->size();
+
+                QSize dialog_size = message_box.sizeHint();
+                message_box.move(window_pos.x() + window_size.width()/2 - dialog_size.width()/2, window_pos.y() + window_size.height()/2 - dialog_size.height()/2);
                 return;
             }
 
