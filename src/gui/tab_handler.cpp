@@ -1,5 +1,5 @@
 #include "gui/tab_handler.hpp"
-#include <iostream>
+
 namespace logicsim
 {
     namespace gui

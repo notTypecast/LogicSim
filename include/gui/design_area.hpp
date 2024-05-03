@@ -10,6 +10,7 @@
 #include <QUndoStack>
 #include <QCursor>
 #include <QMessageBox>
+#include <QSettings>
 
 #include <vector>
 #include <unordered_set>

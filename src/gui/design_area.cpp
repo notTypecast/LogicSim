@@ -1,7 +1,7 @@
 #include "gui/design_area.hpp"
 #include "gui/undo_commands.hpp"
 #include "gui/clipboard.hpp"
-#include <iostream>
+
 namespace logicsim
 {
     namespace gui
@@ -10,6 +10,8 @@ namespace logicsim
         {
             _undo_stack = new QUndoStack(this);
             _clipboard = new Clipboard(this);
+            QSettings settings("notTypecast", "LogicSim");
+            _color_wires = settings.value("wire-color").toBool();
         }
 
         DesignArea::~DesignArea()

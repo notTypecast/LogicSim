@@ -125,7 +125,11 @@ namespace logicsim
                 COMPONENT::OSCILLATOR
             };
 
+#ifdef QT_DEBUG
             inline const QString IMG_PATH = "../LogicSim/res/";
+#else
+            inline const QString IMG_PATH = "res/";
+#endif
 
             // images for each component
             // initialized when load is called, because QPixmap cannot be created here

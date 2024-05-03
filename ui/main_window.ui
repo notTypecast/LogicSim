@@ -587,12 +587,19 @@
     <addaction name="actionZoom_Out"/>
     <addaction name="actionReset_Zoom"/>
    </widget>
+   <widget class="QMenu" name="menuInfo">
+    <property name="title">
+     <string>Info</string>
+    </property>
+    <addaction name="actionVersion"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuTools"/>
    <addaction name="menuComponents"/>
    <addaction name="menuSimulation"/>
    <addaction name="menuView"/>
+   <addaction name="menuInfo"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionNew">
@@ -976,6 +983,11 @@
    </property>
    <property name="text">
     <string>Toolbar</string>
+   </property>
+  </action>
+  <action name="actionVersion">
+   <property name="text">
+    <string>Version</string>
    </property>
   </action>
  </widget>

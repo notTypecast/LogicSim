@@ -1,6 +1,6 @@
 #include "gui/wire.hpp"
 #include "gui/component_label.hpp"
-#include <iostream>
+
 namespace logicsim
 {
     namespace gui

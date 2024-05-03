@@ -1,6 +1,8 @@
 #ifndef LOGICSIM_GUI_MAIN_WINDOW_HPP
 #define LOGICSIM_GUI_MAIN_WINDOW_HPP
 
+#define LOGICSIM_VERSION "1.0.0"
+
 #include <QApplication>
 #include <QMainWindow>
 #include <QActionGroup>
@@ -68,6 +70,8 @@ namespace logicsim
             void quit();
 
             void toggleToolbar();
+
+            void showVersionPopup();
         };
 
     }

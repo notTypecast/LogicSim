@@ -1,6 +1,5 @@
 #include "gui/main_window.hpp"
 #include "ui_main_window.h"
-#include <iostream>
 
 namespace logicsim
 {
@@ -118,6 +117,9 @@ namespace logicsim
             QObject::connect(_ui->actionZoom_Out, SIGNAL (triggered()), _ui->tabHandler, SLOT (zoomOut()));
 
             QObject::connect(_ui->actionReset_Zoom, SIGNAL (triggered()), _ui->tabHandler, SLOT (resetZoom()));
+
+            // Info menu
+            QObject::connect(_ui->actionVersion, SIGNAL (triggered()), this, SLOT (showVersionPopup()));
 
             // Tools & Insert menu
             // group tools for exclusive seleciton
@@ -564,6 +566,18 @@ namespace logicsim
                 _toolbar->hide();
             }
             _settings->setValue("toolbar", !_toolbar->isHidden());
+        }
+
+        void MainWindow::showVersionPopup()
+        {
+            QMessageBox version_popup;
+            version_popup.setWindowTitle("Version Info");
+            version_popup.setText(QString("Version: ") + LOGICSIM_VERSION);
+
+            QSize dialog_size = version_popup.sizeHint();
+            version_popup.move(x() + width()/2 - dialog_size.width()/2, y() + height()/2 - dialog_size.height()/2);
+
+            version_popup.exec();
         }
     }
 }

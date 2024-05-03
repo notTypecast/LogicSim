@@ -1,6 +1,6 @@
 #include "gui/component_label.hpp"
 #include "gui/undo_commands.hpp"
-#include <iostream>
+
 namespace logicsim
 {
     namespace gui
