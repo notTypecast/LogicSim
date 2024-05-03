@@ -62,6 +62,22 @@ namespace logicsim
                 _design_area->_disconnect_component(component);
                 component->hide();
                 component->removeFromCircuit();
+
+                for (const auto &wire : component->inputWires())
+                {
+                    if (wire != nullptr)
+                    {
+                        _design_area->_disconnect_wire(wire);
+                    }
+                }
+
+                for (const auto &output : component->outputWires())
+                {
+                    for (const auto &wire : output)
+                    {
+                        _design_area->_disconnect_wire(wire);
+                    }
+                }
             }
         }
 
@@ -72,6 +88,22 @@ namespace logicsim
                 _design_area->_connect_component(component);
                 component->show();
                 component->bringBackToCircuit();
+
+                for (const auto &wire: component->inputWires())
+                {
+                    if (wire != nullptr)
+                    {
+                        _design_area->_connect_wire(wire);
+                    }
+                }
+
+                for (const auto &output : component->outputWires())
+                {
+                    for (const auto &wire : output)
+                    {
+                        _design_area->_connect_wire(wire);
+                    }
+                }
             }
         }
 

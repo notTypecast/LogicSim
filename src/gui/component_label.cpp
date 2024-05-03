@@ -300,7 +300,7 @@ namespace logicsim
                     }
                     unsigned int key = 4*row + col;
                     dynamic_cast<model::input::Keypad *>(_component_model)->set_key(key);
-                    setPixmap(resources::comp_images.at(_comp_type)[key + 1]);
+                    setResourceByIdx(key + 1);
                     break;
                 }
                 default:
@@ -335,7 +335,7 @@ namespace logicsim
                 switch (_comp_type)
                 {
                 case KEYPAD:
-                    setPixmap(resources::comp_images.at(_comp_type)[0]);
+                    setResourceByIdx(0);
                     break;
                 default:
                     break;
@@ -537,7 +537,7 @@ namespace logicsim
                     break;
                 }
             }
-            catch (model::component::null_input)
+            catch (const model::component::null_input &)
             {
                 return;
             }

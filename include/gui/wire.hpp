@@ -117,6 +117,8 @@ namespace logicsim
             double _scale;
             const double SCALE_SCALING_FACTOR = 1.2;
 
+            bool _hidden = false;
+
         public slots:
             void checkProximity(int x, int y);
             void changeMode(TOOL tool);

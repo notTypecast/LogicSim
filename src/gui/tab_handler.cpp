@@ -205,7 +205,7 @@ namespace logicsim
             try {
                 design_area->readFromFile(filepath);
             }
-            catch (std::invalid_argument)
+            catch (const std::invalid_argument &)
             {
                 QMessageBox message_box;
                 message_box.critical(0, "Error", "File could not be opened; it might be corrupted.");
@@ -247,7 +247,7 @@ namespace logicsim
             try {
                 success = design_area->writeToFile(new_file);
             }
-            catch (std::invalid_argument) {
+            catch (const std::invalid_argument &) {
                 return;
             }
 

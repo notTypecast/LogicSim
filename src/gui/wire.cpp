@@ -157,6 +157,8 @@ namespace logicsim
             _vwire_right->hide();
             _hwire2_up->hide();
             _hwire2_down->hide();
+
+            _hidden = true;
         }
 
         void Wire::show()
@@ -164,6 +166,8 @@ namespace logicsim
             _hwire1->show();
             _vwire->show();
             _hwire2->show();
+
+            _hidden = false;
         }
 
         std::pair<ComponentLabel *, int> Wire::outputComponentInfo() const
@@ -427,6 +431,10 @@ namespace logicsim
 
         void Wire::evaluate()
         {
+            if (_hidden)
+            {
+                return;
+            }
             _createColorWire();
 
             int conn_idx = _conns[0].is_input;
@@ -527,9 +535,12 @@ namespace logicsim
 
         void Wire::uncolor()
         {
-            _hwire1->show();
-            _vwire->show();
-            _hwire2->show();
+            if (!_hidden)
+            {
+                _hwire1->show();
+                _vwire->show();
+                _hwire2->show();
+            }
 
             _hwire1_on->hide();
             _vwire_on->hide();

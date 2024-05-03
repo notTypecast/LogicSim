@@ -1,6 +1,7 @@
 #ifndef LOGICSIM_GUI_RESOURCE_LOADER_HPP
 #define LOGICSIM_GUI_RESOURCE_LOADER_HPP
 
+#include <QApplication>
 #include <QLabel>
 #include <QPixmap>
 
@@ -128,7 +129,7 @@ namespace logicsim
 #ifdef QT_DEBUG
             inline const QString IMG_PATH = "../LogicSim/res/";
 #else
-            inline const QString IMG_PATH = "res/";
+            inline QString IMG_PATH;
 #endif
 
             // images for each component

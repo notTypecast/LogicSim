@@ -91,6 +91,10 @@ namespace logicsim
 
             void load()
             {
+#ifndef QT_DEBUG
+                IMG_PATH = QApplication::applicationDirPath() + "/res/";
+#endif
+
                 comp_images =
                 {
                     {COMPONENT::BUFFER, {QPixmap(IMG_PATH + "BUFFER.png")}},
