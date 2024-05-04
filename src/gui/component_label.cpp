@@ -545,13 +545,16 @@ namespace logicsim
 
         void ComponentLabel::resetResource()
         {
-            setResourceByIdx(_base_resource_idx);
+            if (reset_resource_on_sim_components.find(_comp_type) != reset_resource_on_sim_components.end())
+            {
+                setResourceByIdx(_base_resource_idx);
+            }
         }
 
         void ComponentLabel::writeComponent(std::ofstream &file, double inverse_scale_factor, double inverse_translation_x, double inverse_translation_y)
         {
             QPoint native = getNativeCoordinates(inverse_scale_factor, inverse_translation_x, inverse_translation_y);
-            file << _component_model->id() << ';' << _component_model->ctype() << ';' << _component_model->param_string() << ';' << std::to_string(native.x()) << ',' << std::to_string(native.y()) << ';';
+            file << _component_model->id() << ';' << _component_model->ctype() << ';' << (_current_tool == TOOL::SIMULATE ? _base_params : _component_model->param_string()) << ';' << std::to_string(native.x()) << ',' << std::to_string(native.y()) << ';';
 
             std::vector<std::pair<unsigned int, unsigned int>> input_ids = _component_model->input_ids();
             for (size_t i = 0; i < input_ids.size(); ++i)

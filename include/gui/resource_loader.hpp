@@ -91,6 +91,12 @@ namespace logicsim
 
         inline const int WIRE_REMOVE_DISTANCE_THRESHOLD = 40;
 
+        inline const std::unordered_set<COMPONENT> reset_resource_on_sim_components = {
+            LED,
+            _7SEG_5IN,
+            _7SEG_8IN
+        };
+
         namespace resources
         {
             inline const std::unordered_map<std::string, COMPONENT> ctype_to_component_t = {

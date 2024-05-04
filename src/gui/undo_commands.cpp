@@ -217,10 +217,7 @@ namespace logicsim
         {
             if (_res_idx != -1)
             {
-                _component->_resource_idx = _res_idx;
-                QPixmap &res = resources::comp_images.at(_component->_comp_type)[_res_idx];
-                _component->setPixmap(res);
-                _component->resize(res.width(), res.height());
+                _component->setResourceByIdx(_res_idx);
             }
             _component->_component_model->set_params(_params.toStdString());
         }
@@ -229,10 +226,7 @@ namespace logicsim
         {
             if (_prev_res_idx != -1)
             {
-                _component->_resource_idx = _prev_res_idx;
-                QPixmap &res = resources::comp_images.at(_component->_comp_type)[_prev_res_idx];
-                _component->setPixmap(res);
-                _component->resize(res.width(), res.height());
+                _component->setResourceByIdx(_prev_res_idx);
             }
 
             _component->_component_model->set_params(_prev_params.toStdString());

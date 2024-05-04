@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_GUI_MAIN_WINDOW_HPP
 #define LOGICSIM_GUI_MAIN_WINDOW_HPP
 
-#define LOGICSIM_VERSION "1.0.0"
+#define LOGICSIM_VERSION "1.0.9"
 
 #include <QApplication>
 #include <QMainWindow>
@@ -40,6 +40,7 @@ namespace logicsim
 
             TOOL _last_design_tool = TOOL::SELECT;
             COMPONENT _last_insert_comp = COMPONENT::NONE;
+            int _last_insert_res_idx = -1;
 
             QFrame *_toolbar;
             void _setupToolbar();
@@ -55,8 +56,7 @@ namespace logicsim
 
             void setSimulationMenu(bool running = true);
             void setDesignMenu();
-            // TODO: if component is constant, 1 switches to 0 (same enum type)
-            void setLastDesignTool(TOOL tool, COMPONENT comp_type = COMPONENT::NONE);
+            void setLastDesignTool(TOOL tool, COMPONENT comp_type = COMPONENT::NONE, int res_idx = -1);
 
             void enableContinue();
             void enablePause();

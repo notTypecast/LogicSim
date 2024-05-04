@@ -90,7 +90,7 @@ namespace logicsim
             void performSelectionAction(bool have_select, bool have_clipboard);
 
         signals:
-            void designToolChanged(TOOL tool, COMPONENT comp_type = COMPONENT::NONE);
+            void designToolChanged(TOOL tool, COMPONENT comp_type = COMPONENT::NONE, int res_idx = -1);
             void designTabChosen();
             void simulationTabChosen(bool running_sim);
 

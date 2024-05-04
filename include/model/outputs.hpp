@@ -37,12 +37,12 @@ namespace logicsim
 
                 void set_inputs(component::Component &input1, component::Component &input2, component::Component &input3, component::Component &input4, component::Component &input5, unsigned int input1_out = 0, unsigned int input2_out = 0, unsigned int input3_out = 0, unsigned int input4_out = 0, unsigned int input5_out = 0);
 
-                void clear() override;
+                void tick() override;
 
                 std::string ctype() const override;
 
             protected:
-                bool _input_cache[5], _cached = false;
+                bool _input_cache[5], _ticked = false;
                 bool _evaluate(unsigned int out = 0) override;
             };
 
@@ -54,12 +54,12 @@ namespace logicsim
 
                 void set_inputs(component::Component &input1, component::Component &input2, component::Component &input3, component::Component &input4, component::Component &input5, component::Component &input6, component::Component &input7, component::Component &input8, unsigned int input1_out = 0, unsigned int input2_out = 0, unsigned int input3_out = 0, unsigned int input4_out = 0, unsigned int input5_out = 0, unsigned int input6_out = 0, unsigned int input7_out = 0, unsigned int input8_out = 0);
 
-                void clear() override;
+                void tick() override;
 
                 std::string ctype() const override;
 
             protected:
-                bool _input_cache[8], _cached = false;
+                bool _input_cache[8], _ticked = false;
                 bool _evaluate(unsigned int out = 0) override;
             };
         }

@@ -41,8 +41,6 @@ namespace logicsim
                 {_ui->actionD_Flip_Flop, COMPONENT::DFLIPFLOP, -1},
             };
 
-            _setupToolbar();
-
             showMaximized();
 
             // initialize status bar and pass to tab handler
@@ -52,7 +50,7 @@ namespace logicsim
             _ui->tabHandler->setStatusBar(_ui->statusbar);
 
             // handle menu changes (action enable/disable logic)
-            QObject::connect(_ui->tabHandler, SIGNAL (designToolChanged(TOOL, COMPONENT)), this, SLOT (setLastDesignTool(TOOL, COMPONENT)));
+            QObject::connect(_ui->tabHandler, SIGNAL (designToolChanged(TOOL, COMPONENT, int)), this, SLOT (setLastDesignTool(TOOL, COMPONENT, int)));
             QObject::connect(_ui->tabHandler, SIGNAL (designTabChosen()), this, SLOT (setDesignMenu()));
             QObject::connect(_ui->tabHandler, SIGNAL (simulationTabChosen(bool)), this, SLOT (setSimulationMenu(bool)));
             QObject::connect(_ui->tabHandler, SIGNAL (undoActionPerformed(bool, bool)), this, SLOT (setUndoActionState(bool, bool)));
@@ -188,6 +186,7 @@ namespace logicsim
 
             QObject::connect(_ui->actionProperties, SIGNAL (triggered()), this, SLOT (simulationProperties()));
 
+            _setupToolbar();
         }
 
         MainWindow::~MainWindow()
@@ -198,10 +197,11 @@ namespace logicsim
 
         }
 
-        void MainWindow::setLastDesignTool(TOOL tool, COMPONENT comp_type)
+        void MainWindow::setLastDesignTool(TOOL tool, COMPONENT comp_type, int res_idx)
         {
             _last_design_tool = tool;
             _last_insert_comp = comp_type;
+            _last_insert_res_idx = res_idx;
         }
 
         void MainWindow::addDesignArea()
@@ -225,9 +225,11 @@ namespace logicsim
             switch (_last_design_tool)
             {
             case INSERT:
+                // TODO: don't use loop here
                 for (const auto &triplet: _insert_actions)
                 {
-                    if (std::get<1>(triplet) == _last_insert_comp)
+                    int res_idx = std::get<2>(triplet);
+                    if (std::get<1>(triplet) == _last_insert_comp && (res_idx == -1 || res_idx == _last_insert_res_idx))
                     {
                         QAction *action = std::get<0>(triplet);
                         action->setChecked(true);
@@ -286,6 +288,10 @@ namespace logicsim
             _ui->actionContinue->setEnabled(enabled && _sim_paused);
             _ui->actionPause->setEnabled(enabled && !_sim_paused);
             _pause_sim_button->setEnabled(enabled);
+
+            _pause_sim_button->blockSignals(true);
+            _pause_sim_button->setChecked(enabled && _sim_paused);
+            _pause_sim_button->blockSignals(false);
 
             _ui->actionReset->setEnabled(enabled);
             _reset_sim_button->setEnabled(enabled);
@@ -374,6 +380,8 @@ namespace logicsim
 
         void MainWindow::_setupToolbar()
         {
+            std::unordered_map<QAction *, QPushButton *> toolbar_actions;
+
             _toolbar = new QFrame(this);
             _toolbar->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
             _toolbar->setMinimumWidth(150);
@@ -396,12 +404,9 @@ namespace logicsim
             _select_button->setCheckable(true);
             _select_button->setChecked(true);
             QObject::connect(_select_button, SIGNAL (pressed()), _ui->actionSelect, SLOT (trigger()));
-            QObject::connect(_ui->actionSelect, &QAction::triggered, [this]()
-            {
-                _select_button->setChecked(true);
-            });
             grid->addWidget(_select_button, 0, 0);
             button_group->addButton(_select_button);
+            toolbar_actions[_ui->actionSelect] = _select_button;
 
 
             _move_button = new QPushButton(_toolbar);
@@ -409,36 +414,27 @@ namespace logicsim
             _move_button->setFixedSize(button_size);
             _move_button->setCheckable(true);
             QObject::connect(_move_button, SIGNAL (pressed()), _ui->actionMove, SLOT (trigger()));
-            QObject::connect(_ui->actionMove, &QAction::triggered, [this]()
-            {
-                _move_button->setChecked(true);
-            });
             grid->addWidget(_move_button, 0, 1);
             button_group->addButton(_move_button);
+            toolbar_actions[_ui->actionMove] = _move_button;
 
             _wire_button = new QPushButton(_toolbar);
             _wire_button->setIcon(*resources::wire_icon);
             _wire_button->setFixedSize(button_size);
             _wire_button->setCheckable(true);
             QObject::connect(_wire_button, SIGNAL (pressed()), _ui->actionWire, SLOT (trigger()));
-            QObject::connect(_ui->actionWire, &QAction::triggered, [this]()
-            {
-                _wire_button->setChecked(true);
-            });
             grid->addWidget(_wire_button, 0, 2);
             button_group->addButton(_wire_button);
+            toolbar_actions[_ui->actionWire] = _wire_button;
 
             _wire_remove_button = new QPushButton(_toolbar);
             _wire_remove_button->setIcon(*resources::wire_remove_icon);
             _wire_remove_button->setFixedSize(button_size);
             _wire_remove_button->setCheckable(true);
             QObject::connect(_wire_remove_button, SIGNAL (pressed()), _ui->actionWire_Remove, SLOT (trigger()));
-            QObject::connect(_ui->actionWire_Remove, &QAction::triggered, [this]()
-            {
-                _wire_remove_button->setChecked(true);
-            });
             grid->addWidget(_wire_remove_button, 1, 0);
             button_group->addButton(_wire_remove_button);
+            toolbar_actions[_ui->actionWire_Remove] = _wire_remove_button;
 
             QFrame *hline1 = new QFrame(_toolbar);
             hline1->setFrameShape(QFrame::HLine);
@@ -458,12 +454,10 @@ namespace logicsim
                 button->setFixedSize(button_size);
                 button->setCheckable(true);
                 QObject::connect(button, SIGNAL (pressed()), std::get<0>(triplet), SLOT (trigger()));
-                QObject::connect(std::get<0>(triplet), &QAction::triggered, [button]()
-                {
-                    button->setChecked(true);
-                });
                 grid->addWidget(button, row, col);
                 button_group->addButton(button);
+                toolbar_actions[std::get<0>(triplet)] = button;
+
                 row = row + col / 2;
                 col = (col + 1) % 3;
 
@@ -551,6 +545,25 @@ namespace logicsim
             QObject::connect(_reset_sim_button, SIGNAL (pressed()), _ui->actionReset, SLOT (trigger()));
             grid->addWidget(_reset_sim_button, row, col++);
             _reset_sim_button->setEnabled(false);
+
+            QObject::connect(_tool_group, &QActionGroup::triggered, [last_button = static_cast<QPushButton *>(_select_button), toolbar_actions, button_group](QAction* action) mutable
+            {
+                if (toolbar_actions.find(action) == toolbar_actions.end())
+                {
+                    if (last_button != nullptr)
+                    {
+                        button_group->setExclusive(false);
+                        last_button->setChecked(false);
+                        button_group->setExclusive(true);
+                        last_button = nullptr;
+                    }
+
+                    return;
+                }
+
+                last_button = toolbar_actions[action];
+                last_button->setChecked(true);
+            });
 
             _ui->horizontalLayout->insertWidget(0, _toolbar);
         }

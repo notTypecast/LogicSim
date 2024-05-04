@@ -815,6 +815,9 @@
    </property>
   </action>
   <action name="actionConstant_1">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>Constant (1)</string>
    </property>

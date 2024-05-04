@@ -15,9 +15,30 @@ namespace logicsim
         {
             _status_bar = status_bar;
             addDesignArea();
+            // TODO: move to open file method
             if (QCoreApplication::arguments().size() > 1)
-            {
-                currentDesignArea()->readFromFile(QCoreApplication::arguments().at(1));
+            {                
+                QString filepath = QCoreApplication::arguments().at(1);
+                DesignArea *design_area = currentDesignArea();
+
+                try {
+                    design_area->readFromFile(filepath);
+                }
+                catch (const std::invalid_argument &)
+                {
+                    QMessageBox message_box;
+                    message_box.critical(0, "Error", "File could not be opened; it might be corrupted.");
+
+                    message_box.setWindowFlags(Qt::Window);
+                    QPoint window_pos = parentWidget()->parentWidget()->pos();
+                    QSize window_size = parentWidget()->parentWidget()->size();
+
+                    QSize dialog_size = message_box.sizeHint();
+                    message_box.move(window_pos.x() + window_size.width()/2 - dialog_size.width()/2, window_pos.y() + window_size.height()/2 - dialog_size.height()/2);
+
+                    return;
+                }
+                _setupTab(design_area);
             }
         }
 
@@ -336,7 +357,7 @@ namespace logicsim
             COMPONENT comp_type = static_cast<COMPONENT>(QObject::sender()->property("component-type").value<int>());
             QVariant res_idx = QObject::sender()->property("resource-idx");
             currentDesignArea()->setMode(TOOL::INSERT, comp_type, res_idx.isValid() ? res_idx.value<int>() : 0);
-            emit designToolChanged(TOOL::INSERT, comp_type);
+            emit designToolChanged(TOOL::INSERT, comp_type, res_idx.isValid() ? res_idx.value<int>() : -1);
         }
 
         bool TabHandler::setSimulationMode()

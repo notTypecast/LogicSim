@@ -31,11 +31,14 @@ namespace logicsim
 
                 // calculates all outputs for current inputs
                 virtual void tick();
+                // moves output to next tick
+                // separate to tick method, since all ticks are performed first, then all updates
+                virtual void update();
+
                 // returns value for given output, taking delay into account
                 bool evaluate(unsigned int out = 0);
 
                 virtual void check() const; // checks input components
-                virtual void clear();       // clears component cache, allowing next tick
                 virtual void reset();       // resets component state
 
                 virtual unsigned int n_inputs() const;
@@ -59,11 +62,8 @@ namespace logicsim
                 size_t _history_size;
                 unsigned int _n_evals;
                 std::list<std::vector<bool>> _cache_history;
-                bool _cached = false;
 
                 virtual bool _evaluate(unsigned int out = 0) = 0;
-
-
             };
 
             class NInputComponent : public Component
@@ -123,10 +123,12 @@ namespace logicsim
                 TimeComponent(unsigned int delay, unsigned int n_evals);
 
                 void tick() override;
+                void update() override;
                 void reset() override;
 
             protected:
                 unsigned long _ticks = -1;
+                bool _ticked = false;
             };
         }
     }

@@ -49,15 +49,15 @@ namespace logicsim
                 set_input(4, input5, input5_out);
             }
 
-            void _5in_7SegmentDisplay::clear()
+            void _5in_7SegmentDisplay::tick()
             {
-                Component::clear();
-                _cached = false;
+                _ticked = false;
+                Component::tick();
             }
 
             bool _5in_7SegmentDisplay::_evaluate(unsigned int out)
             {
-                if (!_cached)
+                if (!_ticked)
                 {
                     for (size_t i = 0; i < 5; ++i)
                     {
@@ -113,15 +113,15 @@ namespace logicsim
                 set_input(7, input8, input8_out);
             }
 
-            void _8in_7SegmentDisplay::clear()
+            void _8in_7SegmentDisplay::tick()
             {
-                Component::clear();
-                _cached = false;
+                _ticked = false;
+                Component::tick();
             }
 
             bool _8in_7SegmentDisplay::_evaluate(unsigned int out)
             {
-                if (!_cached)
+                if (!_ticked)
                 {
                     for (size_t i = 0; i < 8; ++i)
                     {

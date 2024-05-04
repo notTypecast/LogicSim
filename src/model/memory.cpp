@@ -19,10 +19,10 @@ namespace logicsim
                 set_input(_inputs.size() - 1, clk, clk_out);
             }
 
-            void MemoryComponent::clear()
+            void MemoryComponent::tick()
             {
-                Component::clear();
                 _evaluated = false;
+                Component::tick();
             }
 
             void MemoryComponent::reset()

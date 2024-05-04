@@ -40,7 +40,7 @@ namespace logicsim
             {
                 for (auto &target : _components)
                 {
-                    target->clear();
+                    target->update();
                 }
                 for (auto &target : _components)
                 {

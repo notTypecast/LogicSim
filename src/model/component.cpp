@@ -25,40 +25,33 @@ namespace logicsim
 
             void Component::tick()
             {
-                if (!_cached)
+                for (size_t i = 0; i < _n_evals; ++i)
                 {
-                    if (_history_size > 1)
-                    {
-                        std::vector<bool> back = std::move(_cache_history.back());
-                        _cache_history.pop_back();
-                        _cache_history.push_front(std::move(back));
-                    }
+                    _cache_history.front()[i] = _evaluate(i);
+                }
+            }
 
-                    for (size_t i = 0; i < n_evals(); ++i)
-                    {
-                        _cache_history.front()[i] = _evaluate(i);
-                    }
-                    _cached = true;
+            void Component::update()
+            {
+                if (_history_size > 1)
+                {
+                    std::vector<bool> back = std::move(_cache_history.back());
+                    _cache_history.pop_back();
+                    _cache_history.push_front(std::move(back));
+                }
+                else
+                {
+                    tick();
                 }
             }
 
             bool Component::evaluate(unsigned int out)
             {
-                // if there is no delay, component must be evaluated now if it hasn't already been
-                if (_history_size == 1)
-                {
-                    tick();
-                }
                 return _cache_history.back()[out];
             }
 
             void Component::check() const
             {
-            }
-
-            void Component::clear()
-            {
-                _cached = false;
             }
 
             void Component::reset()
@@ -161,11 +154,18 @@ namespace logicsim
 
             void TimeComponent::tick()
             {
-                if (!_cached)
+                if (!_ticked)
                 {
                     ++_ticks;
+                    _ticked = true;
                 }
                 Component::tick();
+            }
+
+            void TimeComponent::update()
+            {
+                _ticked = false;
+                Component::update();
             }
 
             void TimeComponent::reset()

@@ -16,7 +16,7 @@ namespace logicsim
 
                 void set_clk(component::Component &clk, unsigned int clk_out = 0);
 
-                virtual void clear() override;
+                virtual void tick() override;
                 virtual void reset() override;
 
                 unsigned int n_outputs() const override;
