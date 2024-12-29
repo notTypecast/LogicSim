@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_GUI_MAIN_WINDOW_HPP
 #define LOGICSIM_GUI_MAIN_WINDOW_HPP
 
-#define LOGICSIM_VERSION "1.0.9"
+#define LOGICSIM_VERSION "1.0.10"
 
 #include <QApplication>
 #include <QMainWindow>
@@ -54,7 +54,8 @@ namespace logicsim
         protected slots:
             void addDesignArea();
 
-            void setSimulationMenu(bool running = true);
+            // no_apply: do not try to apply simulation mode (already applied)
+            void setSimulationMenu(bool running = true, bool no_apply = false);
             void setDesignMenu();
             void setLastDesignTool(TOOL tool, COMPONENT comp_type = COMPONENT::NONE, int res_idx = -1);
 

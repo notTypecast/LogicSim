@@ -52,7 +52,11 @@ namespace logicsim
             // handle menu changes (action enable/disable logic)
             QObject::connect(_ui->tabHandler, SIGNAL (designToolChanged(TOOL, COMPONENT, int)), this, SLOT (setLastDesignTool(TOOL, COMPONENT, int)));
             QObject::connect(_ui->tabHandler, SIGNAL (designTabChosen()), this, SLOT (setDesignMenu()));
-            QObject::connect(_ui->tabHandler, SIGNAL (simulationTabChosen(bool)), this, SLOT (setSimulationMenu(bool)));
+            QObject::connect(_ui->tabHandler, &TabHandler::simulationTabChosen, [this](bool running) {
+                // if triggered by simulationTabChosen, simulation is already running
+                // so don't re-apply
+                setSimulationMenu(running, true);
+            });
             QObject::connect(_ui->tabHandler, SIGNAL (undoActionPerformed(bool, bool)), this, SLOT (setUndoActionState(bool, bool)));
             QObject::connect(_ui->tabHandler, SIGNAL (selectionActionPerformed(bool, bool)), this, SLOT (setSelectActionState(bool, bool)));
 
@@ -209,9 +213,9 @@ namespace logicsim
             _ui->tabHandler->addDesignArea();
         }
 
-        void MainWindow::setSimulationMenu(bool running)
+        void MainWindow::setSimulationMenu(bool running, bool no_apply)
         {
-            if (!_ui->tabHandler->setSimulationMode())
+            if (!(no_apply || _ui->tabHandler->setSimulationMode()))
             {
                 return;
             }
