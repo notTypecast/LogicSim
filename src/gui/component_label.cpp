@@ -547,7 +547,7 @@ namespace logicsim
         {
             if (reset_resource_on_sim_components.find(_comp_type) != reset_resource_on_sim_components.end())
             {
-                setResourceByIdx(_base_resource_idx);
+                evaluate();
             }
         }
 
@@ -576,7 +576,7 @@ namespace logicsim
             file << "\n";
         }
 
-        bool ComponentLabel::getValue(int output_idx)
+        model::State ComponentLabel::getValue(int output_idx)
         {
             return _component_model->evaluate(output_idx);
         }

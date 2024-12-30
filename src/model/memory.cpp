@@ -28,7 +28,7 @@ namespace logicsim
             void MemoryComponent::reset()
             {
                 Component::reset();
-                _Q = false;
+                _Q = State::HiZ;
             }
 
             unsigned int MemoryComponent::n_outputs() const
@@ -52,7 +52,7 @@ namespace logicsim
                 set_input(1, R, R_out);
             }
 
-            bool SRMemoryComponent::_evaluate(unsigned int out)
+            State SRMemoryComponent::_evaluate(unsigned int out)
             {
                 if (_clk_edge() && !_evaluated)
                 {
@@ -60,7 +60,7 @@ namespace logicsim
                     _evaluated = true;
                 }
 
-                return out ^ _Q;
+                return static_cast<State>(out) ^ _Q;
             }
 
             // JKMemoryComponent
@@ -79,7 +79,7 @@ namespace logicsim
                 set_input(1, K, K_out);
             }
 
-            bool JKMemoryComponent::_evaluate(unsigned int out)
+            State JKMemoryComponent::_evaluate(unsigned int out)
             {
                 if (_clk_edge() && !_evaluated)
                 {
@@ -87,7 +87,7 @@ namespace logicsim
                     _evaluated = true;
                 }
 
-                return out ^ _Q;
+                return static_cast<State>(out) ^ _Q;
             }
 
             // DMemoryComponent
@@ -103,7 +103,7 @@ namespace logicsim
                 set_input(0, D, D_out);
             }
 
-            bool DMemoryComponent::_evaluate(unsigned int out)
+            State DMemoryComponent::_evaluate(unsigned int out)
             {
                 if (_clk_edge() && !_evaluated)
                 {
@@ -111,7 +111,7 @@ namespace logicsim
                     _evaluated = true;
                 }
 
-                return out ^ _Q;
+                return static_cast<State>(out) ^ _Q;
             }
 
             // TMemoryComponent
@@ -127,14 +127,14 @@ namespace logicsim
                 set_input(0, T, T_out);
             }
 
-            bool TMemoryComponent::_evaluate(unsigned int out)
+            State TMemoryComponent::_evaluate(unsigned int out)
             {
                 if (_clk_edge() && !_evaluated)
                 {
-                    _Q ^= (*_T)->evaluate(*_T_out);
+                    _Q = _Q ^ (*_T)->evaluate(*_T_out);
                     _evaluated = true;
                 }
-                return out ^ _Q;
+                return static_cast<State>(out) ^ _Q;
             }
 
             // Component Types for implementations

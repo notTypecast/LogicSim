@@ -343,7 +343,7 @@ namespace logicsim
             QObject::connect(wire, SIGNAL (proximityConfirmed(Wire *, int)), this, SLOT (getProximityWireDistance(Wire *, int)));
             QObject::connect(this, SIGNAL (evaluateWire()), wire, SLOT (evaluate()));
             QObject::connect(this, SIGNAL (disableColorWires()), wire, SLOT (uncolor()));
-            QObject::connect(this, SIGNAL (resetResource()), wire, SLOT (updateColorWire()));
+            QObject::connect(this, SIGNAL (resetWireResource()), wire, SLOT (updateColorWire()));
         }
 
         void DesignArea::_disconnect_wire(Wire *wire)
@@ -352,7 +352,7 @@ namespace logicsim
             QObject::disconnect(wire, SIGNAL (proximityConfirmed(Wire *, int)), this, SLOT (getProximityWireDistance(Wire *, int)));
             QObject::disconnect(this, SIGNAL (evaluateWire()), wire, SLOT (evaluate()));
             QObject::disconnect(this, SIGNAL (disableColorWires()), wire, SLOT (uncolor()));
-            QObject::disconnect(this, SIGNAL (resetResource()), wire, SLOT (updateColorWire()));
+            QObject::disconnect(this, SIGNAL (resetWireResource()), wire, SLOT (updateColorWire()));
         }
 
         void DesignArea::addSelected(ComponentLabel *component, bool ctrl)
@@ -517,9 +517,12 @@ namespace logicsim
             }
         }
 
-        void DesignArea::executeTick()
+        void DesignArea::executeTick(unsigned int ticks)
         {
-            _circuit_model.tick();
+            for (unsigned int i = 0; i < ticks; ++i)
+            {
+                _circuit_model.tick();
+            }
             _ticks_label_text = "Ticks: " + QString::number(_circuit_model.total_ticks());
             _ticks_label->setText(_ticks_label_text);
             emit evaluate();
@@ -553,23 +556,6 @@ namespace logicsim
                     component->hideBorder();
                 }
 
-                try
-                {
-                    _circuit_model.check();
-                }
-                catch (const model::component::null_input &)
-                {
-                    QMessageBox message_box;
-                    message_box.critical(0, "Error", "Invalid circuit");
-
-                    message_box.setWindowFlags(Qt::Window);
-                    QPoint window_pos = parentWidget()->parentWidget()->parentWidget()->pos();
-                    QSize window_size = parentWidget()->parentWidget()->parentWidget()->size();
-
-                    QSize dialog_size = message_box.sizeHint();
-                    message_box.move(window_pos.x() + window_size.width()/2 - dialog_size.width()/2, window_pos.y() + window_size.height()/2 - dialog_size.height()/2);
-                    return false;
-                }
                 if (_timer == nullptr)
                 {
                     _ticks_label_text = "Ticks: 0";
@@ -595,6 +581,18 @@ namespace logicsim
 
             _selected_tool = tool;
             emit modeChanged(tool);
+
+            // emitted after modeChanged, so components correctly save base resource index
+            if (_selected_tool == TOOL::SIMULATE)
+            {
+                emit resetResource();
+
+                if (_color_wires)
+                {
+                    emit resetWireResource();
+                }
+            }
+
             return true;
         }
 
@@ -606,8 +604,7 @@ namespace logicsim
             _ticks_label->setText("");
             _ticks_label->hide();
 
-            _selected_tool = TOOL::SELECT;
-            emit setMode(_selected_tool);
+            setMode(TOOL::SELECT);
 
             for (const auto &component : _selected_components)
             {
@@ -622,7 +619,7 @@ namespace logicsim
 
         void DesignArea::stepSimulation()
         {
-            executeTick();
+            executeTick(_freq);
         }
 
         void DesignArea::continueSimulation()
@@ -635,6 +632,10 @@ namespace logicsim
             _circuit_model.reset();
             _ticks_label->setText("Ticks: 0");
             emit resetResource();
+            if (_color_wires)
+            {
+                emit resetWireResource();
+            }
         }
 
         bool DesignArea::empty() const
@@ -985,7 +986,10 @@ namespace logicsim
             if (!_color_wires)
             {
                 emit disableColorWires();
+                return;
             }
+
+            emit resetWireResource();
         }
 
         void DesignArea::zoomIn(int origin_x, int origin_y)

@@ -14,7 +14,7 @@ namespace logicsim
             // Component
             unsigned int Component::_CURR_ID = 0;
 
-            Component::Component(unsigned int delay, unsigned int n_evals) : _history_size(delay + 1), _n_evals(n_evals), _cache_history(_history_size, std::vector<bool>(n_evals, false))
+            Component::Component(unsigned int delay, unsigned int n_evals) : _history_size(delay + 1), _n_evals(n_evals), _cache_history(_history_size, std::vector<State>(n_evals, State::HiZ))
             {
                 _id = _CURR_ID++;
             }
@@ -35,7 +35,7 @@ namespace logicsim
             {
                 if (_history_size > 1)
                 {
-                    std::vector<bool> back = std::move(_cache_history.back());
+                    std::vector<State> back = std::move(_cache_history.back());
                     _cache_history.pop_back();
                     _cache_history.push_front(std::move(back));
                 }
@@ -45,7 +45,7 @@ namespace logicsim
                 }
             }
 
-            bool Component::evaluate(unsigned int out)
+            State Component::evaluate(unsigned int out)
             {
                 return _cache_history.back()[out];
             }
@@ -56,12 +56,12 @@ namespace logicsim
 
             void Component::reset()
             {
-                std::list<std::vector<bool>>::iterator it;
+                std::list<std::vector<State>>::iterator it;
                 for (it = _cache_history.begin(); it != _cache_history.end(); ++it)
                 {
                     for (size_t i = 0; i < _n_evals; ++i)
                     {
-                        (*it)[i] = false;
+                        (*it)[i] = State::HiZ;
                     }
                 }
             }
@@ -97,12 +97,33 @@ namespace logicsim
                 return "";
             }
 
-            void Component::set_params(const std::string &param_string)
+            void Component::set_params(const std::string &)
             {
             }
 
+            // NullComponent
+            NullComponent &NullComponent::get_instance()
+            {
+                static NullComponent instance;
+                return instance;
+            }
+
+            NullComponent::NullComponent() : Component(0, 1) {
+                tick();
+            }
+
+            std::string NullComponent::ctype() const
+            {
+                return "";
+            }
+
+            State NullComponent::_evaluate(unsigned int)
+            {
+                return State::HiZ;
+            }
+
             // NInputComponent
-            NInputComponent::NInputComponent(unsigned int n, unsigned int delay, unsigned int n_evals) : Component(delay, n_evals), _n(n), _inputs(n, nullptr), _inputs_out(n) {}
+            NInputComponent::NInputComponent(unsigned int n, unsigned int delay, unsigned int n_evals) : Component(delay, n_evals), _n(n), _inputs(n, &NullComponent::get_instance()), _inputs_out(n) {}
 
             void NInputComponent::set_input(size_t index, Component &input, unsigned int out)
             {
@@ -114,14 +135,14 @@ namespace logicsim
             void NInputComponent::remove_input(size_t index)
             {
                 assert(index < _n);
-                _inputs[index] = nullptr;
+                _inputs[index] = &NullComponent::get_instance();
             }
 
             void NInputComponent::check() const
             {
                 for (auto &input : _inputs)
                 {
-                    if (!input)
+                    if (input == &NullComponent::get_instance())
                     {
                         throw null_input();
                     }
@@ -136,9 +157,10 @@ namespace logicsim
             std::vector<std::pair<unsigned int, unsigned int>> NInputComponent::input_ids() const
             {
                 std::vector<std::pair<unsigned int, unsigned int>> ids(_n, {std::numeric_limits<unsigned int>::max(), std::numeric_limits<unsigned int>::max()});
+                NullComponent *null_component = &NullComponent::get_instance();
                 for (size_t i = 0; i < _n; ++i)
                 {
-                    if (_inputs[i])
+                    if (_inputs[i] != null_component)
                     {
                         ids[i] = {_inputs[i]->id(), _inputs_out[i]};
                     }

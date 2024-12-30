@@ -58,7 +58,7 @@ To simulate a circuit, it must first be valid. This means that the inputs of all
 
 Once a circuit is valid, the *Start* option of the Simulation menu can be used. This will start simulating the circuit at the given frequency.
 
-Using the *Pause* option will pause the simulation. While paused, the simulation can be progressed by a single tick using the *Step* option. The *Continue* option will continue the simulation. Finally, the *Reset* option can be used to reset the simulation to its initial state.
+Using the *Pause* option will pause the simulation. While paused, the simulation can be progressed by a second using the *Step* option. The *Continue* option will continue the simulation. Finally, the *Reset* option can be used to reset the simulation to its initial state.
 
 Components that need to evaluate their inputs to create outputs have a predetermined delay (in ticks). For instance, logic gates have a delay of 1 tick, while memory components have a delay of 5. Input and output components do not have a delay.
 
@@ -86,8 +86,7 @@ LogicSim is still in development, and thus is expected to contain bugs. Addition
 
 * More complex components, such as decoders and multiplexers.
 * Nodes that wires can connect to.
-* Option for random initial values for memory components (currently always 0).
-* Option for unknown outputs, allowing for simulation of invalid circuits.
+* More customization for initial values of memory components and preset-clear lines.
 * (Possibly) a grid for components to snap to.
 
 ## Credit

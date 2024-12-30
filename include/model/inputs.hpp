@@ -29,7 +29,7 @@ namespace logicsim
 
             protected:
                 bool _value = false;
-                bool _evaluate(unsigned int = 0) override;
+                State _evaluate(unsigned int = 0) override;
             };
 
             class Switch : public Input
@@ -46,7 +46,7 @@ namespace logicsim
 
             protected:
                 bool _value = false;
-                bool _evaluate(unsigned int = 0) override;
+                State _evaluate(unsigned int = 0) override;
             };
 
             class Oscillator : public component::TimeComponent
@@ -63,7 +63,7 @@ namespace logicsim
                 unsigned int _low_ticks = 200;
                 unsigned int _period = 400;
                 unsigned int _phase = 0;
-                bool _evaluate(unsigned int = 0) override;
+                State _evaluate(unsigned int = 0) override;
             };
 
             class Keypad : public Input
@@ -79,7 +79,7 @@ namespace logicsim
 
             protected:
                 unsigned int _key;
-                bool _evaluate(unsigned int out = 0) override;
+                State _evaluate(unsigned int out = 0) override;
             };
         }
     }

@@ -22,9 +22,11 @@ namespace logicsim
                 unsigned int n_outputs() const override;
 
             protected:
+                // Double pointers point to pointers to input components kept by NInputComponent superclass
+                // Thus, when changing an input component, the double pointer will automatically point to the new component
                 component::Component **_clk;
                 unsigned int *_clk_out;
-                bool _Q = false;
+                State _Q = State::HiZ;
                 bool _evaluated = false;
 
                 // whether the current clock state indicates input should be evaluated
@@ -41,7 +43,7 @@ namespace logicsim
                 Component **_S, **_R;
                 unsigned int *_S_out, *_R_out;
 
-                bool _evaluate(unsigned int out = 0) override;
+                State _evaluate(unsigned int out = 0) override;
             };
 
             class JKMemoryComponent : public MemoryComponent
@@ -54,7 +56,7 @@ namespace logicsim
                 Component **_J, **_K;
                 unsigned int *_J_out, *_K_out;
 
-                bool _evaluate(unsigned int out = 0) override;
+                State _evaluate(unsigned int out = 0) override;
             };
 
             class DMemoryComponent : public MemoryComponent
@@ -67,7 +69,7 @@ namespace logicsim
                 Component **_D;
                 unsigned int *_D_out;
 
-                bool _evaluate(unsigned int out = 0) override;
+                State _evaluate(unsigned int out = 0) override;
             };
 
             class TMemoryComponent : public MemoryComponent
@@ -80,7 +82,7 @@ namespace logicsim
                 Component **_T;
                 unsigned int *_T_out;
 
-                bool _evaluate(unsigned int out = 0) override;
+                State _evaluate(unsigned int out = 0) override;
             };
 
     #define DEFINE_1_INPUT_LATCH(name, base)                                                                                                                             \

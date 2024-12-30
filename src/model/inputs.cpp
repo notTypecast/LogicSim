@@ -22,9 +22,9 @@ namespace logicsim
                 _value = value;
             }
 
-            bool Constant::_evaluate(unsigned int)
+            State Constant::_evaluate(unsigned int)
             {
-                return _value;
+                return static_cast<State>(_value);
             }
 
             std::string Constant::ctype() const
@@ -52,9 +52,9 @@ namespace logicsim
                 _value = value;
             }
 
-            bool Switch::_evaluate(unsigned int)
+            State Switch::_evaluate(unsigned int)
             {
-                return _value;
+                return static_cast<State>(_value);
             }
 
             void Switch::toggle()
@@ -87,10 +87,10 @@ namespace logicsim
                 _ticks = phase - 1;
             }
 
-            bool Oscillator::_evaluate(unsigned int)
+            State Oscillator::_evaluate(unsigned int)
             {
                 _ticks %= _period;
-                return _ticks >= _low_ticks;
+                return static_cast<State>(_ticks >= _low_ticks);
             }
 
             std::string Oscillator::ctype() const
@@ -132,14 +132,14 @@ namespace logicsim
                 _key = key;
             }
 
-            bool Keypad::_evaluate(unsigned int out)
+            State Keypad::_evaluate(unsigned int out)
             {
                 unsigned int outputs = n_outputs();
                 if (out >= outputs)
                 {
                     out = 0;
                 }
-                return (_key >> (outputs - 1 - out)) & 1;
+                return static_cast<State>((_key >> (outputs - 1 - out)) & 1);
             }
 
             std::string Keypad::ctype() const

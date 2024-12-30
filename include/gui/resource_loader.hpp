@@ -147,6 +147,7 @@ namespace logicsim
             inline QPixmap *hwire, *vwire;
             inline QPixmap *hwire_up, *hwire_down, *vwire_left, *vwire_right;
             inline QPixmap *hwire_on, *vwire_on;
+            inline QPixmap *hwire_z, *vwire_z;
 
             inline QIcon *select_icon;
             inline QIcon *move_icon;
@@ -249,7 +250,7 @@ namespace logicsim
             QPixmap getComponentResource(COMPONENT comp_type, int res_idx, double scale);
             QPixmap getBorder(int width, int height);
             QPixmap getLine(LINE_TYPE line_type, int size);
-            QPixmap getWire(LINE_TYPE line_type, int size, double scale, bool on = false);
+            QPixmap getWire(LINE_TYPE line_type, int size, double scale, const model::State &wire_type = model::State::ZERO);
             QPixmap getWireMarking(LINE_TYPE line_type, int size, double scale, bool dir_ul = true);
             void load();
             void deallocate();

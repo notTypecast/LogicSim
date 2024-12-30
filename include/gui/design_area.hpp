@@ -221,7 +221,7 @@ namespace logicsim
 
             // Simulation
             // triggered by timer
-            void executeTick();
+            void executeTick(unsigned int ticks = 1);
 
         signals:
             // emitted when the mode is changed
@@ -234,8 +234,10 @@ namespace logicsim
             // emitted during simulation, after every tick
             // components receiving this signal will evaluate based on their component model
             void evaluate();
-            // emitted when simulation is reset
+            // emitted for components when simulation is reset
             void resetResource();
+            // emitted for wires when simulation is reset (only when colored wires is enabled)
+            void resetWireResource();
             // emitted when writing to file
             void writeComponent(std::ofstream &file, double inverse_scale_factor, double inverse_translation_x, double inverse_translation_y) const;
             // emitted when an undo action is redone/undone

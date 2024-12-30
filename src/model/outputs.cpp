@@ -22,7 +22,7 @@ namespace logicsim
                 set_input(0, input, input_out);
             }
 
-            bool BaseOutput::_evaluate(unsigned int)
+            State BaseOutput::_evaluate(unsigned int)
             {
                 return _inputs[0]->evaluate(_inputs_out[0]);
             }
@@ -55,7 +55,7 @@ namespace logicsim
                 Component::tick();
             }
 
-            bool _5in_7SegmentDisplay::_evaluate(unsigned int out)
+            State _5in_7SegmentDisplay::_evaluate(unsigned int out)
             {
                 if (!_ticked)
                 {
@@ -65,7 +65,7 @@ namespace logicsim
                     }
                 }
 
-                bool(&x)[5] = _input_cache;
+                State(&x)[5] = _input_cache;
                 switch (out)
                 {
                 case 1:
@@ -119,7 +119,7 @@ namespace logicsim
                 Component::tick();
             }
 
-            bool _8in_7SegmentDisplay::_evaluate(unsigned int out)
+            State _8in_7SegmentDisplay::_evaluate(unsigned int out)
             {
                 if (!_ticked)
                 {

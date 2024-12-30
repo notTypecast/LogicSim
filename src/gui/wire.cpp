@@ -25,6 +25,14 @@ namespace logicsim
             _vwire_on->hide();
             _hwire2_on->hide();
 
+            _hwire1_z = new QLabel(parent);
+            _vwire_z = new QLabel(parent);
+            _hwire2_z = new QLabel(parent);
+
+            _hwire1_z->hide();
+            _vwire_z->hide();
+            _hwire2_z->hide();
+
             _hwire1_up = new QLabel(parent);
             _hwire1_down = new QLabel(parent);
             _vwire_left = new QLabel(parent);
@@ -49,6 +57,10 @@ namespace logicsim
             delete _hwire1_on;
             delete _vwire_on;
             delete _hwire2_on;
+
+            delete _hwire1_z;
+            delete _vwire_z;
+            delete _hwire2_z;
 
             delete _hwire1_up;
             delete _hwire1_down;
@@ -438,19 +450,37 @@ namespace logicsim
             _createColorWire();
 
             int conn_idx = _conns[0].is_input;
-            if (_conns[conn_idx].component->getValue(_conns[conn_idx].idx))
+            switch (_conns[conn_idx].component->getValue(_conns[conn_idx].idx))
             {
-                _hwire1->hide();
-                _vwire->hide();
-                _hwire2->hide();
+                case model::State::ZERO:
+                    uncolor();
+                    break;
+                case model::State::ONE:
+                    _hwire1->hide();
+                    _vwire->hide();
+                    _hwire2->hide();
 
-                _hwire1_on->show();
-                _vwire_on->show();
-                _hwire2_on->show();
-            }
-            else
-            {
-                uncolor();
+                    _hwire1_z->hide();
+                    _vwire_z->hide();
+                    _hwire2_z->hide();
+
+                    _hwire1_on->show();
+                    _vwire_on->show();
+                    _hwire2_on->show();
+                    break;
+                case model::State::HiZ:
+                    _hwire1->hide();
+                    _vwire->hide();
+                    _hwire2->hide();
+
+                    _hwire1_on->hide();
+                    _vwire_on->hide();
+                    _hwire2_on->hide();
+
+                    _hwire1_z->show();
+                    _vwire_z->show();
+                    _hwire2_z->show();
+                    break;
             }
         }
 
@@ -458,19 +488,33 @@ namespace logicsim
         {
             if (!_wire_on)
             {
-                QPixmap hwire_on = resources::getWire(resources::LINE_TYPE::HORIZONTAL, _hwire1->width(), _scale, true);
+                QPixmap hwire_on = resources::getWire(resources::LINE_TYPE::HORIZONTAL, _hwire1->width(), _scale, model::State::ONE);
 
                 _hwire1_on->setPixmap(hwire_on);
                 _hwire1_on->resize(_hwire1->width(), _hwire1->height());
                 _hwire1_on->move(_hwire1->x(), _hwire1->y());
 
-                _vwire_on->setPixmap(resources::getWire(resources::LINE_TYPE::VERTICAL, _vwire->height(), _scale, true));
+                _vwire_on->setPixmap(resources::getWire(resources::LINE_TYPE::VERTICAL, _vwire->height(), _scale, model::State::ONE));
                 _vwire_on->resize(_vwire->width(), _vwire->height());
                 _vwire_on->move(_vwire->x(), _vwire->y());
 
                 _hwire2_on->setPixmap(hwire_on);
                 _hwire2_on->resize(_hwire2->width(), _hwire2->height());
                 _hwire2_on->move(_hwire2->x(), _hwire2->y());
+
+                QPixmap hwire_z = resources::getWire(resources::LINE_TYPE::HORIZONTAL, _hwire1->width(), _scale, model::State::HiZ);
+
+                _hwire1_z->setPixmap(hwire_z);
+                _hwire1_z->resize(_hwire1->width(), _hwire1->height());
+                _hwire1_z->move(_hwire1->x(), _hwire1->y());
+
+                _vwire_z->setPixmap(resources::getWire(resources::LINE_TYPE::VERTICAL, _vwire->height(), _scale, model::State::HiZ));
+                _vwire_z->resize(_vwire->width(), _vwire->height());
+                _vwire_z->move(_vwire->x(), _vwire->y());
+
+                _hwire2_z->setPixmap(hwire_z);
+                _hwire2_z->resize(_hwire2->width(), _hwire2->height());
+                _hwire2_z->move(_hwire2->x(), _hwire2->y());
 
                 _wire_on = true;
             }
@@ -545,6 +589,10 @@ namespace logicsim
             _hwire1_on->hide();
             _vwire_on->hide();
             _hwire2_on->hide();
+
+            _hwire1_z->hide();
+            _vwire_z->hide();
+            _hwire2_z->hide();
         }
 
         void Wire::scaleTransformationApplied(double size_scale)

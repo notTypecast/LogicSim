@@ -6,7 +6,7 @@ namespace logicsim
     {
         namespace gate
         {
-            bool AND::_evaluate(unsigned int)
+            State AND::_evaluate(unsigned int)
             {
                 return _inputs[0]->evaluate(_inputs_out[0]) && _inputs[1]->evaluate(_inputs_out[1]);
             }
@@ -16,7 +16,7 @@ namespace logicsim
                 return "AND";
             }
 
-            bool OR::_evaluate(unsigned int)
+            State OR::_evaluate(unsigned int)
             {
                 return _inputs[0]->evaluate(_inputs_out[0]) || _inputs[1]->evaluate(_inputs_out[1]);
             }
@@ -26,7 +26,7 @@ namespace logicsim
                 return "OR";
             }
 
-            bool XOR::_evaluate(unsigned int)
+            State XOR::_evaluate(unsigned int)
             {
                 return _inputs[0]->evaluate(_inputs_out[0]) ^ _inputs[1]->evaluate(_inputs_out[1]);
             }
@@ -36,7 +36,7 @@ namespace logicsim
                 return "XOR";
             }
 
-            bool NAND::_evaluate(unsigned int)
+            State NAND::_evaluate(unsigned int)
             {
                 return !(_inputs[0]->evaluate(_inputs_out[0]) && _inputs[1]->evaluate(_inputs_out[1]));
             }
@@ -46,7 +46,7 @@ namespace logicsim
                 return "NAND";
             }
 
-            bool NOR::_evaluate(unsigned int)
+            State NOR::_evaluate(unsigned int)
             {
                 return !(_inputs[0]->evaluate(_inputs_out[0]) || _inputs[1]->evaluate(_inputs_out[1]));
             }
@@ -56,7 +56,7 @@ namespace logicsim
                 return "NOR";
             }
 
-            bool XNOR::_evaluate(unsigned int)
+            State XNOR::_evaluate(unsigned int)
             {
                 return !(_inputs[0]->evaluate(_inputs_out[0]) ^ _inputs[1]->evaluate(_inputs_out[1]));
             }
@@ -66,7 +66,7 @@ namespace logicsim
                 return "XNOR";
             }
 
-            bool NOT::_evaluate(unsigned int)
+            State NOT::_evaluate(unsigned int)
             {
                 return !_inputs[0]->evaluate(_inputs_out[0]);
             }
@@ -76,7 +76,7 @@ namespace logicsim
                 return "NOT";
             }
 
-            bool BUFFER::_evaluate(unsigned int)
+            State BUFFER::_evaluate(unsigned int)
             {
                 return _inputs[0]->evaluate(_inputs_out[0]);
             }

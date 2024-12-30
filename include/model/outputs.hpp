@@ -26,7 +26,7 @@ namespace logicsim
                 std::string ctype() const override;
 
             protected:
-                bool _evaluate(unsigned int = 0) override;
+                State _evaluate(unsigned int = 0) override;
             };
 
             class _5in_7SegmentDisplay : public Output
@@ -42,8 +42,9 @@ namespace logicsim
                 std::string ctype() const override;
 
             protected:
-                bool _input_cache[5], _ticked = false;
-                bool _evaluate(unsigned int out = 0) override;
+                State _input_cache[5];
+                bool _ticked = false;
+                State _evaluate(unsigned int out = 0) override;
             };
 
             class _8in_7SegmentDisplay : public Output
@@ -59,8 +60,9 @@ namespace logicsim
                 std::string ctype() const override;
 
             protected:
-                bool _input_cache[8], _ticked = false;
-                bool _evaluate(unsigned int out = 0) override;
+                State _input_cache[8];
+                bool _ticked = false;
+                State _evaluate(unsigned int out = 0) override;
             };
         }
     }

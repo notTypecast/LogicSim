@@ -29,6 +29,14 @@ namespace logicsim
             bool saveAndCloseAll();
 
         protected:
+            struct FileUndoState
+            {
+                bool is_saved {true};
+                int undo_counter {0};
+                bool undo_enabled {false};
+                bool redo_enabled {false};
+            };
+
             DesignArea *_designArea(int idx) const;
             bool _removeDesignArea(DesignArea *design_area);
             void _setupTab(DesignArea *design_area);
@@ -40,8 +48,7 @@ namespace logicsim
             void _saveFile(bool new_file);
 
             // maps each tab to its undo state
-            // state consists of 4 values: {is saved, undo counter, undo enabled, redo enabled}
-            std::unordered_map<DesignArea *, std::tuple<bool, int, bool, bool>> _file_undo_state;
+            std::unordered_map<DesignArea *, FileUndoState> _file_undo_state;
             // maps full file directory to design area
             std::unordered_map<QString, DesignArea *> _open_files;
             // maps file name to design areas (tabs) with that file name

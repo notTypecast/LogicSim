@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_GUI_MAIN_WINDOW_HPP
 #define LOGICSIM_GUI_MAIN_WINDOW_HPP
 
-#define LOGICSIM_VERSION "1.0.10"
+#define LOGICSIM_VERSION "1.1.11"
 
 #include <QApplication>
 #include <QMainWindow>

@@ -8,6 +8,8 @@
 
 #include "gui/resource_loader.hpp"
 
+#include "model/component.hpp"
+
 namespace logicsim
 {
     namespace gui
@@ -94,6 +96,10 @@ namespace logicsim
             QLabel *_hwire1_on = nullptr;
             QLabel *_vwire_on = nullptr;
             QLabel *_hwire2_on = nullptr;
+
+            QLabel *_hwire1_z = nullptr;
+            QLabel *_vwire_z = nullptr;
+            QLabel *_hwire2_z = nullptr;
 
             bool _wire_on = false;
 

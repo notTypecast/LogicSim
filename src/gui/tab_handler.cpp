@@ -79,12 +79,12 @@ namespace logicsim
 
         bool TabHandler::_removeDesignArea(DesignArea *design_area)
         {
-            if (count() == 1 && design_area->empty() && !std::get<0>(_file_undo_state[design_area]))
+            if (count() == 1 && design_area->empty() && !_file_undo_state[design_area].is_saved)
             {
                 return true;
             }
 
-            if (!design_area->empty() && std::get<1>(_file_undo_state[design_area]) != 0)
+            if (!design_area->empty() && _file_undo_state[design_area].undo_counter != 0)
             {
                 // TODO: improve visually
                 QMessageBox save_dialog;
@@ -226,10 +226,10 @@ namespace logicsim
             try {
                 design_area->readFromFile(filepath);
             }
-            catch (const std::invalid_argument &)
+            catch (const std::invalid_argument &exc)
             {
                 QMessageBox message_box;
-                message_box.critical(0, "Error", "File could not be opened; it might be corrupted.");
+                message_box.critical(0, "Error", "File could not be opened; it might be corrupted.\nError message: " + QString(exc.what()));
 
                 message_box.setWindowFlags(Qt::Window);
                 QPoint window_pos = parentWidget()->parentWidget()->pos();
@@ -291,22 +291,22 @@ namespace logicsim
                 _setupTab(design_area);
                 _file_undo_state[design_area] = {true, 0, false, false};
             }
-            if (std::get<1>(_file_undo_state[design_area]) != 0)
+            if (_file_undo_state[design_area].undo_counter != 0)
             {
-                std::get<1>(_file_undo_state[design_area]) = 0;
+                _file_undo_state[design_area].undo_counter = 0;
                 _removeUnsavedIcon();
             }
         }
 
         void TabHandler::changeArea(int idx)
         {
-            if (_selected_idx == idx || idx < 0)
+            DesignArea *design_area = currentDesignArea();
+            if (design_area == nullptr)
             {
                 return;
             }
 
-            DesignArea *design_area = currentDesignArea();
-            if (_selected_idx < count())
+            if (_selected_idx < count() && _selected_idx != idx)
             {
                 design_area->pauseState();
             }
@@ -325,7 +325,7 @@ namespace logicsim
             {
                 emit simulationTabChosen(running_sim);
             }
-            emit undoActionPerformed(std::get<2>(_file_undo_state[new_design_area]), std::get<3>(_file_undo_state[new_design_area]));
+            emit undoActionPerformed(_file_undo_state[new_design_area].undo_enabled, _file_undo_state[new_design_area].redo_enabled);
         }
 
         void TabHandler::setSelectMode()
@@ -405,29 +405,29 @@ namespace logicsim
             emit undoActionPerformed(undo_enabled, redo_enabled);
             DesignArea *design_area = currentDesignArea();
 
-            std::tuple<bool, int, bool, bool> &state = _file_undo_state[design_area];
+            FileUndoState &state = _file_undo_state[design_area];
 
-            std::get<2>(state) = undo_enabled;
-            std::get<3>(state) = redo_enabled;
+            state.undo_enabled = undo_enabled;
+            state.redo_enabled = redo_enabled;
 
             if (was_undo)
             {
-                if (--std::get<1>(state) == 0)
+                if (--state.undo_counter == 0)
                 {
                     _removeUnsavedIcon();
                 }
-                else if (std::get<1>(state) == -1)
+                else if (state.undo_counter == -1)
                 {
                     _addUnsavedIcon();
                 }
             }
             else
             {
-                if (++std::get<1>(state) == 0)
+                if (++state.undo_counter == 0)
                 {
                     _removeUnsavedIcon();
                 }
-                else if (std::get<1>(state) == 1)
+                else if (state.undo_counter == 1)
                 {
                     _addUnsavedIcon();
                 }
@@ -436,7 +436,7 @@ namespace logicsim
 
         void TabHandler::_addUnsavedIcon()
         {
-            if (!std::get<0>(_file_undo_state[currentDesignArea()]))
+            if (!_file_undo_state[currentDesignArea()].is_saved)
             {
                 return;
             }
@@ -445,7 +445,7 @@ namespace logicsim
 
         void TabHandler::_removeUnsavedIcon()
         {
-            if (!std::get<0>(_file_undo_state[currentDesignArea()]))
+            if (!_file_undo_state[currentDesignArea()].is_saved)
             {
                 return;
             }

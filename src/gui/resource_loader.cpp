@@ -53,19 +53,45 @@ namespace logicsim
                 }
             }
 
-            QPixmap getWire(LINE_TYPE line_type, int size, double scale, bool on)
-            {
+            QPixmap getWire(LINE_TYPE line_type, int size, double scale, const model::State &wire_type)
+            {                
                 switch (line_type)
                 {
                 case HORIZONTAL:
                 default:
                 {
-                    QPixmap *wire = on ? hwire_on : hwire;
+                    QPixmap *wire;
+                    switch (wire_type)
+                    {
+                    case model::State::ZERO:
+                        wire = hwire;
+                        break;
+                    case model::State::ONE:
+                        wire = hwire_on;
+                        break;
+                    case model::State::HiZ:
+                        wire = hwire_z;
+                        break;
+                    }
+
                     return wire->scaled(size, static_cast<int>(scale * WIRE_THICKNESS));
                 }
                 case VERTICAL:
                 {
-                    QPixmap *wire = on ? vwire_on : vwire;
+                    QPixmap *wire;
+                    switch (wire_type)
+                    {
+                    case model::State::ZERO:
+                        wire = vwire;
+                        break;
+                    case model::State::ONE:
+                        wire = vwire_on;
+                        break;
+                    case model::State::HiZ:
+                        wire = vwire_z;
+                        break;
+                    }
+
                     return wire->scaled(static_cast<int>(scale * WIRE_THICKNESS), size);
                 }
                 }
@@ -108,7 +134,7 @@ namespace logicsim
                     {COMPONENT::CONSTANT, {QPixmap(IMG_PATH + "CONSTANT0.png"), QPixmap(IMG_PATH + "CONSTANT1.png")}},
                     {COMPONENT::SWITCH, {QPixmap(IMG_PATH + "SWITCH0.png"), QPixmap(IMG_PATH + "SWITCH1.png")}},
                     {COMPONENT::OSCILLATOR, {QPixmap(IMG_PATH + "OSCILLATOR.png")}},
-                    {COMPONENT::LED, {QPixmap(IMG_PATH + "LED0.png"), QPixmap(IMG_PATH + "LED1.png")}},
+                    {COMPONENT::LED, {QPixmap(IMG_PATH + "LED0.png"), QPixmap(IMG_PATH + "LED1.png"), QPixmap(IMG_PATH + "LED2.png")}},
                     {COMPONENT::SRLATCH, {QPixmap(IMG_PATH + "SRLATCH.png")}},
                     {COMPONENT::JKLATCH, {QPixmap(IMG_PATH + "JKLATCH.png")}},
                     {COMPONENT::TLATCH, {QPixmap(IMG_PATH + "TLATCH.png")}},
@@ -156,6 +182,8 @@ namespace logicsim
                 vwire_right = new QPixmap(IMG_PATH + "vwire_mark_right.png");
                 hwire_on = new QPixmap(IMG_PATH + "hwire_on.png");
                 vwire_on = new QPixmap(IMG_PATH + "vwire_on.png");
+                hwire_z = new QPixmap(IMG_PATH + "hwire_z.png");
+                vwire_z = new QPixmap(IMG_PATH + "vwire_z.png");
 
                 select_icon = new QIcon(IMG_PATH + "select_icon.png");
                 move_icon = new QIcon(IMG_PATH + "move_icon.png");

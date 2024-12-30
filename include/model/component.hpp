@@ -15,6 +15,33 @@ namespace logicsim
 {
     namespace model
     {
+        enum State
+        {
+            ZERO = 0,
+            ONE = 1,
+            HiZ = 2
+        };
+
+        inline State operator!(const State &x)
+        {
+            return static_cast<State>((x != 2) * (1 - x) + (x == 2) * 2);
+        }
+
+        inline State operator&&(const State &x, const State &y)
+        {
+            return static_cast<State>((x == 1) * y + (x == 2) * 2 * (y != 0));
+        }
+
+        inline State operator||(const State &x, const State &y)
+        {
+            return static_cast<State>((x == 0) * y + (x == 1) + (x == 2) * (2 - (y == 1)));
+        }
+
+        inline State operator^(const State &x, const State &y)
+        {
+            return static_cast<State>((x == 0) * y + (x == 1) * !y + (x == 2) * 2);
+        }
+
         namespace component
         {
             class null_input : public std::exception
@@ -36,7 +63,7 @@ namespace logicsim
                 virtual void update();
 
                 // returns value for given output, taking delay into account
-                bool evaluate(unsigned int out = 0);
+                State evaluate(unsigned int out = 0);
 
                 virtual void check() const; // checks input components
                 virtual void reset();       // resets component state
@@ -61,9 +88,27 @@ namespace logicsim
 
                 size_t _history_size;
                 unsigned int _n_evals;
-                std::list<std::vector<bool>> _cache_history;
+                std::list<std::vector<State>> _cache_history;
 
-                virtual bool _evaluate(unsigned int out = 0) = 0;
+                virtual State _evaluate(unsigned int out = 0) = 0;
+            };
+
+            // Singleton component object to use for undriven inputs
+            // Will always evaluate to the preset value (default HiZ)
+            class NullComponent : public Component
+            {
+            public:
+                static NullComponent &get_instance();
+
+                std::string ctype() const override;
+            private:
+                NullComponent();
+            public:
+                NullComponent(Component const&) = delete;
+                void operator=(Component const&) = delete;
+
+            protected:
+                virtual State _evaluate(unsigned int out = 0) override;
             };
 
             class NInputComponent : public Component
@@ -98,7 +143,7 @@ namespace logicsim
             std::string ctype() const override;                                     \
                                                                                     \
         protected:                                                                  \
-            bool _evaluate(unsigned int = 0) override;                              \
+            State _evaluate(unsigned int = 0) override;                              \
         };
 
     #define DEFINE_2_INPUT_COMPONENT(name)                                                                                      \
@@ -114,7 +159,7 @@ namespace logicsim
             std::string ctype() const override;                                                                                 \
                                                                                                                                 \
         protected:                                                                                                              \
-            bool _evaluate(unsigned int = 0) override;                                                                          \
+            State _evaluate(unsigned int = 0) override;                                                                          \
         };
 
             class TimeComponent : public Component
