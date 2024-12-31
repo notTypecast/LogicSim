@@ -221,7 +221,6 @@ namespace logicsim
 
             // update in case new was added
             design_area = currentDesignArea();
-            _file_undo_state[design_area] = {true, 0, false, false};
 
             try {
                 design_area->readFromFile(filepath);
@@ -243,6 +242,9 @@ namespace logicsim
                 }
                 return;
             }
+
+            _file_undo_state[design_area] = {true, 0, false, false};
+
             _setupTab(design_area);
             if (!add)
             {

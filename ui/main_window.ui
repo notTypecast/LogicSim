@@ -510,6 +510,7 @@
      </property>
      <addaction name="actionConstant_0"/>
      <addaction name="actionConstant_1"/>
+     <addaction name="actionButton"/>
      <addaction name="actionSwitch"/>
      <addaction name="actionOscillator"/>
      <addaction name="actionKeypad"/>
@@ -991,6 +992,14 @@
   <action name="actionVersion">
    <property name="text">
     <string>Version</string>
+   </property>
+  </action>
+  <action name="actionButton">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Button</string>
    </property>
   </action>
  </widget>

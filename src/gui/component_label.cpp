@@ -265,6 +265,10 @@ namespace logicsim
                 ev->accept();
                 switch (_comp_type)
                 {
+                case BUTTON:
+                    setResourceByIdx(1);
+                    dynamic_cast<model::input::Button *>(_component_model)->press();
+                    break;
                 case SWITCH:
                     setResourceByIdx(!_resource_idx);
                     _component_model->set_params(std::to_string(_resource_idx));
@@ -334,6 +338,10 @@ namespace logicsim
                 ev->accept();
                 switch (_comp_type)
                 {
+                case BUTTON:
+                    setResourceByIdx(0);
+                    dynamic_cast<model::input::Button *>(_component_model)->release();
+                    break;
                 case KEYPAD:
                     setResourceByIdx(0);
                     break;
@@ -484,7 +492,7 @@ namespace logicsim
             }
             int obj_x = this->x();
             int obj_y = this->y();
-            if (!(obj_x <= x && obj_y <= y && x <= obj_x + width() && y <= obj_y + height()))
+            if (!(obj_x - WIRE_SNAP_LEEWAY <= x && obj_y - WIRE_SNAP_LEEWAY <= y && x <= obj_x + width() + WIRE_SNAP_LEEWAY && y <= obj_y + height() + WIRE_SNAP_LEEWAY))
             {
                 return;
             }

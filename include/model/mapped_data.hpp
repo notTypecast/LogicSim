@@ -32,6 +32,7 @@ namespace logicsim
         DEFINE_FACTORY_FUNCTION(buffer, gate::BUFFER)
 
         DEFINE_FACTORY_FUNCTION(constant, input::Constant)
+        DEFINE_FACTORY_FUNCTION(button, input::Button)
         DEFINE_FACTORY_FUNCTION(switch, input::Switch)
         DEFINE_FACTORY_FUNCTION(oscillator, input::Oscillator)
         DEFINE_FACTORY_FUNCTION(keypad, input::Keypad)
@@ -59,6 +60,7 @@ namespace logicsim
             {"NOT", &create_not},
             {"BUFFER", &create_buffer},
             {"CONSTANT", &create_constant},
+            {"BUTTON", &create_button},
             {"SWITCH", &create_switch},
             {"OSCILLATOR", &create_oscillator},
             {"KEYPAD", &create_keypad},

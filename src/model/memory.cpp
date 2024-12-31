@@ -8,15 +8,20 @@ namespace logicsim
         namespace memory
         {
             // MemoryComponent
-            MemoryComponent::MemoryComponent(unsigned int n) : NInputComponent(n + 1, 5, 2)
+            MemoryComponent::MemoryComponent(unsigned int n) : NInputComponent(n + 3, 5, 2)
             {
-                _clk = &_inputs[_inputs.size() - 1];
-                _clk_out = &_inputs_out[_inputs.size() - 1];
+                int s = _inputs.size();
+                _clk = &_inputs[s - 2];
+                _clk_out = &_inputs_out[s - 2];
+                _pre = &_inputs[0];
+                _pre_out = &_inputs_out[0];
+                _clr = &_inputs[s - 1];
+                _clr_out = &_inputs_out[s - 1];
             }
 
             void MemoryComponent::set_clk(component::Component &clk, unsigned int clk_out)
             {
-                set_input(_inputs.size() - 1, clk, clk_out);
+                set_input(_inputs.size() - 3, clk, clk_out);
             }
 
             void MemoryComponent::tick()
@@ -36,23 +41,47 @@ namespace logicsim
                 return 2;
             }
 
+            State MemoryComponent::_evaluate(unsigned int out)
+            {
+                State pre = (*_pre)->evaluate(*_pre_out);
+                State clr = (*_clr)->evaluate(*_clr_out);
+
+                // override HiZ to 0, so unconnected lines do not affect function
+                pre = pre == State::HiZ ? State::ZERO : pre;
+                clr = clr == State::HiZ ? State::ZERO : clr;
+
+                if (pre ^ clr)
+                {
+                    _Q = pre ? State::ONE : State::ZERO;
+                    return _Q;
+                }
+
+                if (pre)
+                {
+                    _Q = State::HiZ;
+                    return _Q;
+                }
+
+                return _memory_evaluate(out);
+            }
+
             // SRMemoryComponent
             SRMemoryComponent::SRMemoryComponent() : MemoryComponent(2)
             {
-                _S = &_inputs[0];
-                _S_out = &_inputs_out[0];
-                _R = &_inputs[1];
-                _R_out = &_inputs_out[1];
+                _S = &_inputs[1];
+                _S_out = &_inputs_out[1];
+                _R = &_inputs[2];
+                _R_out = &_inputs_out[2];
             }
 
             SRMemoryComponent::SRMemoryComponent(component::Component &clk, component::Component &S, component::Component &R, unsigned int clk_out, unsigned int S_out, unsigned int R_out) : SRMemoryComponent()
             {
                 set_clk(clk, clk_out);
-                set_input(0, S, S_out);
-                set_input(1, R, R_out);
+                set_input(1, S, S_out);
+                set_input(2, R, R_out);
             }
 
-            State SRMemoryComponent::_evaluate(unsigned int out)
+            State SRMemoryComponent::_memory_evaluate(unsigned int out)
             {
                 if (_clk_edge() && !_evaluated)
                 {
@@ -66,20 +95,20 @@ namespace logicsim
             // JKMemoryComponent
             JKMemoryComponent::JKMemoryComponent() : MemoryComponent(2)
             {
-                _J = &_inputs[0];
-                _J_out = &_inputs_out[0];
-                _K = &_inputs[1];
-                _K_out = &_inputs_out[1];
+                _J = &_inputs[1];
+                _J_out = &_inputs_out[1];
+                _K = &_inputs[2];
+                _K_out = &_inputs_out[2];
             }
 
             JKMemoryComponent::JKMemoryComponent(component::Component &clk, component::Component &J, component::Component &K, unsigned int clk_out, unsigned int J_out, unsigned int K_out) : JKMemoryComponent()
             {
                 set_clk(clk, clk_out);
-                set_input(0, J, J_out);
-                set_input(1, K, K_out);
+                set_input(1, J, J_out);
+                set_input(2, K, K_out);
             }
 
-            State JKMemoryComponent::_evaluate(unsigned int out)
+            State JKMemoryComponent::_memory_evaluate(unsigned int out)
             {
                 if (_clk_edge() && !_evaluated)
                 {
@@ -93,17 +122,17 @@ namespace logicsim
             // DMemoryComponent
             DMemoryComponent::DMemoryComponent() : MemoryComponent(1)
             {
-                _D = &_inputs[0];
-                _D_out = &_inputs_out[0];
+                _D = &_inputs[1];
+                _D_out = &_inputs_out[1];
             }
 
             DMemoryComponent::DMemoryComponent(component::Component &clk, component::Component &D, unsigned int clk_out, unsigned int D_out) : DMemoryComponent()
             {
                 set_clk(clk, clk_out);
-                set_input(0, D, D_out);
+                set_input(1, D, D_out);
             }
 
-            State DMemoryComponent::_evaluate(unsigned int out)
+            State DMemoryComponent::_memory_evaluate(unsigned int out)
             {
                 if (_clk_edge() && !_evaluated)
                 {
@@ -117,17 +146,17 @@ namespace logicsim
             // TMemoryComponent
             TMemoryComponent::TMemoryComponent() : MemoryComponent(1)
             {
-                _T = &_inputs[0];
-                _T_out = &_inputs_out[0];
+                _T = &_inputs[1];
+                _T_out = &_inputs_out[1];
             }
 
             TMemoryComponent::TMemoryComponent(component::Component &clk, component::Component &T, unsigned int clk_out, unsigned int T_out) : TMemoryComponent()
             {
                 set_clk(clk, clk_out);
-                set_input(0, T, T_out);
+                set_input(1, T, T_out);
             }
 
-            State TMemoryComponent::_evaluate(unsigned int out)
+            State TMemoryComponent::_memory_evaluate(unsigned int out)
             {
                 if (_clk_edge() && !_evaluated)
                 {

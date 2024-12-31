@@ -100,6 +100,9 @@ namespace logicsim
 
             double _scale;
 
+            // extra space outside component rectangle to consider for wire snap
+            static constexpr int WIRE_SNAP_LEEWAY = 15;
+
         public slots:
             // called on object creation
             // triggered by properties popup

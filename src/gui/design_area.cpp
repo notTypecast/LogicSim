@@ -885,6 +885,7 @@ namespace logicsim
         {
             for (const auto &pair : components)
             {
+                _circuit_model.remove_component(*(pair.second->component_model()));
                 delete pair.second;
             }
         }

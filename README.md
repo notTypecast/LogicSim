@@ -86,7 +86,6 @@ LogicSim is still in development, and thus is expected to contain bugs. Addition
 
 * More complex components, such as decoders and multiplexers.
 * Nodes that wires can connect to.
-* More customization for initial values of memory components and preset-clear lines.
 * (Possibly) a grid for components to snap to.
 
 ## Credit

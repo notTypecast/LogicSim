@@ -25,6 +25,7 @@ namespace logicsim
                 {_ui->actionXNOR, COMPONENT::XNOR_GATE, -1},
                 {_ui->actionConstant_0, COMPONENT::CONSTANT, 0},
                 {_ui->actionConstant_1, COMPONENT::CONSTANT, 1},
+                {_ui->actionButton, COMPONENT::BUTTON, 0},
                 {_ui->actionSwitch, COMPONENT::SWITCH, 0},
                 {_ui->actionOscillator, COMPONENT::OSCILLATOR, -1},
                 {_ui->actionKeypad, COMPONENT::KEYPAD, -1},

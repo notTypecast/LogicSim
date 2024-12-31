@@ -26,11 +26,17 @@ namespace logicsim
                 // Thus, when changing an input component, the double pointer will automatically point to the new component
                 component::Component **_clk;
                 unsigned int *_clk_out;
+                component::Component **_pre, **_clr;
+                unsigned int *_pre_out, *_clr_out;
+
                 State _Q = State::HiZ;
                 bool _evaluated = false;
 
                 // whether the current clock state indicates input should be evaluated
                 virtual bool _clk_edge() = 0;
+
+                virtual State _memory_evaluate(unsigned int out = 0) = 0;
+                State _evaluate(unsigned int out = 0) override final;
             };
 
             class SRMemoryComponent : public MemoryComponent
@@ -43,7 +49,7 @@ namespace logicsim
                 Component **_S, **_R;
                 unsigned int *_S_out, *_R_out;
 
-                State _evaluate(unsigned int out = 0) override;
+                State _memory_evaluate(unsigned int out = 0) override;
             };
 
             class JKMemoryComponent : public MemoryComponent
@@ -56,7 +62,7 @@ namespace logicsim
                 Component **_J, **_K;
                 unsigned int *_J_out, *_K_out;
 
-                State _evaluate(unsigned int out = 0) override;
+                State _memory_evaluate(unsigned int out = 0) override;
             };
 
             class DMemoryComponent : public MemoryComponent
@@ -69,7 +75,7 @@ namespace logicsim
                 Component **_D;
                 unsigned int *_D_out;
 
-                State _evaluate(unsigned int out = 0) override;
+                State _memory_evaluate(unsigned int out = 0) override;
             };
 
             class TMemoryComponent : public MemoryComponent
@@ -82,7 +88,7 @@ namespace logicsim
                 Component **_T;
                 unsigned int *_T_out;
 
-                State _evaluate(unsigned int out = 0) override;
+                State _memory_evaluate(unsigned int out = 0) override;
             };
 
     #define DEFINE_1_INPUT_LATCH(name, base)                                                                                                                             \

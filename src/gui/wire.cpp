@@ -274,7 +274,7 @@ namespace logicsim
 
         bool Wire::calculateWireTargetPos(ComponentLabel *component, int dx, int dy, int &x, int &y, bool &is_input, int &io_idx)
         {
-            if (dx >= component->width()/2)
+            if (dx >= component->width() * 0.6)
             {
                 is_input = false;
             }

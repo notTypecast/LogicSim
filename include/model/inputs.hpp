@@ -32,6 +32,21 @@ namespace logicsim
                 State _evaluate(unsigned int = 0) override;
             };
 
+            class Button : public Input
+            {
+            public:
+                Button();
+
+                void press();
+                void release();
+
+                std::string ctype() const override;
+
+            protected:
+                bool _state = false;
+                State _evaluate(unsigned int = 0) override;
+            };
+
             class Switch : public Input
             {
             public:

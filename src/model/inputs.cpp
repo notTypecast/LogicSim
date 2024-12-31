@@ -42,6 +42,31 @@ namespace logicsim
                 _value = std::stoi(param_string);
             }
 
+            // Button
+            Button::Button() : Input(1)
+            {
+            }
+
+            State Button::_evaluate(unsigned int)
+            {
+                return static_cast<State>(_state);
+            }
+
+            void Button::press()
+            {
+                _state = true;
+            }
+
+            void Button::release()
+            {
+                _state = false;
+            }
+
+            std::string Button::ctype() const
+            {
+                return "BUTTON";
+            }
+
             // Switch
             Switch::Switch() : Input(1)
             {
