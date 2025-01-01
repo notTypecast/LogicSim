@@ -11,6 +11,7 @@
 #include "model/inputs.hpp"
 #include "model/memory.hpp"
 #include "model/outputs.hpp"
+#include "model/control.hpp"
 
 namespace logicsim
 {
@@ -21,6 +22,11 @@ namespace logicsim
         {                                            \
             return new class_t();                    \
         }
+    #define DEFINE_FACTORY_FUNCTION_ARG(name, class_t, arg) \
+        inline component::Component *create_##name()        \
+        {                                                   \
+            return new class_t(arg);                        \
+        }
 
         DEFINE_FACTORY_FUNCTION(and, gate::AND)
         DEFINE_FACTORY_FUNCTION(or, gate::OR)
@@ -30,6 +36,7 @@ namespace logicsim
         DEFINE_FACTORY_FUNCTION(xnor, gate::XNOR)
         DEFINE_FACTORY_FUNCTION(not, gate::NOT)
         DEFINE_FACTORY_FUNCTION(buffer, gate::BUFFER)
+        DEFINE_FACTORY_FUNCTION(connector, gate::CONNECTOR)
 
         DEFINE_FACTORY_FUNCTION(constant, input::Constant)
         DEFINE_FACTORY_FUNCTION(button, input::Button)
@@ -50,6 +57,14 @@ namespace logicsim
         DEFINE_FACTORY_FUNCTION(5in_7segment, output::_5in_7SegmentDisplay)
         DEFINE_FACTORY_FUNCTION(8in_7segment, output::_8in_7SegmentDisplay)
 
+        DEFINE_FACTORY_FUNCTION_ARG(mux1, control::Multiplexer, 1)
+        DEFINE_FACTORY_FUNCTION_ARG(mux2, control::Multiplexer, 2)
+        DEFINE_FACTORY_FUNCTION_ARG(mux3, control::Multiplexer, 3)
+
+        DEFINE_FACTORY_FUNCTION_ARG(dec1, control::Decoder, 1)
+        DEFINE_FACTORY_FUNCTION_ARG(dec2, control::Decoder, 2)
+        DEFINE_FACTORY_FUNCTION_ARG(dec3, control::Decoder, 3)
+
         const std::unordered_map<std::string, std::function<component::Component *()>> ctype_map = {
             {"AND", &create_and},
             {"OR", &create_or},
@@ -58,6 +73,7 @@ namespace logicsim
             {"NOR", &create_nor},
             {"XNOR", &create_xnor},
             {"NOT", &create_not},
+            {"CONNECTOR", &create_connector},
             {"BUFFER", &create_buffer},
             {"CONSTANT", &create_constant},
             {"BUTTON", &create_button},
@@ -74,7 +90,14 @@ namespace logicsim
             {"TFLIPFLOP", &create_tflipflop},
             {"OUTPUT", &create_output},
             {"5IN_7SEGMENT", &create_5in_7segment},
-            {"8IN_7SEGMENT", &create_8in_7segment}};
+            {"8IN_7SEGMENT", &create_8in_7segment},
+            {"MUX-1", &create_mux1},
+            {"MUX-2", &create_mux2},
+            {"MUX-3", &create_mux3},
+            {"DEC-1", &create_dec1},
+            {"DEC-2", &create_dec2},
+            {"DEC-3", &create_dec3}
+        };
     }
 }
 

@@ -274,36 +274,26 @@ namespace logicsim
 
         bool Wire::calculateWireTargetPos(ComponentLabel *component, int dx, int dy, int &x, int &y, bool &is_input, int &io_idx)
         {
-            if (dx >= component->width() * 0.6)
-            {
-                is_input = false;
-            }
-            else
-            {
-                is_input = true;
-            }
-
-            if (resources::getComponentIOPositionVector(component->comp_type(), is_input).empty())
-            {
-                is_input = !is_input;
-            }
+            const std::vector<std::pair<double, double>> &input_rel_io_pos = resources::comp_io_rel_pos.at(component->comp_type()).first;
+            const std::vector<std::pair<double, double>> &output_rel_io_pos = resources::comp_io_rel_pos.at(component->comp_type()).second;
 
             int distance = std::numeric_limits<int>::max();
             io_idx = 0;
 
-            const std::vector<std::pair<double, double>> &vec = resources::getComponentIOPositionVector(component->comp_type(), is_input);
-            int i = -1;
-            for (auto const & p : vec)
+            for (auto const & vec : {input_rel_io_pos, output_rel_io_pos})
             {
-                ++i;
-                int new_distance = std::abs(dy - p.second * component->height());
-                if (new_distance < distance)
+                int i = -1;
+                for (auto const & p : vec)
                 {
-                    distance = new_distance;
-                    io_idx = i;
-                    continue;
+                    ++i;
+                    int new_distance = std::abs(dx - p.first * component->width()) + std::abs(dy - p.second * component->height());
+                    if (new_distance < distance)
+                    {
+                        distance = new_distance;
+                        io_idx = i;
+                        is_input = vec == input_rel_io_pos;
+                    }
                 }
-                break;
             }
 
             int rel_x, rel_y;

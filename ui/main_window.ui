@@ -537,10 +537,35 @@
      <addaction name="actionT_Flip_Flop"/>
      <addaction name="actionD_Flip_Flop"/>
     </widget>
+    <widget class="QMenu" name="menuControl">
+     <property name="title">
+      <string>Control</string>
+     </property>
+     <widget class="QMenu" name="menuMultiplexer">
+      <property name="title">
+       <string>Multiplexer</string>
+      </property>
+      <addaction name="action2_to_1"/>
+      <addaction name="action4_to_1"/>
+      <addaction name="action8_to_1"/>
+     </widget>
+     <widget class="QMenu" name="menuDecoder">
+      <property name="title">
+       <string>Decoder</string>
+      </property>
+      <addaction name="action1_to_2"/>
+      <addaction name="action2_to_4"/>
+      <addaction name="action3_to_8"/>
+     </widget>
+     <addaction name="menuMultiplexer"/>
+     <addaction name="menuDecoder"/>
+    </widget>
+    <addaction name="actionConnector"/>
     <addaction name="menuGates"/>
     <addaction name="menuInputs"/>
     <addaction name="menuOutputs"/>
     <addaction name="menuMemory"/>
+    <addaction name="menuControl"/>
    </widget>
    <widget class="QMenu" name="menuTools">
     <property name="title">
@@ -1000,6 +1025,44 @@
    </property>
    <property name="text">
     <string>Button</string>
+   </property>
+  </action>
+  <action name="actionConnector">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Connector</string>
+   </property>
+  </action>
+  <action name="action2_to_1">
+   <property name="text">
+    <string>2 to 1</string>
+   </property>
+  </action>
+  <action name="action4_to_1">
+   <property name="text">
+    <string>4 to 1</string>
+   </property>
+  </action>
+  <action name="action1_to_2">
+   <property name="text">
+    <string>1 to 2</string>
+   </property>
+  </action>
+  <action name="action2_to_4">
+   <property name="text">
+    <string>2 to 4</string>
+   </property>
+  </action>
+  <action name="action8_to_1">
+   <property name="text">
+    <string>8 to 1</string>
+   </property>
+  </action>
+  <action name="action3_to_8">
+   <property name="text">
+    <string>3 to 8</string>
    </property>
   </action>
  </widget>

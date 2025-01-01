@@ -15,6 +15,7 @@ namespace logicsim
 
             _insert_actions =
             {
+                {_ui->actionConnector, COMPONENT::CONNECTOR, -1},
                 {_ui->actionBuffer, COMPONENT::BUFFER, -1},
                 {_ui->actionNOT, COMPONENT::NOT_GATE, -1},
                 {_ui->actionAND, COMPONENT::AND_GATE, -1},
@@ -40,6 +41,12 @@ namespace logicsim
                 {_ui->actionJK_Flip_Flop, COMPONENT::JKFLIPFLOP, -1},
                 {_ui->actionT_Flip_Flop, COMPONENT::TFLIPFLOP, -1},
                 {_ui->actionD_Flip_Flop, COMPONENT::DFLIPFLOP, -1},
+                {_ui->action2_to_1, COMPONENT::MUX_1, -1},
+                {_ui->action4_to_1, COMPONENT::MUX_2, -1},
+                {_ui->action8_to_1, COMPONENT::MUX_3, -1},
+                {_ui->action1_to_2, COMPONENT::DEC_1, -1},
+                {_ui->action2_to_4, COMPONENT::DEC_2, -1},
+                {_ui->action3_to_8, COMPONENT::DEC_3, -1}
             };
 
             showMaximized();

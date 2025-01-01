@@ -19,6 +19,7 @@ SOURCES += \
     src/model/inputs.cpp \
     src/model/memory.cpp \
     src/model/outputs.cpp \
+    src/model/control.cpp \
     src/utils.cpp \
     src/gui/main_window.cpp \
     src/gui/tab_handler.cpp \
@@ -38,6 +39,7 @@ HEADERS += \
     include/model/mapped_data.hpp \
     include/model/memory.hpp \
     include/model/outputs.hpp \
+    include/model/control.hpp \
     include/utils.hpp \
     include/gui/main_window.hpp \
     include/gui/tab_handler.hpp \

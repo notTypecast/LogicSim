@@ -844,7 +844,6 @@ namespace logicsim
                         output_idx = std::stoi(splitter2.next());
                         if (output_idx >= components[input_id_str]->component_model()->n_outputs())
                         {
-                            _delete_components(components);
                             throw std::invalid_argument("");
                         }
                     }

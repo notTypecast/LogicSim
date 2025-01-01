@@ -38,7 +38,14 @@ namespace logicsim
 
             QPixmap getBorder(int width, int height)
             {
-                return border->scaled(width, height);
+                QPixmap pixmap(width, height);
+                pixmap.fill(Qt::transparent);
+
+                QPainter painter(&pixmap);
+                painter.setPen(Qt::black);
+                painter.drawRect(0, 0, width - 1, height - 1);
+
+                return pixmap;
             }
 
             QPixmap getLine(LINE_TYPE line_type, int size)
@@ -123,6 +130,7 @@ namespace logicsim
 
                 comp_images =
                 {
+                    {COMPONENT::CONNECTOR, {QPixmap(IMG_PATH + "CONNECTOR.png")}},
                     {COMPONENT::BUFFER, {QPixmap(IMG_PATH + "BUFFER.png")}},
                     {COMPONENT::NOT_GATE, {QPixmap(IMG_PATH + "NOT.png")}},
                     {COMPONENT::AND_GATE, {QPixmap(IMG_PATH + "AND.png")}},
@@ -144,6 +152,12 @@ namespace logicsim
                     {COMPONENT::JKFLIPFLOP, {QPixmap(IMG_PATH + "JKFFPC.png")}},
                     {COMPONENT::TFLIPFLOP, {QPixmap(IMG_PATH + "TFFPC.png")}},
                     {COMPONENT::DFLIPFLOP, {QPixmap(IMG_PATH + "DFFPC.png")}},
+                    {COMPONENT::MUX_1, {QPixmap(IMG_PATH + "MUX2-1.png")}},
+                    {COMPONENT::MUX_2, {QPixmap(IMG_PATH + "MUX4-1.png")}},
+                    {COMPONENT::MUX_3, {QPixmap(IMG_PATH + "MUX8-1.png")}},
+                    {COMPONENT::DEC_1, {QPixmap(IMG_PATH + "DEC1-2.png")}},
+                    {COMPONENT::DEC_2, {QPixmap(IMG_PATH + "DEC2-4.png")}},
+                    {COMPONENT::DEC_3, {QPixmap(IMG_PATH + "DEC3-8.png")}},
                 };
 
                 comp_images[COMPONENT::_7SEG_5IN] = std::vector<QPixmap>(33);
@@ -172,7 +186,6 @@ namespace logicsim
                     comp_images[COMPONENT::KEYPAD][i] = QPixmap(IMG_PATH + QString::fromStdString(ss.str()));
                 }
 
-                border = new QPixmap(IMG_PATH + "border.png");
                 hselline = new QPixmap(IMG_PATH + "hselline.png");
                 vselline = new QPixmap(IMG_PATH + "vselline.png");
                 hwire = new QPixmap(IMG_PATH + "hwire.png");
@@ -193,6 +206,7 @@ namespace logicsim
 
                 comp_icons =
                 {
+                    {COMPONENT::CONNECTOR, {new QIcon(IMG_PATH + "CONNECTOR.png")}},
                     {COMPONENT::BUFFER, {new QIcon(IMG_PATH + "BUFFER.png")}},
                     {COMPONENT::NOT_GATE, {new QIcon(IMG_PATH + "NOT.png")}},
                     {COMPONENT::AND_GATE, {new QIcon(IMG_PATH + "AND.png")}},
@@ -228,7 +242,6 @@ namespace logicsim
 
             void deallocate()
             {
-                delete border;
                 delete hselline;
                 delete vselline;
                 delete hwire;

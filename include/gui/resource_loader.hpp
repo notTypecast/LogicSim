@@ -4,6 +4,7 @@
 #include <QApplication>
 #include <QLabel>
 #include <QPixmap>
+#include <QPainter>
 
 #include <unordered_set>
 #include <unordered_map>
@@ -38,6 +39,7 @@ namespace logicsim
         enum COMPONENT
         {
             NONE,
+            CONNECTOR,
             BUFFER,
             NOT_GATE,
             AND_GATE,
@@ -61,10 +63,17 @@ namespace logicsim
             SRFLIPFLOP,
             JKFLIPFLOP,
             TFLIPFLOP,
-            DFLIPFLOP
+            DFLIPFLOP,
+            MUX_1,
+            MUX_2,
+            MUX_3,
+            DEC_1,
+            DEC_2,
+            DEC_3
         };
 
         inline const std::unordered_map<COMPONENT, std::string> comp_type_to_ctype = {
+            {CONNECTOR, "CONNECTOR"},
             {BUFFER, "BUFFER"},
             {NOT_GATE, "NOT"},
             {AND_GATE, "AND"},
@@ -88,7 +97,13 @@ namespace logicsim
             {SRFLIPFLOP, "SRFLIPFLOP"},
             {JKFLIPFLOP, "JKFLIPFLOP"},
             {DFLIPFLOP, "DFLIPFLOP"},
-            {TFLIPFLOP, "TFLIPFLOP"}
+            {TFLIPFLOP, "TFLIPFLOP"},
+            {MUX_1, "MUX-1"},
+            {MUX_2, "MUX-2"},
+            {MUX_3, "MUX-3"},
+            {DEC_1, "DEC-1"},
+            {DEC_2, "DEC-2"},
+            {DEC_3, "DEC-3"}
         };
 
         inline const int WIRE_REMOVE_DISTANCE_THRESHOLD = 40;
@@ -102,6 +117,7 @@ namespace logicsim
         namespace resources
         {
             inline const std::unordered_map<std::string, COMPONENT> ctype_to_component_t = {
+                {"CONNECTOR", COMPONENT::CONNECTOR},
                 {"AND", COMPONENT::AND_GATE},
                 {"OR", COMPONENT::OR_GATE},
                 {"XOR", COMPONENT::XOR_GATE},
@@ -125,7 +141,13 @@ namespace logicsim
                 {"TFLIPFLOP", COMPONENT::TFLIPFLOP},
                 {"OUTPUT", COMPONENT::LED},
                 {"5IN_7SEGMENT", COMPONENT::_7SEG_5IN},
-                {"8IN_7SEGMENT", COMPONENT::_7SEG_8IN}
+                {"8IN_7SEGMENT", COMPONENT::_7SEG_8IN},
+                {"MUX-1", COMPONENT::MUX_1},
+                {"MUX-2", COMPONENT::MUX_2},
+                {"MUX-3", COMPONENT::MUX_3},
+                {"DEC-1", COMPONENT::DEC_1},
+                {"DEC-2", COMPONENT::DEC_2},
+                {"DEC-3", COMPONENT::DEC_3}
             };
 
             inline const std::unordered_set<COMPONENT> components_with_properties =
@@ -145,7 +167,6 @@ namespace logicsim
             // initialized when load is called, because QPixmap cannot be created here
             inline std::unordered_map<COMPONENT, std::vector<QPixmap>> comp_images;
 
-            inline QPixmap *border;
             inline QPixmap *hselline, *vselline;
             inline QPixmap *hwire, *vwire;
             inline QPixmap *hwire_up, *hwire_down, *vwire_left, *vwire_right;
@@ -212,6 +233,7 @@ namespace logicsim
 
             inline const std::unordered_map<COMPONENT, std::pair<std::vector<std::pair<double, double>>, std::vector<std::pair<double, double>>>> comp_io_rel_pos =
             {
+                {COMPONENT::CONNECTOR, {{{0.15, 0.45}}, {{0.75, 0.45}}}},
                 {COMPONENT::BUFFER, {{{0.04, 0.48}}, {{0.9, 0.48}}}},
                 {COMPONENT::NOT_GATE, {{{0.04, 0.48}}, {{0.9, 0.48}}}},
                 {COMPONENT::AND_GATE, {{{0.12, 0.26}, {0.12, 0.7}}, {{0.9, 0.48}}}},
@@ -236,6 +258,12 @@ namespace logicsim
                 {COMPONENT::JKFLIPFLOP, {{{0.48, 0.06}, {0.08, 0.22}, {0.08, 0.38}, {0.08, 0.76}, {0.48, 0.92}}, {{0.88, 0.22}, {0.88, 0.76}}}},
                 {COMPONENT::TFLIPFLOP, {{{0.48, 0.06}, {0.08, 0.22}, {0.08, 0.76}, {0.48, 0.92}}, {{0.88, 0.22}, {0.88, 0.76}}}},
                 {COMPONENT::DFLIPFLOP, {{{0.48, 0.06}, {0.08, 0.22}, {0.08, 0.76}, {0.48, 0.92}}, {{0.88, 0.22}, {0.88, 0.76}}}},
+                {COMPONENT::MUX_1, {{{0.5, 0.08}, {0.08, 0.36}, {0.08, 0.62}, {0.5, 0.9}}, {{0.88, 0.48}}}},
+                {COMPONENT::MUX_2, {{{0.5, 0.08}, {0.08, 0.22}, {0.08, 0.4}, {0.08, 0.58}, {0.08, 0.76}, {0.38, 0.9}, {0.58, 0.9}}, {{0.88, 0.48}}}},
+                {COMPONENT::MUX_3, {{{0.5, 0.05}, {0.08, 0.13}, {0.08, 0.235}, {0.08, 0.34}, {0.08, 0.44}, {0.08, 0.55}, {0.08, 0.65}, {0.08, 0.755}, {0.08, 0.86}, {0.34, 0.94}, {0.5, 0.94}, {0.66, 0.94}}, {{0.88, 0.5}}}},
+                {COMPONENT::DEC_1, {{{0.08, 0.48}, {0.48, 0.92}}, {{0.88, 0.36}, {0.88, 0.62}}}},
+                {COMPONENT::DEC_2, {{{0.08, 0.36}, {0.08, 0.62}, {0.48, 0.92}}, {{0.88, 0.22}, {0.88, 0.4}, {0.88, 0.58}, {0.88, 0.76}}}},
+                {COMPONENT::DEC_3, {{{0.08, 0.29}, {0.08, 0.5}, {0.08, 0.71}, {0.48, 0.96}}, {{0.88, 0.13}, {0.88, 0.235}, {0.88, 0.34}, {0.88, 0.44}, {0.88, 0.55}, {0.88, 0.65}, {0.88, 0.755}, {0.88, 0.86}}}},
             };
 
             enum LINE_TYPE

@@ -131,12 +131,12 @@ namespace logicsim
                 std::vector<unsigned int> _inputs_out;
             };
 
-    #define DEFINE_1_INPUT_COMPONENT(name)                                          \
+    #define DEFINE_1_INPUT_COMPONENT(name, delay)                                          \
         class name : public component::NInputComponent                              \
         {                                                                           \
         public:                                                                     \
-            name() : NInputComponent(1, 1, 1) {}                                    \
-            name(Component &input, unsigned int out = 0) : NInputComponent(1, 1, 1) \
+            name() : NInputComponent(1, delay, 1) {}                                    \
+            name(Component &input, unsigned int out = 0) : NInputComponent(1, delay, 1) \
             {                                                                       \
                 set_input(0, input, out);                                           \
             }                                                                       \
@@ -146,12 +146,12 @@ namespace logicsim
             State _evaluate(unsigned int = 0) override;                              \
         };
 
-    #define DEFINE_2_INPUT_COMPONENT(name)                                                                                      \
+    #define DEFINE_2_INPUT_COMPONENT(name, delay)                                                                                      \
         class name : public component::NInputComponent                                                                          \
         {                                                                                                                       \
         public:                                                                                                                 \
-            name() : NInputComponent(2, 1, 1) {}                                                                                \
-            name(Component &input1, Component &input2, unsigned int out1 = 0, unsigned int out2 = 0) : NInputComponent(2, 1, 1) \
+            name() : NInputComponent(2, delay, 1) {}                                                                                \
+            name(Component &input1, Component &input2, unsigned int out1 = 0, unsigned int out2 = 0) : NInputComponent(2, delay, 1) \
             {                                                                                                                   \
                 set_input(0, input1, out1);                                                                                     \
                 set_input(1, input2, out2);                                                                                     \
