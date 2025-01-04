@@ -1,0 +1,16 @@
+<head>
+    <link rel="stylesheet" type="text/css" href="[BASE_DOC_PATH]/style.css">
+</head>
+<h1 id="states">States</h1>
+<p>In digital circuits, probing a wire at a certain spot often results in two states, 0 or 1. In reality, there are certain voltage ranges that are assigned to each of these and, depending on the voltage of a wire, the corresponding state is decided.</p>
+<p>Nevertheless, because of the complicated nature of real world circuits, it is not always possible to assign one of these to a spot on the circuit with certainty. This creates issues for digital design, where a simplified model is used.</p>
+<h3 id="state-model">3 State Model</h3>
+<p>LogicSim uses a 3 state model to deal with this issue. Any spot in a circuit can be either of:</p>
+<ul>
+<li>Logic 0 (False)</li>
+<li>Logic 1 (True)</li>
+<li>HiZ (Unknown)</li>
+</ul>
+<p>At the very beginning of a simulation, all outputs of non-input components are initialized to HiZ. Input components always output a 0 or 1, so their output is immediately set to that.</p>
+<p>As the simulation progresses, components calculate their output based on their inputs and propagate it, often resulting in a valid circuit output.</p>
+<p>Most components require inputs. Driving a component’s input means connecting some output to that input. Undriven inputs are considered HiZ. Each component handles HiZ in its inputs differently. For specific information on how a component does this, refer to its documentation page.</p>

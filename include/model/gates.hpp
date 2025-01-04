@@ -23,4 +23,4 @@ namespace logicsim
     }
 }
 
-#endif // GATES_HPP
+#endif // LOGICSIM_MODEL_GATES_HPP

@@ -1,0 +1,10 @@
+<head>
+    <link rel="stylesheet" type="text/css" href="[BASE_DOC_PATH]/style.css">
+</head>
+<h1 id="multiplexer">Multiplexer</h1>
+<p>Multiplexers are control components that allow for selecting between multiple signals based on other select signals. Multiplexers are defined by the number of select signals they possess.</p>
+<p>A multiplexer will have <em>b</em> select signals, <em>2<sup>b</sup></em> inputs and 1 output. Inputs are numbered <em>0</em> to <em>2<sup>b</sup> - 1</em>. The select signals indicate a <em>b</em> bit binary number, which corresponds to the signal that will be propagated to the output.</p>
+<p>LogicSim provides 3 multiplexers: a 2-1, a 4-1 and an 8-1 multiplexer. The number shown corresponds to the number of inputs, <em>2<sup>b</sup></em>.</p>
+<p>Multiplexers also have an active low enable input. When this input is at 1, the multiplexer always outputs 0.</p>
+<p>If the enable signal is not connected (HiZ), the output will also be HiZ. If any of the select signals are not connected (HiZ), the output will also be HiZ. The inputs don’t necessarily all have to be connected, but if an unconnected input is propagated, the output will be HiZ.</p>
+<p><strong>Delay: 5 ticks</strong></p>

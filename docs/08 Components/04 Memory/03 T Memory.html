@@ -1,0 +1,31 @@
+<head>
+    <link rel="stylesheet" type="text/css" href="[BASE_DOC_PATH]/style.css">
+</head>
+<h1 id="t-memory-component">T Memory Component</h1>
+<p>T memory components are memory components that store 1 bit of information.</p>
+<p>These components have 1 main input, <em>T</em>, as well as a clock input. This input is used to toggle the state of the component.</p>
+<h3 id="truth-table">Truth Table</h3>
+<table>
+<thead>
+<tr class="header">
+<th>T</th>
+<th>Q</th>
+<th>Q’</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0</td>
+<td>Q</td>
+<td>Q’</td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td>Q’</td>
+<td>Q</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Delay: 5 ticks</strong></p>
+<p>T components can either be latches or flip flops. Latches will only change their state based on their <em>T</em> input when the clock signal is at 1, whereas flip-flops will only do so during a positive edge (clock signal switch from 0 to 1).</p>
+<p>Note that, if the state of the component is HiZ, toggling the component will have no effect on it, since toggling HiZ results in HiZ. These components must always be set first using the preset/clear inputs.</p>

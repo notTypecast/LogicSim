@@ -53,4 +53,4 @@ namespace logicsim
     }
 }
 
-#endif // CONTROL_HPP
+#endif // LOGICSIM_MODEL_CONTROL_HPP

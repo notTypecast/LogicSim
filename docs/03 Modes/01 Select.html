@@ -1,0 +1,17 @@
+<head>
+    <link rel="stylesheet" type="text/css" href="[BASE_DOC_PATH]/style.css">
+</head>
+<h1 id="select-tool">Select Tool</h1>
+<p>The select tool allows for manipulation of existing components in a circuit. The main function of the select tool is to create selections of components in order to manipulate them. Note that only components can be selected, not wires.</p>
+<p>Specifically, while using the select tool, components can be selected in the following ways:</p>
+<ul>
+<li>Clicking on an unselected component will select it and unselect all currently selected components.</li>
+<li>Ctrl + clicking on a component will add/remove it to/from the selection, without otherwise altering the selection.</li>
+<li>Clicking on empty space will clear the existing selection.</li>
+<li>Clicking and dragging will create a rectangular area, selecting any component inside it on release.</li>
+</ul>
+<p>Once a selection has been made, clicking on any component in the selection and dragging will move all components in the selection in the cursor’s move direction.</p>
+<p>While in select mode, double clicking a component will open its properties popup. Most components don’t actually have properties that can be edited, but their documentation page can be accessed directly through the properties popup.</p>
+<p>Selections are also useful because they allow for edit functions. Once a selection has been made, the <em>CTRL + C</em> shortcut can be used to copy it (or <em>CTRL + X</em> to cut). Subsequently, <em>CTRL + V</em> can be used to paste the selection.</p>
+<p>Note that when pasting a selection, a copy of the selection is created. For wires, this means that any wires between components of the copied selection will be duplicated, but any wires between components of the copied selection and components that weren’t copied will not be.</p>
+<p>A selection’s components can all be deleted using <em>DEL</em>.</p>

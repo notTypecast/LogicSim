@@ -1,0 +1,47 @@
+<head>
+    <link rel="stylesheet" type="text/css" href="[BASE_DOC_PATH]/style.css">
+</head>
+<h1 id="jk-memory-component">JK Memory Component</h1>
+<p>JK memory components are memory components that store 1 bit of information.</p>
+<p>These components have 2 main inputs, <em>J</em> and <em>K</em>, as well as a clock input.</p>
+<p>JK memory components are similar to SR memory components, with the difference that the invalid inputs <em>S = 1</em> and <em>R = 1</em> are valid and toggle the output.</p>
+<h3 id="truth-table">Truth Table</h3>
+<table>
+<thead>
+<tr class="header">
+<th>J</th>
+<th>K</th>
+<th>Q</th>
+<th>Q’</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0</td>
+<td>0</td>
+<td>Q</td>
+<td>Q’</td>
+</tr>
+<tr class="even">
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="odd">
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td>1</td>
+<td>Q’</td>
+<td>Q</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Delay: 5 ticks</strong></p>
+<p>JK components can either be latches or flip flops. Latches will only change their state based on their <em>J</em> and <em>K</em> inputs when the clock signal is at 1, whereas flip-flops will only do so during a positive edge (clock signal switch from 0 to 1).</p>
+<p>Note that, if the state of the component is HiZ, some inputs of this component will not have the intended effect.</p>

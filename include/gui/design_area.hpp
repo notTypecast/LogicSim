@@ -254,6 +254,8 @@ namespace logicsim
             void transformPosition(int dx, int dy);
             // emitted when a zoom transformation is performed
             void transformScale(double size_scale, double pos_scale, double offset_x, double offset_y);
+            // emitted when a component is removed from the selection, so the component doesn't emit moved signals
+            void cancelMove(ComponentLabel *component);
         };
     }
 }

@@ -1,0 +1,9 @@
+<head>
+    <link rel="stylesheet" type="text/css" href="[BASE_DOC_PATH]/style.css">
+</head>
+<h1 id="simulation">Simulation</h1>
+<p>To simulate a circuit, LogicSim uses ticks. Each tick corresponds to one evaluation of the circuit, moving it from its current state to the immediate next.</p>
+<p>The simulation frequency can be set at <em>Simulation &gt; Properties</em>. This frequency determines the number of ticks per second, and is unique to each circuit. Any value in the [1, 1000] Hz range can be used.</p>
+<p>While in simulation mode, the current tick number can be seen at the bottom right of the window. If the simulation is paused, it can be progressed by a second using the step function. This is equivalent to simulating the same number of ticks as the frequency.</p>
+<p>Note that most components have a delay in ticks. This results in their output being delayed: if a component has a delay of <em>x</em> ticks, its output at tick <em>i</em> will be the output calculated at tick <em>i - x</em>.</p>
+<p>Component delays are often single digit numbers. As such, setting a high simulation frequency (e.g 500 Hz) will make those delays practically unnoticable. However, setting a low simulation frequency (e.g 5 Hz) will result in the circuit behaving in an unexpected manner. This is because a low simulation frequency is equivalent to components being really slow to evaluate their outputs.</p>

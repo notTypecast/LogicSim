@@ -53,13 +53,13 @@ namespace logicsim
                 if (pre ^ clr)
                 {
                     _Q = pre ? State::ONE : State::ZERO;
-                    return _Q;
+                    return static_cast<State>(out) ^ _Q;
                 }
 
                 if (pre)
                 {
                     _Q = State::HiZ;
-                    return _Q;
+                    return static_cast<State>(out) ^ _Q;
                 }
 
                 return _memory_evaluate(out);

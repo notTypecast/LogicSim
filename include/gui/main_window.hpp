@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_GUI_MAIN_WINDOW_HPP
 #define LOGICSIM_GUI_MAIN_WINDOW_HPP
 
-#define LOGICSIM_VERSION "1.6.13"
+#define LOGICSIM_VERSION "1.7.15"
 
 #include <QApplication>
 #include <QMainWindow>
@@ -12,6 +12,7 @@
 
 #include "gui/properties.hpp"
 #include "gui/resource_loader.hpp"
+#include "gui/doc_window.hpp"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -30,7 +31,11 @@ namespace logicsim
 
             void closeEvent(QCloseEvent *ev);
 
+            void showDocs(const QString &file_path = "");
+
         protected:
+            DocWindow _doc_window;
+
             Ui::MainWindow *_ui;
             QActionGroup *_tool_group;
             std::vector<std::tuple<QAction *, COMPONENT, int>> _insert_actions;
@@ -73,8 +78,9 @@ namespace logicsim
             void toggleToolbar();
 
             void showVersionPopup();
+            void showDocumentation();
         };
 
     }
 }
-#endif // MAIN_WINDOW_HPP
+#endif // LOGICSIM_GUI_MAIN_WINDOW_HPP

@@ -227,6 +227,10 @@ namespace logicsim
                 ev->ignore();
                 break;
             case SELECT:
+                if (_cancel_move)
+                {
+                    return;
+                }
                 ev->accept();
                 emit moved(ev->x() - _press_x, ev->y() - _press_y);
                 break;
@@ -321,6 +325,7 @@ namespace logicsim
             switch (_current_tool)
             {
             case SELECT:
+                _cancel_move = false;
                 ev->accept();
                 emit moveFinished();
                 break;
@@ -361,7 +366,7 @@ namespace logicsim
             case SELECT:
                 if (resources::components_with_properties.find(_comp_type) == resources::components_with_properties.end())
                 {
-                    break;
+                    //break;
                 }
                 _setupProperties();
                 break;
@@ -380,22 +385,28 @@ namespace logicsim
             moveWires();
         }
 
+        void ComponentLabel::cancelMove(ComponentLabel *component)
+        {
+            if (component == this)
+            {
+                _cancel_move = true;
+            }
+        }
+
         void ComponentLabel::_setupProperties()
         {
+            _properties_popup = new Properties(comp_type_to_name.at(_comp_type), resources::DOC_PATH + comp_type_to_doc_filename.at(_comp_type), parentWidget());
+
             switch (_comp_type)
             {
             case CONSTANT:
-                _properties_popup = new Properties("Constant Properties", parentWidget());
                 _properties_popup->addExclusiveGroup("Type", {{"0", "0"}, {"1", "1"}}, _resource_idx);
                 break;
             case SWITCH:
-                _properties_popup = new Properties("Switch Properties", parentWidget());
                 _properties_popup->addExclusiveGroup("State", {{"Off", "0"}, {"On", "1"}}, _resource_idx);
                 break;
             case OSCILLATOR:
             {
-                _properties_popup = new Properties("Oscillator Properties", parentWidget());
-
                 utils::StringSplitter splitter(_component_model->param_string(), ',');
                 QString low = QString::fromStdString(splitter.next());
                 QString high = QString::fromStdString(splitter.next());

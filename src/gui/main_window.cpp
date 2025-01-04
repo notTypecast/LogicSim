@@ -7,6 +7,8 @@ namespace logicsim
     {
         MainWindow::MainWindow(QWidget *parent) : QMainWindow{parent}, _ui(new Ui::MainWindow)
         {
+            _doc_window.hide();
+
             resources::load();
 
             _ui->setupUi(this);
@@ -130,6 +132,7 @@ namespace logicsim
 
             // Info menu
             QObject::connect(_ui->actionVersion, SIGNAL (triggered()), this, SLOT (showVersionPopup()));
+            QObject::connect(_ui->actionDocumentation, SIGNAL (triggered()), this, SLOT (showDocumentation()));
 
             // Tools & Insert menu
             // group tools for exclusive seleciton
@@ -207,6 +210,16 @@ namespace logicsim
             resources::deallocate();
             delete _ui;
 
+        }
+
+        void MainWindow::showDocs(const QString &file_path)
+        {
+            _doc_window.hide();
+            _doc_window.show();
+            if (!file_path.isEmpty())
+            {
+                _doc_window.selectItemByFile(file_path);
+            }
         }
 
         void MainWindow::setLastDesignTool(TOOL tool, COMPONENT comp_type, int res_idx)
@@ -332,7 +345,7 @@ namespace logicsim
 
         void MainWindow::simulationProperties()
         {
-            Properties *sim_properties_popup = new Properties("Simulation Properties", this);
+            Properties *sim_properties_popup = new Properties("Simulation Properties", resources::DOC_PATH + "02 Simulation.html", this);
 
             sim_properties_popup->addValueEntry("Frequency", QString::number(_ui->tabHandler->currentDesignArea()->frequency()), [](QLineEdit *entry) {
                 bool ok;
@@ -603,6 +616,12 @@ namespace logicsim
             version_popup.move(x() + width()/2 - dialog_size.width()/2, y() + height()/2 - dialog_size.height()/2);
 
             version_popup.exec();
+        }
+
+        void MainWindow::showDocumentation()
+        {
+            _doc_window.hide();
+            _doc_window.show();
         }
     }
 }

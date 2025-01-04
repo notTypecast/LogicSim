@@ -170,4 +170,4 @@ namespace logicsim
     }
 }
 
-#endif // MEMORY_HPP
+#endif // LOGICSIM_MODEL_MEMORY_HPP

@@ -1,0 +1,50 @@
+<head>
+    <link rel="stylesheet" type="text/css" href="[BASE_DOC_PATH]/style.css">
+</head>
+<h1 id="memory-components">Memory Components</h1>
+<p>Memory components are components that can store bits of information.</p>
+<p>All memory components have the following characteristics in common.</p>
+<ul>
+<li>Memory components all have a clock input. Their state only changes when the clock input is in the right part of its duty cycle, and it always positive triggered.</li>
+<li>Memory components have asynchronous preset and clear lines, which are positive triggered. These inputs, if used, will override the state of the component instantly, ignoring other inputs or the clock input.</li>
+</ul>
+<h3 id="preset-clear-truth-table">Preset / Clear Truth Table</h3>
+<table>
+<thead>
+<tr class="header">
+<th>PRE</th>
+<th>CLR</th>
+<th>Q</th>
+<th>Q’</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0</td>
+<td>0</td>
+<td>Q</td>
+<td>Q’</td>
+</tr>
+<tr class="even">
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+</tr>
+<tr class="odd">
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td>1</td>
+<td>HiZ</td>
+<td>HiZ</td>
+</tr>
+</tbody>
+</table>
+<p>Note that if one of these inputs is HiZ, it is considered to be 0. As such, these inputs may be unconnected and the memory component will operate normally, as long as its state is correct.</p>
+<h3 id="memory-component-initial-state">Memory Component Initial State</h3>
+<p>When the simulation is started, a memory component’s initial state is HiZ for both <em>Q</em> and <em>Q’</em>. This can result in some components not operating as expected, based on their inputs. Make sure to always set the initial state of a component using the preset/clear inputs at the start of the simulation.</p>

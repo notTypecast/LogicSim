@@ -179,4 +179,4 @@ namespace logicsim
     }
 }
 
-#endif // COMPONENT_HPP
+#endif // LOGICSIM_MODEL_COMPONENT_HPP

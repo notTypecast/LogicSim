@@ -48,4 +48,4 @@ namespace logicsim
     }
 }
 
-#endif // CIRCUIT_HPP
+#endif // LOGICSIM_MODEL_CIRCUIT_HPP

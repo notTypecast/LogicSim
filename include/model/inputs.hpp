@@ -100,4 +100,4 @@ namespace logicsim
     }
 }
 
-#endif // INPUTS_HPP
+#endif // LOGICSIM_MODEL_INPUTS_HPP

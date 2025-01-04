@@ -126,6 +126,7 @@ namespace logicsim
             {
 #ifndef QT_DEBUG
                 IMG_PATH = QApplication::applicationDirPath() + "/res/";
+                DOC_PATH = QApplication::applicationDirPath() + "/docs/";
 #endif
 
                 comp_images =

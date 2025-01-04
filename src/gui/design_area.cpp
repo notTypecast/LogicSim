@@ -296,6 +296,7 @@ namespace logicsim
                 QObject::connect(this, SIGNAL (resetResource()), label, SLOT (resetResource()));
                 QObject::connect(this, SIGNAL (transformPosition(int, int)), label, SLOT (positionTransformationApplied(int, int)));
                 QObject::connect(this, SIGNAL (transformScale(double, double, double, double)), label, SLOT (scaleTransformationApplied(double, double, double, double)));
+                QObject::connect(this, SIGNAL (cancelMove(ComponentLabel *)), label, SLOT (cancelMove(ComponentLabel *)));
             }
 
             QObject::connect(label, SIGNAL (selected(ComponentLabel *, bool)), this, SLOT (addSelected(ComponentLabel *, bool)));
@@ -364,6 +365,8 @@ namespace logicsim
                 {
                     component->hideBorder();
                     _selected_components.erase(comp_iter);
+
+                    emit cancelMove(component);
 
                     if (_selected_components.empty())
                     {
@@ -739,7 +742,7 @@ namespace logicsim
                     res_idx = 0;
                 }
 
-                ComponentLabel *component = new ComponentLabel(resources::ctype_to_component_t.at(ctype), res_idx, getScale(), _undo_stack, this);
+                ComponentLabel *component = new ComponentLabel(ctype_to_comp_type.at(ctype), res_idx, getScale(), _undo_stack, this);
                 _connect_component(component, true);
                 components[id_str] = component;
 

@@ -1,0 +1,6 @@
+<head>
+    <link rel="stylesheet" type="text/css" href="[BASE_DOC_PATH]/style.css">
+</head>
+<h1 id="wire-tool">Wire Tool</h1>
+<p>The wire tool is used to create connections between components. Each component has inputs and/or outputs, and each of those are represented by a node on the component. While using the wire tool, clicking on a component’s node and dragging will start creating a wire, connected to the closest node. While dragging, when approaching another node, the wire will snap to its position, indicating that on release, this connection will be attempted.</p>
+<p>On release, the simulator checks whether this is a valid connection. If it is, the wire is successfully placed. Note that outputs cannot be connected to other outputs, inputs cannot be connected to other inputs and can only be driven once, so any wire that doesn’t follow these conditions will be invalid.</p>

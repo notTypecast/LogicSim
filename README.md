@@ -85,7 +85,6 @@ Currently, some functionality is lacking, such as retrieving specific components
 LogicSim is still in development, and thus is expected to contain bugs. Additionally, there are various features that will be added in the future. Some of them are listed below:
 
 * More advanced components.
-* Help pages describing components and the simulator's function.
 * (Possibly) a grid for components to snap to.
 
 ## Credit

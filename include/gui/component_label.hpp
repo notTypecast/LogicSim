@@ -103,6 +103,8 @@ namespace logicsim
             // extra space outside component rectangle to consider for wire snap
             static constexpr int WIRE_SNAP_LEEWAY = 15;
 
+            bool _cancel_move = false;
+
         public slots:
             // called on object creation
             // triggered by properties popup
@@ -128,6 +130,8 @@ namespace logicsim
             void positionTransformationApplied(int dx, int dy);
             // triggered by transformScale of DesignArea
             void scaleTransformationApplied(double size_scale, double pos_scale, double offset_x, double offset_y);
+            // triggered by cancelMove of DesignArea
+            void cancelMove(ComponentLabel *component);
 
         signals:
             // emitted when a mouse press registers on component during select mode
@@ -153,4 +157,4 @@ namespace logicsim
     }
 }
 
-#endif // GUI_COMPONENT_HPP
+#endif // LOGICSIM_GUI_GUI_COMPONENT_HPP

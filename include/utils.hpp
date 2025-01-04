@@ -1,5 +1,5 @@
-#ifndef LOGICSIM_MODEL_UTILS_HPP
-#define LOGICSIM_MODEL_UTILS_HPP
+#ifndef LOGICSIM_UTILS_HPP
+#define LOGICSIM_UTILS_HPP
 
 #include <string>
 #include <vector>
@@ -33,4 +33,4 @@ namespace logicsim
     }
 }
 
-#endif // UTILS_HPP
+#endif // LOGICSIM_UTILS_HPP

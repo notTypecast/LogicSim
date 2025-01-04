@@ -68,4 +68,4 @@ namespace logicsim
     }
 }
 
-#endif // OUTPUTS_HPP
+#endif // LOGICSIM_MODEL_OUTPUTS_HPP

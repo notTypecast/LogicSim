@@ -106,6 +106,108 @@ namespace logicsim
             {DEC_3, "DEC-3"}
         };
 
+        inline const std::unordered_map<std::string, COMPONENT> ctype_to_comp_type = {
+            {"CONNECTOR", CONNECTOR},
+            {"AND", AND_GATE},
+            {"OR", OR_GATE},
+            {"XOR", XOR_GATE},
+            {"NAND", NAND_GATE},
+            {"NOR", NOR_GATE},
+            {"XNOR", XNOR_GATE},
+            {"NOT", NOT_GATE},
+            {"BUFFER", BUFFER},
+            {"CONSTANT", CONSTANT},
+            {"BUTTON", BUTTON},
+            {"SWITCH", SWITCH},
+            {"OSCILLATOR", OSCILLATOR},
+            {"KEYPAD", KEYPAD},
+            {"SRLATCH", SRLATCH},
+            {"JKLATCH", JKLATCH},
+            {"DLATCH", DLATCH},
+            {"TLATCH", TLATCH},
+            {"SRFLIPFLOP", SRFLIPFLOP},
+            {"JKFLIPFLOP", JKFLIPFLOP},
+            {"DFLIPFLOP", DFLIPFLOP},
+            {"TFLIPFLOP", TFLIPFLOP},
+            {"OUTPUT", LED},
+            {"5IN_7SEGMENT", _7SEG_5IN},
+            {"8IN_7SEGMENT", _7SEG_8IN},
+            {"MUX-1", MUX_1},
+            {"MUX-2", MUX_2},
+            {"MUX-3", MUX_3},
+            {"DEC-1", DEC_1},
+            {"DEC-2", DEC_2},
+            {"DEC-3", DEC_3}
+        };
+
+        inline const std::unordered_map<COMPONENT, QString> comp_type_to_name = {
+            {CONNECTOR, "Connector"},
+            {BUFFER, "Buffer"},
+            {NOT_GATE, "NOT gate"},
+            {AND_GATE, "AND gate"},
+            {OR_GATE, "OR gate"},
+            {XOR_GATE, "XOR gate"},
+            {NAND_GATE, "NAND gate"},
+            {NOR_GATE, "NOR gate"},
+            {XNOR_GATE, "XNOR gate"},
+            {CONSTANT, "Constant"},
+            {BUTTON, "Button"},
+            {SWITCH, "Switch"},
+            {OSCILLATOR, "Oscillator"},
+            {KEYPAD, "Keypad"},
+            {LED, "Output"},
+            {_7SEG_5IN, "7 Segment Display (5)"},
+            {_7SEG_8IN, "7 Segment Display (8)"},
+            {SRLATCH, "SR Latch"},
+            {JKLATCH, "JK Latch"},
+            {DLATCH, "D Latch"},
+            {TLATCH, "T Latch"},
+            {SRFLIPFLOP, "SR Flip-Flop"},
+            {JKFLIPFLOP, "JK Flip-Flop"},
+            {DFLIPFLOP, "D Flip-Flop"},
+            {TFLIPFLOP, "T Flip-Flop"},
+            {MUX_1, "Multiplexer"},
+            {MUX_2, "Multiplexer"},
+            {MUX_3, "Multiplexer"},
+            {DEC_1, "Decoder"},
+            {DEC_2, "Decoder"},
+            {DEC_3, "Decoder"}
+        };
+
+        inline const std::unordered_map<COMPONENT, QString> comp_type_to_doc_filename = {
+            {CONNECTOR, "08 Components/00 Connector.html"},
+            {BUFFER, "08 Components/01 Gates/00 Buffer.html"},
+            {NOT_GATE, "08 Components/01 Gates/01 NOT gate.html"},
+            {AND_GATE, "08 Components/01 Gates/02 AND gate.html"},
+            {OR_GATE, "08 Components/01 Gates/03 OR gate.html"},
+            {XOR_GATE, "08 Components/01 Gates/04 XOR gate.html"},
+            {NAND_GATE, "08 Components/01 Gates/05 NAND gate.html"},
+            {NOR_GATE, "08 Components/01 Gates/06 NOR gate.html"},
+            {XNOR_GATE, "08 Components/01 Gates/07 XNOR gate.html"},
+            {CONSTANT, "08 Components/02 Inputs/01 Constant.html"},
+            {BUTTON, "08 Components/02 Inputs/02 Button.html"},
+            {SWITCH, "08 Components/02 Inputs/03 Switch.html"},
+            {OSCILLATOR, "08 Components/02 Inputs/04 Oscillator.html"},
+            {KEYPAD, "08 Components/02 Inputs/05 Keypad.html"},
+            {LED, "08 Components/03 Outputs/01 LED.html"},
+            {_7SEG_5IN, "08 Components/03 Outputs/02 7 Segment Display.html"},
+            {_7SEG_8IN, "08 Components/03 Outputs/02 7 Segment Display.html"},
+            {SRLATCH, "08 Components/04 Memory/01 SR Memory.html"},
+            {JKLATCH, "08 Components/04 Memory/02 JK Memory.html"},
+            {DLATCH, "08 Components/04 Memory/03 T Memory.html"},
+            {TLATCH, "08 Components/04 Memory/04 D Memory.html"},
+            {SRFLIPFLOP, "08 Components/04 Memory/01 SR Memory.html"},
+            {JKFLIPFLOP, "08 Components/04 Memory/02 JK Memory.html"},
+            {DFLIPFLOP, "08 Components/04 Memory/03 D Memory.html"},
+            {TFLIPFLOP, "08 Components/04 Memory/04 T Memory.html"},
+            {MUX_1, "08 Components/05 Control/00 Multiplexer.html"},
+            {MUX_2, "08 Components/05 Control/00 Multiplexer.html"},
+            {MUX_3, "08 Components/05 Control/00 Multiplexer.html"},
+            {DEC_1, "08 Components/05 Control/01 Decoder.html"},
+            {DEC_2, "08 Components/05 Control/01 Decoder.html"},
+            {DEC_3, "08 Components/05 Control/01 Decoder.html"}
+        };
+
         inline const int WIRE_REMOVE_DISTANCE_THRESHOLD = 40;
 
         inline const std::unordered_set<COMPONENT> reset_resource_on_sim_components = {
@@ -116,40 +218,6 @@ namespace logicsim
 
         namespace resources
         {
-            inline const std::unordered_map<std::string, COMPONENT> ctype_to_component_t = {
-                {"CONNECTOR", COMPONENT::CONNECTOR},
-                {"AND", COMPONENT::AND_GATE},
-                {"OR", COMPONENT::OR_GATE},
-                {"XOR", COMPONENT::XOR_GATE},
-                {"NAND", COMPONENT::NAND_GATE},
-                {"NOR", COMPONENT::NOR_GATE},
-                {"XNOR", COMPONENT::XNOR_GATE},
-                {"NOT", COMPONENT::NOT_GATE},
-                {"BUFFER", COMPONENT::BUFFER},
-                {"CONSTANT", COMPONENT::CONSTANT},
-                {"BUTTON", COMPONENT::BUTTON},
-                {"SWITCH", COMPONENT::SWITCH},
-                {"OSCILLATOR", COMPONENT::OSCILLATOR},
-                {"KEYPAD", COMPONENT::KEYPAD},
-                {"SRLATCH", COMPONENT::SRLATCH},
-                {"JKLATCH", COMPONENT::JKLATCH},
-                {"DLATCH", COMPONENT::DLATCH},
-                {"TLATCH", COMPONENT::TLATCH},
-                {"SRFLIPFLOP", COMPONENT::SRFLIPFLOP},
-                {"JKFLIPFLOP", COMPONENT::JKFLIPFLOP},
-                {"DFLIPFLOP", COMPONENT::DFLIPFLOP},
-                {"TFLIPFLOP", COMPONENT::TFLIPFLOP},
-                {"OUTPUT", COMPONENT::LED},
-                {"5IN_7SEGMENT", COMPONENT::_7SEG_5IN},
-                {"8IN_7SEGMENT", COMPONENT::_7SEG_8IN},
-                {"MUX-1", COMPONENT::MUX_1},
-                {"MUX-2", COMPONENT::MUX_2},
-                {"MUX-3", COMPONENT::MUX_3},
-                {"DEC-1", COMPONENT::DEC_1},
-                {"DEC-2", COMPONENT::DEC_2},
-                {"DEC-3", COMPONENT::DEC_3}
-            };
-
             inline const std::unordered_set<COMPONENT> components_with_properties =
             {
                 COMPONENT::CONSTANT,
@@ -159,8 +227,10 @@ namespace logicsim
 
 #ifdef QT_DEBUG
             inline const QString IMG_PATH = "../LogicSim/res/";
+            inline const QString DOC_PATH = "../LogicSim/docs/";
 #else
             inline QString IMG_PATH;
+            inline const QString DOC_PATH;
 #endif
 
             // images for each component

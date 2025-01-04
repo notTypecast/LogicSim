@@ -1,0 +1,11 @@
+<head>
+    <link rel="stylesheet" type="text/css" href="[BASE_DOC_PATH]/style.css">
+</head>
+<h1 id="decoder">Decoder</h1>
+<p>Decoders are control components that allow for an input binary number to be mapped to a corresponding output. Decoders are defined by the number of inputs they possess.</p>
+<p>A decoder will have <em>b</em> inputs and <em>2<sup>b</sup></em> outputs. Inputs are numbered <em>0</em> to <em>b - 1</em>, while outputs are <em>0</em> to <em>2^b - 1</em>. The inputs indicate a <em>b</em> bit binary number that indicates which output will be 1. All other outputs will be 0.</p>
+<p>LogicSim provides 3 decoders: an 1-2, a 2-4 and a 3-8 decoder. The numbers correspond to the numbers of inputs and outputs for the decoder.</p>
+<p>Decoders also have an active low enable input. When this input is 1, the decoder’s outputs will always all be 0.</p>
+<p>If the enable signal is not connected (HiZ), all outputs will also be HiZ. If any of the inputs are not connected (HiZ), all outputs will also be HiZ.</p>
+<p>A decoder with an enable signal can also be seen as a DeMultiplexer. If we consider the enable signal to be the input and the <em>b</em> inputs to be select signals, then we can say that the select signals decide which output the enable signal will be propagated to (in this case inverted, since enable is active low).</p>
+<p><strong>Delay: 5 ticks</strong></p>

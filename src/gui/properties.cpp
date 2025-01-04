@@ -1,22 +1,49 @@
 #include "gui/properties.hpp"
 #include "gui/component_label.hpp"
+#include "gui/main_window.hpp"
 
 namespace logicsim
 {
     namespace gui
     {
-        Properties::Properties(QString title, QWidget *parent) :
+        Properties::Properties(QString title, QWidget *parent) : Properties(title, "", parent) {}
+
+        Properties::Properties(QString title, const QString &doc_file_path, QWidget *parent) :
             QWidget(parent)
         {
             setWindowFlags(Qt::Popup | Qt::FramelessWindowHint);
 
             QVBoxLayout *main_layout = new QVBoxLayout(this);
             main_layout->setAlignment(Qt::AlignTop);
-            QGroupBox *title_group = new QGroupBox(title, this);
-            QVBoxLayout *title_layout = new QVBoxLayout;
-            title_group->setLayout(title_layout);
-            main_layout->addWidget(title_group);
-            _title_group_layout = title_layout;
+
+            QHBoxLayout *title_layout = new QHBoxLayout;
+            main_layout->addLayout(title_layout);
+
+            QLabel *title_label = new QLabel(title, this);
+            title_layout->addWidget(title_label);
+
+            QPushButton *help_button = new QPushButton(this);
+            help_button->setIcon(QApplication::style()->standardIcon(QStyle::SP_MessageBoxQuestion));
+            help_button->setFixedWidth(30);
+            QObject::connect(help_button, &QPushButton::clicked, [this, doc_file_path]()
+            {
+                QObject *current = this;
+
+                while (current->parent() != nullptr)
+                {
+                    current = current->parent();
+                }
+
+                dynamic_cast<MainWindow *>(current)->showDocs(doc_file_path);
+            });
+            title_layout->addWidget(help_button);
+
+            _group_box = new QGroupBox(this);
+            QVBoxLayout *box_layout = new QVBoxLayout;
+            _group_box->setLayout(box_layout);
+            main_layout->addWidget(_group_box);
+            _title_group_layout = box_layout;
+            _group_box->hide();
 
             QPushButton *ok_button = new QPushButton("OK", this);
             QObject::connect(ok_button, SIGNAL (clicked()), this, SLOT (done()));
@@ -38,6 +65,11 @@ namespace logicsim
 
         void Properties::addValueEntry(QString option_name, QString option_value, std::function<QString(QLineEdit *)> create_value, QString after)
         {
+            if (_group_box->isHidden())
+            {
+                _group_box->show();
+            }
+
             int group_idx = _groups++;
             QHBoxLayout *layout = new QHBoxLayout;
 
@@ -68,6 +100,11 @@ namespace logicsim
 
         void Properties::addExclusiveGroup(QString title, std::vector<std::pair<QString, QString>> options, int init_checked_idx)
         {
+            if (_group_box->isHidden())
+            {
+                _group_box->show();
+            }
+
             int group_idx = _groups++;
             int checked_idx = init_checked_idx;
             QGroupBox *group = new QGroupBox(title, this);
@@ -94,6 +131,11 @@ namespace logicsim
 
         void Properties::addValueGroup(QString title, std::vector<std::pair<QString, QString>> options, std::function<QString(std::vector<QLineEdit *>)> create_value)
         {
+            if (_group_box->isHidden())
+            {
+                _group_box->show();
+            }
+
             int group_idx = _groups++;
             QGroupBox *group = new QGroupBox(title, this);
             QVBoxLayout *layout = new QVBoxLayout;

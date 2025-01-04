@@ -30,6 +30,7 @@ SOURCES += \
     src/gui/properties.cpp \
     src/gui/undo_commands.cpp \
     src/gui/clipboard.cpp \
+    src/gui/doc_window.cpp
 
 HEADERS += \
     include/model/circuit.hpp \
@@ -50,6 +51,7 @@ HEADERS += \
     include/gui/properties.hpp \
     include/gui/undo_commands.hpp \
     include/gui/clipboard.hpp \
+    include/gui/doc_window.hpp
 
 DISTFILES += \
     saves/flip_flop.lsc \
@@ -58,4 +60,5 @@ DISTFILES += \
     saves/simple_circuit.lsc
 
 FORMS += \
+    ui/doc_window.ui \
     ui/main_window.ui

@@ -101,4 +101,4 @@ namespace logicsim
     }
 }
 
-#endif // CTYPE_MAP_HPP
+#endif // LOGICSIM_MODEL_CTYPE_MAP_HPP

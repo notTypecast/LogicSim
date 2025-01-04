@@ -1,5 +1,5 @@
-#ifndef PROPERTIES_HPP
-#define PROPERTIES_HPP
+#ifndef LOGICSIM_GUI_PROPERTIES_HPP
+#define LOGICSIM_GUI_PROPERTIES_HPP
 
 #include <QWidget>
 #include <QVBoxLayout>
@@ -9,10 +9,12 @@
 #include <QPushButton>
 #include <QLineEdit>
 #include <QString>
+#include <QStyle>
 
 #include <functional>
 
 #include "gui/resource_loader.hpp"
+#include "gui/doc_window.hpp"
 
 #include "utils.hpp"
 
@@ -27,6 +29,7 @@ namespace logicsim
             Q_OBJECT
 
         public:
+            explicit Properties(QString title, const QString &doc_file_path, QWidget *parent = nullptr);
             explicit Properties(QString title, QWidget *parent = nullptr);
             ~Properties();
 
@@ -49,6 +52,7 @@ namespace logicsim
         protected:
             unsigned int _groups = 0;
             QVBoxLayout *_title_group_layout = nullptr;
+            QGroupBox *_group_box;
 
             std::vector<std::function<void()>> _close_funcs;
 
@@ -64,4 +68,4 @@ namespace logicsim
     }
 }
 
-#endif // PROPERTIES_HPP
+#endif // LOGICSIM_GUI_PROPERTIES_HPP
