@@ -514,6 +514,7 @@
      <addaction name="actionSwitch"/>
      <addaction name="actionOscillator"/>
      <addaction name="actionKeypad"/>
+     <addaction name="actionRandom"/>
     </widget>
     <widget class="QMenu" name="menuOutputs">
      <property name="title">
@@ -1069,6 +1070,14 @@
   <action name="actionDocumentation">
    <property name="text">
     <string>Documentation</string>
+   </property>
+  </action>
+  <action name="actionRandom">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Random</string>
    </property>
   </action>
  </widget>

@@ -8,6 +8,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 win32:RC_ICONS += res/logo.ico
 
 CONFIG += c++17
+DEFINES += QT_DISABLE_DEPRECATED_UP_TO=0x050F00
 
 INCLUDEPATH += ./include/
 

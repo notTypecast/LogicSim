@@ -5,169 +5,157 @@
 
 namespace logicsim
 {
-    namespace model
-    {
-        namespace memory
-        {
-            class MemoryComponent : public component::NInputComponent
-            {
-            public:
-                MemoryComponent(unsigned int n);
+namespace model
+{
+namespace memory
+{
+class MemoryComponent : virtual public component::NInputComponent
+{
+  public:
+    MemoryComponent();
 
-                void set_clk(component::Component &clk, unsigned int clk_out = 0);
+    virtual void tick() override;
+    virtual void reset() override;
 
-                virtual void tick() override;
-                virtual void reset() override;
+    unsigned int n_outputs() const override;
 
-                unsigned int n_outputs() const override;
+  protected:
+    // Double pointers point to pointers to input components kept by
+    // NInputComponent superclass. Thus, when changing an input component, the
+    // double pointer will automatically point to the new component
+    component::Component **_pre, **_clr;
+    unsigned int          *_pre_out, *_clr_out;
 
-            protected:
-                // Double pointers point to pointers to input components kept by NInputComponent superclass
-                // Thus, when changing an input component, the double pointer will automatically point to the new component
-                component::Component **_clk;
-                unsigned int *_clk_out;
-                component::Component **_pre, **_clr;
-                unsigned int *_pre_out, *_clr_out;
+    State _Q         = State::HiZ;
+    bool  _evaluated = false;
 
-                State _Q = State::HiZ;
-                bool _evaluated = false;
+    State _evaluate(unsigned int out = 0) override final;
+    // Updates state
+    virtual void _memory_evaluate() = 0;
+};
 
-                // whether the current clock state indicates input should be evaluated
-                virtual bool _clk_edge() = 0;
+class SRMemoryComponent : public MemoryComponent
+{
+  public:
+    SRMemoryComponent();
 
-                virtual State _memory_evaluate(unsigned int out = 0) = 0;
-                State _evaluate(unsigned int out = 0) override final;
-            };
+  protected:
+    Component   **_S, **_R;
+    unsigned int *_S_out, *_R_out;
 
-            class SRMemoryComponent : public MemoryComponent
-            {
-            public:
-                SRMemoryComponent();
-                SRMemoryComponent(component::Component &clk, component::Component &S, component::Component &R, unsigned int clk_out = 0, unsigned int S_out = 0, unsigned int R_out = 0);
+    void _memory_evaluate() override;
+};
 
-            protected:
-                Component **_S, **_R;
-                unsigned int *_S_out, *_R_out;
+class JKMemoryComponent : public MemoryComponent
+{
+  public:
+    JKMemoryComponent();
 
-                State _memory_evaluate(unsigned int out = 0) override;
-            };
+  protected:
+    Component   **_J, **_K;
+    unsigned int *_J_out, *_K_out;
 
-            class JKMemoryComponent : public MemoryComponent
-            {
-            public:
-                JKMemoryComponent();
-                JKMemoryComponent(component::Component &clk, component::Component &J, component::Component &K, unsigned int clk_out = 0, unsigned int J_out = 0, unsigned int K_out = 0);
+    void _memory_evaluate() override;
+};
 
-            protected:
-                Component **_J, **_K;
-                unsigned int *_J_out, *_K_out;
+class DMemoryComponent : public MemoryComponent
+{
+  public:
+    DMemoryComponent();
 
-                State _memory_evaluate(unsigned int out = 0) override;
-            };
+  protected:
+    Component   **_D;
+    unsigned int *_D_out;
 
-            class DMemoryComponent : public MemoryComponent
-            {
-            public:
-                DMemoryComponent();
-                DMemoryComponent(component::Component &clk, component::Component &D, unsigned int clk_out = 0, unsigned int D_out = 0);
+    void _memory_evaluate() override;
+};
 
-            protected:
-                Component **_D;
-                unsigned int *_D_out;
+class TMemoryComponent : public MemoryComponent
+{
+  public:
+    TMemoryComponent();
 
-                State _memory_evaluate(unsigned int out = 0) override;
-            };
+  protected:
+    Component   **_T;
+    unsigned int *_T_out;
 
-            class TMemoryComponent : public MemoryComponent
-            {
-            public:
-                TMemoryComponent();
-                TMemoryComponent(component::Component &clk, component::Component &T, unsigned int clk_out = 0, unsigned int T_out = 0);
+    void _memory_evaluate() override;
+};
 
-            protected:
-                Component **_T;
-                unsigned int *_T_out;
+/* Defines a clocked memory component
+ * Inputs:
+ *  * The class name
+ *  * The memory component to inherit from
+ *  * The clock type to use
+ */
+#define DEFINE_CLOCKED_MEMORY(name, memory_component, clock_type) \
+    class name                                                    \
+      : public memory_component                                   \
+      , public clock_type                                         \
+    {                                                             \
+      public:                                                     \
+        name();                                                   \
+        std::string ctype() const override;                       \
+                                                                  \
+      protected:                                                  \
+        void _memory_evaluate() override;                         \
+    };
 
-                State _memory_evaluate(unsigned int out = 0) override;
-            };
-
-    #define DEFINE_1_INPUT_LATCH(name, base)                                                                                                                             \
-        class name : public base                                                                                                                                         \
-        {                                                                                                                                                                \
-        public:                                                                                                                                                          \
-            name() {}                                                                                                                                                    \
-            name(component::Component &clk, component::Component &input, unsigned int clk_out = 0, unsigned int input_out = 0) : base(clk, input, clk_out, input_out) {} \
-            std::string ctype() const override;                                                                                                                          \
-                                                                                                                                                                         \
-        protected:                                                                                                                                                       \
-            bool _clk_edge() override                                                                                                                                    \
-            {                                                                                                                                                            \
-                return (*_clk)->evaluate(*_clk_out);                                                                                                                     \
-            }                                                                                                                                                            \
-        };
-
-    #define DEFINE_2_INPUT_LATCH(name, base)                                                                                                                                                                                                                \
-        class name : public base                                                                                                                                                                                                                            \
-        {                                                                                                                                                                                                                                                   \
-        public:                                                                                                                                                                                                                                             \
-            name() {}                                                                                                                                                                                                                                       \
-            name(component::Component &clk, component::Component &input1, component::Component &input2, unsigned int clk_out = 0, unsigned int input1_out = 0, unsigned int input2_out = 0) : base(clk, input1, input2, clk_out, input1_out, input2_out) {} \
-            std::string ctype() const override;                                                                                                                                                                                                             \
-                                                                                                                                                                                                                                                            \
-        protected:                                                                                                                                                                                                                                          \
-            bool _clk_edge() override                                                                                                                                                                                                                       \
-            {                                                                                                                                                                                                                                               \
-                return (*_clk)->evaluate(*_clk_out);                                                                                                                                                                                                        \
-            }                                                                                                                                                                                                                                               \
-        };
-
-    #define DEFINE_1_INPUT_FLIPFLOP(name, base)                                                                                                                          \
-        class name : public base                                                                                                                                         \
-        {                                                                                                                                                                \
-        public:                                                                                                                                                          \
-            name() {}                                                                                                                                                    \
-            name(component::Component &clk, component::Component &input, unsigned int clk_out = 0, unsigned int input_out = 0) : base(clk, input, clk_out, input_out) {} \
-            std::string ctype() const override;                                                                                                                          \
-                                                                                                                                                                         \
-        protected:                                                                                                                                                       \
-            bool _prev_clk = false;                                                                                                                                      \
-            bool _clk_edge() override                                                                                                                                    \
-            {                                                                                                                                                            \
-                bool prev_clk = _prev_clk;                                                                                                                               \
-                _prev_clk = (*_clk)->evaluate(*_clk_out);                                                                                                                \
-                return !prev_clk && _prev_clk;                                                                                                                           \
-            }                                                                                                                                                            \
-        };
-
-    #define DEFINE_2_INPUT_FLIPFLOP(name, base)                                                                                                                                                                                                             \
-        class name : public base                                                                                                                                                                                                                            \
-        {                                                                                                                                                                                                                                                   \
-        public:                                                                                                                                                                                                                                             \
-            name() {}                                                                                                                                                                                                                                       \
-            name(component::Component &clk, component::Component &input1, component::Component &input2, unsigned int clk_out = 0, unsigned int input1_out = 0, unsigned int input2_out = 0) : base(clk, input1, input2, clk_out, input1_out, input2_out) {} \
-            std::string ctype() const override;                                                                                                                                                                                                             \
-                                                                                                                                                                                                                                                            \
-        protected:                                                                                                                                                                                                                                          \
-            bool _prev_clk = false;                                                                                                                                                                                                                         \
-            bool _clk_edge() override                                                                                                                                                                                                                       \
-            {                                                                                                                                                                                                                                               \
-                bool prev_clk = _prev_clk;                                                                                                                                                                                                                  \
-                _prev_clk = (*_clk)->evaluate(*_clk_out);                                                                                                                                                                                                   \
-                return !prev_clk && _prev_clk;                                                                                                                                                                                                              \
-            }                                                                                                                                                                                                                                               \
-        };
-
-            DEFINE_2_INPUT_LATCH(SRLatch, SRMemoryComponent)
-            DEFINE_2_INPUT_LATCH(JKLatch, JKMemoryComponent)
-            DEFINE_1_INPUT_LATCH(DLatch, DMemoryComponent)
-            DEFINE_1_INPUT_LATCH(TLatch, TMemoryComponent)
-
-            DEFINE_2_INPUT_FLIPFLOP(SRFlipFlop, SRMemoryComponent)
-            DEFINE_2_INPUT_FLIPFLOP(JKFlipFlop, JKMemoryComponent)
-            DEFINE_1_INPUT_FLIPFLOP(DFlipFlop, DMemoryComponent)
-            DEFINE_1_INPUT_FLIPFLOP(TFlipFlop, TMemoryComponent)
-        }
+/* Implements a defined clocked memory component
+ * Inputs:
+ *  * The class name
+ *  * The memory component it inherits from
+ *  * The clock type it uses
+ *  * The total number of inputs
+ *  * The component delay
+ *  * The total number of evaluations
+ *  * The index of the clock input
+ *  * The ctype string
+ */
+#define IMPLEMENT_CLOCKED_MEMORY(name,                \
+                                 memory_component,    \
+                                 clock_type,          \
+                                 n,                   \
+                                 delay,               \
+                                 n_evals,             \
+                                 clk_idx,             \
+                                 ctype_str)           \
+    name::name()                                      \
+      : component::NInputComponent(n, delay, n_evals) \
+      , clock_type(clk_idx)                           \
+    {                                                 \
+    }                                                 \
+    std::string name::ctype() const                   \
+    {                                                 \
+        return ctype_str;                             \
+    }                                                 \
+    void name::_memory_evaluate()                     \
+    {                                                 \
+        if (_clk_edge())                              \
+        {                                             \
+            memory_component::_memory_evaluate();     \
+        }                                             \
     }
+
+DEFINE_CLOCKED_MEMORY(SRLatch, SRMemoryComponent,
+                      component::LevelTriggeredComponent)
+DEFINE_CLOCKED_MEMORY(JKLatch, JKMemoryComponent,
+                      component::LevelTriggeredComponent)
+DEFINE_CLOCKED_MEMORY(DLatch, DMemoryComponent,
+                      component::LevelTriggeredComponent)
+DEFINE_CLOCKED_MEMORY(TLatch, TMemoryComponent,
+                      component::LevelTriggeredComponent)
+DEFINE_CLOCKED_MEMORY(SRFlipFlop, SRMemoryComponent,
+                      component::EdgeTriggeredComponent)
+DEFINE_CLOCKED_MEMORY(JKFlipFlop, JKMemoryComponent,
+                      component::EdgeTriggeredComponent)
+DEFINE_CLOCKED_MEMORY(TFlipFlop, TMemoryComponent,
+                      component::EdgeTriggeredComponent)
+DEFINE_CLOCKED_MEMORY(DFlipFlop, DMemoryComponent,
+                      component::EdgeTriggeredComponent)
+
+}
+}
 }
 
 #endif // LOGICSIM_MODEL_MEMORY_HPP
