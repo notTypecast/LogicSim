@@ -103,6 +103,11 @@ class DesignArea : public QWidget
 
     void clearUndoStack();
 
+    bool isDrawingWire();
+
+    void nextComponent();
+    void previousComponent();
+
   protected:
     // removes all components from selected
     void _unselectAll();
@@ -113,7 +118,12 @@ class DesignArea : public QWidget
     COMPONENT _insert_component;
     int       _insert_resource_idx;
 
-    // vector of selected components: (Component, border) pairs
+    // vector of pointers to all components
+    // used to move view to next component
+    std::vector<ComponentLabel *> _components;
+    int                           _component_idx = 0;
+
+    // vector of selected components
     std::vector<ComponentLabel *> _selected_components;
 
     // initial selection point for selection border
@@ -125,10 +135,18 @@ class DesignArea : public QWidget
 
     // current wire being drawn
     Wire *_wire = nullptr;
+
+    struct WireSnapPosition
+    {
+        ComponentLabel *component;
+        int             x;
+        int             y;
+    };
+
     // positions to snap destination to
     // wire snaps to closest
-    std::tuple<ComponentLabel *, int, int>              _wire_snap_closest;
-    std::vector<std::tuple<ComponentLabel *, int, int>> _wire_snap_positions;
+    WireSnapPosition              _wire_snap_closest;
+    std::vector<WireSnapPosition> _wire_snap_positions;
 
     // Circuit model
     model::circuit::Circuit _circuit_model;
@@ -147,13 +165,13 @@ class DesignArea : public QWidget
 
     QString _filepath;
 
-    void _connect_component(ComponentLabel *label, bool first_time = false);
-    void _disconnect_component(ComponentLabel *label);
-    void _delete_components(
+    void _connectComponent(ComponentLabel *label, bool first_time = false);
+    void _disconnectComponent(ComponentLabel *label);
+    void _deleteComponents(
       std::unordered_map<std::string, ComponentLabel *> components);
 
-    void _connect_wire(Wire *wire, bool first_time = true);
-    void _disconnect_wire(Wire *wire);
+    void _connectWire(Wire *wire, bool first_time = true);
+    void _disconnectWire(Wire *wire);
 
     QUndoStack *_undo_stack;
 
@@ -167,11 +185,95 @@ class DesignArea : public QWidget
 
     bool _color_wires = false;
 
-    double _transformation_translation_x = 0;
-    double _transformation_translation_y = 0;
+    /* Transformations
+     * Keeps information about current translation/scale transform
+     * Each component has a native position, as well as a transformed position
+     * The transformed position, which is the actual screen position of the
+     * component, is what is saved
+     * There are two types of transformations:
+     *
+     * 1) Position transformations
+     *  These consist of simple translations
+     *  To calculate, multiply each point by a 2D transformation matrix (to the
+     *  left), of type:
+     *  | 1  0  tx |
+     *  | 0  1  ty | * P
+     *  | 0  0   1 |
+     *  where tx, ty are the offsets to move by
+     *
+     * 2) Zoom transformations
+     *  These consist of zooming around a certain point of origin (ox, oy)
+     *  To apply such a transformation, there are three steps:
+     *  * Move the point (ox, oy) to the native origin (0, 0)
+     *  * Apply a scale transformation
+     *  * Move the origin point back to its original location (ox, oy)
+     *  To calculate, multiply each point by the 2D transformation matrix for
+     *  the first translation, followed by the one for scaling, followed by the
+     *  one for the second translation:
+     *  | 1  0  ox |   | s  0  0 |   | 1  0  -ox |
+     *  | 0  1  oy | * | 0  s  0 | * | 0  1  -oy | * P
+     *  | 0  0   1 |   | 0  0  1 |   | 0  0    1 |
+     *  Notice that the order is from right to left, such that we multiply first
+     *  by the rightmost matrix (move to native origin), scale next and,
+     *  finally, bring origin back to original position
+     *  Because order of multiplication does not matter, this is equivalent to
+     *  the following:
+     *  | s  0  -s*ox+ox |
+     *  | 0  s  -s*oy+oy | * P
+     *  | 0  0         1 |
+     *
+     * In this representation, each 2D point P is of the following type:
+     *     | x |
+     * P = | y |
+     *     | 1 |
+     */
 
-    double _inverse_transformation_translation_x = 0;
-    double _inverse_transformation_translation_y = 0;
+    /* Transformation struct
+     * Keeps information about current transformation state
+     * Data:
+     *  * tx, ty: The current translation values of the transformation matrix:
+     *  | s  0  tx |
+     *  | 0  s  ty |
+     *  | 0  0   1 |
+     *  Which can be used to transform any native point into the current view's
+     *  coordinates
+     *  * tx_inv, ty_inv: The values of the inverse transformation matrix:
+     *  | s  0  tx_inv |
+     *  | 0  s  ty_inv |
+     *  | 0  0       1 |
+     *  Which can be used to transform any of the current view's points into
+     *  native coordinates
+     * Information about scale is unnecessary, since we can deduce it from the
+     * base zoom level and the current zoom level
+     *
+     * Uses:
+     * 1) The forward transformation values are not used to perform
+     * transformations directly, since components keep their transformed
+     * positions
+     * As such, whenever a new transformation must be made, we simply
+     * multiply from the left with the appropriate matrix
+     * However, when using undo on a move action for component(s), it is
+     * necessary to save initial and final coordinates as native, because the
+     * view might be moved before redo is performed
+     * Therefore, on redo, we need to forward transform those native coordinates
+     * back to the view's coordinates, thus requiring tx and ty
+     * 2) The inverse transformation values are used to return to native
+     * coordinates
+     * This is useful when saving to a file, where we need to save
+     * native coordinates
+     * It is also used to save native coordinates when performing undo on a
+     * move action
+     */
+    struct Transformation
+    {
+        double tx     = 0.0;
+        double ty     = 0.0;
+        double tx_inv = 0.0;
+        double ty_inv = 0.0;
+    } _transformation;
+
+    std::pair<int, int> _toNativeCoordinates(int x, int y);
+    std::pair<int, int> _toViewCoordinates(int x, int y);
 
     int _init_move_x, _init_move_y;
 
@@ -181,6 +283,9 @@ class DesignArea : public QWidget
     const double INV_BASE_SCALE_FACTOR = 1 / BASE_SCALE_FACTOR;
 
     void _zoom(int origin_x, int origin_y, int new_zoom_level);
+
+    // moves view to component indicated by _current_component
+    void _moveToComponent();
 
     /* Signals and slots often transmit position information
      * Such information is referred to as global, if its frame of reference

@@ -188,7 +188,7 @@ bool ComponentLabel::saveWire(Wire *wire, bool is_input, int idx)
 
         std::pair<ComponentLabel *, int> output_info =
           wire->outputComponentInfo();
-        dynamic_cast<model::component::NInputComponent *>(_component_model)
+        static_cast<model::component::NInputComponent *>(_component_model)
           ->set_input(idx,
                       *(output_info.first->component_model()),
                       output_info.second);
@@ -210,7 +210,7 @@ void ComponentLabel::removeWire(Wire *wire, bool is_input, int idx)
             return;
         }
         _input_wires[idx] = nullptr;
-        dynamic_cast<model::component::NInputComponent *>(_component_model)
+        static_cast<model::component::NInputComponent *>(_component_model)
           ->remove_input(idx);
     }
     else
@@ -246,6 +246,13 @@ void ComponentLabel::mouseMoveEvent(QMouseEvent *ev)
 {
     switch (_current_tool)
     {
+    case SIMULATE:
+        if (!_simulate_clicked)
+        {
+            ev->ignore();
+        }
+        break;
+    case MOVE:
     case INSERT:
         ev->ignore();
         break;
@@ -290,11 +297,12 @@ void ComponentLabel::mousePressEvent(QMouseEvent *ev)
         break;
     case SIMULATE:
         ev->accept();
+        _simulate_clicked = true;
         switch (_comp_type)
         {
         case BUTTON:
             setResourceByIdx(1);
-            dynamic_cast<model::input::Button *>(_component_model)->press();
+            static_cast<model::input::Button *>(_component_model)->press();
             break;
         case SWITCH:
             setResourceByIdx(!_resource_idx);
@@ -332,8 +340,7 @@ void ComponentLabel::mousePressEvent(QMouseEvent *ev)
                 break;
             }
             unsigned int key = 4 * row + col;
-            dynamic_cast<model::input::Keypad *>(_component_model)
-              ->set_key(key);
+            static_cast<model::input::Keypad *>(_component_model)->set_key(key);
             setResourceByIdx(key + 1);
             break;
         }
@@ -367,11 +374,12 @@ void ComponentLabel::mouseReleaseEvent(QMouseEvent *ev)
         break;
     case SIMULATE:
         ev->accept();
+        _simulate_clicked = false;
         switch (_comp_type)
         {
         case BUTTON:
             setResourceByIdx(0);
-            dynamic_cast<model::input::Button *>(_component_model)->release();
+            static_cast<model::input::Button *>(_component_model)->release();
             break;
         case KEYPAD:
             setResourceByIdx(0);
@@ -690,8 +698,8 @@ void ComponentLabel::scaleTransformationApplied(double size_scale,
     _border->setPixmap(resources::getBorder(width(), height()));
     _border->resize(width(), height());
     // TODO: rounding can cause slight changes in native position when inverse
-    // transforming possibly keep positions as doubles as well, and use those to
-    // inverse transform
+    // transforming; possibly keep positions as doubles as well, and use those
+    // to inverse transform
     QLabel::move(std::round(pos_scale * x() + offset_x),
                  std::round(pos_scale * y() + offset_y));
     moveWires();

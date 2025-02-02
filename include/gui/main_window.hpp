@@ -1,7 +1,7 @@
 #ifndef LOGICSIM_GUI_MAIN_WINDOW_HPP
 #define LOGICSIM_GUI_MAIN_WINDOW_HPP
 
-#define LOGICSIM_VERSION "1.8.16"
+#define LOGICSIM_VERSION "1.10.18"
 
 #include <QActionGroup>
 #include <QApplication>
@@ -32,6 +32,8 @@ class MainWindow : public QMainWindow
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+    void keyPressEvent(QKeyEvent *ev);
+    void keyReleaseEvent(QKeyEvent *ev);
     void closeEvent(QCloseEvent *ev);
 
     void showDocs(const QString &file_path = "");
@@ -39,9 +41,17 @@ class MainWindow : public QMainWindow
   protected:
     DocWindow *_doc_window;
 
-    Ui::MainWindow                                    *_ui;
-    QActionGroup                                      *_tool_group;
-    std::vector<std::tuple<QAction *, COMPONENT, int>> _insert_actions;
+    Ui::MainWindow *_ui;
+    QActionGroup   *_tool_group;
+
+    struct InsertAction
+    {
+        QAction  *action;
+        COMPONENT comp_type;
+        int       res_idx;
+    };
+
+    std::vector<InsertAction> _insert_actions;
 
     void _setSimulationMenu(bool enabled);
     bool _sim_paused;

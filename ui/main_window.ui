@@ -613,6 +613,9 @@
     <addaction name="actionZoom_In"/>
     <addaction name="actionZoom_Out"/>
     <addaction name="actionReset_Zoom"/>
+    <addaction name="separator"/>
+    <addaction name="actionNext_Component"/>
+    <addaction name="actionPrevious_Component"/>
    </widget>
    <widget class="QMenu" name="menuInfo">
     <property name="title">
@@ -1078,6 +1081,16 @@
    </property>
    <property name="text">
     <string>Random</string>
+   </property>
+  </action>
+  <action name="actionNext_Component">
+   <property name="text">
+    <string>Go to next component</string>
+   </property>
+  </action>
+  <action name="actionPrevious_Component">
+   <property name="text">
+    <string>Go to previous component</string>
    </property>
   </action>
  </widget>

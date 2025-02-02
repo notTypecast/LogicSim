@@ -28,6 +28,9 @@ class TabHandler : public QTabWidget
 
     bool saveAndCloseAll();
 
+    bool setTempMoveMode();
+    bool endTempMoveMode();
+
   protected:
     struct FileUndoState
     {
@@ -59,6 +62,8 @@ class TabHandler : public QTabWidget
     void _addUnsavedIcon();
     void _removeUnsavedIcon();
 
+    bool _temp_move = false;
+
   public slots:
     void addDesignArea();
     bool removeDesignArea();
@@ -75,6 +80,8 @@ class TabHandler : public QTabWidget
     void zoomIn();
     void zoomOut();
     void resetZoom();
+    void nextComponent();
+    void previousComponent();
 
     void setSelectMode();
     void setMoveMode();
@@ -106,6 +113,8 @@ class TabHandler : public QTabWidget
     void undoActionPerformed(bool undo_enabled, bool redo_enabled);
     void selectionActionPerformed(bool have_select, bool have_clipboard);
 };
+
+void setMouseTrackingRecursive(QWidget *widget, bool value);
 }
 }
 

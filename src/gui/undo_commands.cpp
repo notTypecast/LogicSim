@@ -31,7 +31,7 @@ InsertComponentCommand::~InsertComponentCommand()
 
 void InsertComponentCommand::redo()
 {
-    _design_area->_connect_component(_component, _first_time);
+    _design_area->_connectComponent(_component, _first_time);
     if (_first_time)
     {
         _first_time = false;
@@ -41,7 +41,7 @@ void InsertComponentCommand::redo()
 
 void InsertComponentCommand::undo()
 {
-    _design_area->_disconnect_component(_component);
+    _design_area->_disconnectComponent(_component);
     _component->hide();
     // removing from circuit is not needed, since component cannot have wires
 
@@ -75,7 +75,7 @@ void DeleteComponentsCommand::redo()
 {
     for (const auto &component : _deleted_components)
     {
-        _design_area->_disconnect_component(component);
+        _design_area->_disconnectComponent(component);
         component->hide();
         component->removeFromCircuit();
 
@@ -83,7 +83,7 @@ void DeleteComponentsCommand::redo()
         {
             if (wire != nullptr)
             {
-                _design_area->_disconnect_wire(wire);
+                _design_area->_disconnectWire(wire);
             }
         }
 
@@ -91,7 +91,7 @@ void DeleteComponentsCommand::redo()
         {
             for (const auto &wire : output)
             {
-                _design_area->_disconnect_wire(wire);
+                _design_area->_disconnectWire(wire);
             }
         }
     }
@@ -101,7 +101,7 @@ void DeleteComponentsCommand::undo()
 {
     for (const auto &component : _deleted_components)
     {
-        _design_area->_connect_component(component);
+        _design_area->_connectComponent(component);
         component->show();
         component->bringBackToCircuit();
 
@@ -109,7 +109,7 @@ void DeleteComponentsCommand::undo()
         {
             if (wire != nullptr)
             {
-                _design_area->_connect_wire(wire);
+                _design_area->_connectWire(wire);
             }
         }
 
@@ -117,7 +117,7 @@ void DeleteComponentsCommand::undo()
         {
             for (const auto &wire : output)
             {
-                _design_area->_connect_wire(wire);
+                _design_area->_connectWire(wire);
             }
         }
     }
@@ -143,7 +143,7 @@ void InsertWireCommand::redo()
     _conn_success = _wire->saveInComponents();
     _wire->show();
     _disconnected = false;
-    _design_area->_connect_wire(_wire, _first_time);
+    _design_area->_connectWire(_wire, _first_time);
     if (_first_time)
     {
         _first_time = false;
@@ -155,7 +155,7 @@ void InsertWireCommand::undo()
     _wire->removeFromComponents();
     _wire->hide();
     _disconnected = true;
-    _design_area->_disconnect_wire(_wire);
+    _design_area->_disconnectWire(_wire);
 }
 
 bool InsertWireCommand::connected() const
@@ -174,14 +174,14 @@ void DeleteWireCommand::redo()
 {
     _wire->removeFromComponents();
     _wire->hide();
-    _design_area->_disconnect_wire(_wire);
+    _design_area->_disconnectWire(_wire);
 }
 
 void DeleteWireCommand::undo()
 {
     _wire->saveInComponents();
     _wire->show();
-    _design_area->_connect_wire(_wire);
+    _design_area->_connectWire(_wire);
 }
 
 // MoveComponentsCommand
@@ -194,59 +194,41 @@ MoveComponentsCommand::MoveComponentsCommand(
   , _final_positions(std::vector<QPoint>(final_positions.size()))
 {
     // transform to native coordinates
-    double inv_scale_factor =
-      std::pow(design_area->INV_BASE_SCALE_FACTOR,
-               design_area->_zoom_level - design_area->BASE_ZOOM_LEVEL);
+    std::pair<int, int> coords;
     for (size_t i = 0; i < moved_components.size(); ++i)
     {
         // TODO: possibly keep position as double
-        _init_positions[i].setX(
-          std::round(inv_scale_factor * init_positions[i].x() +
-                     design_area->_inverse_transformation_translation_x));
-        _init_positions[i].setY(
-          std::round(inv_scale_factor * init_positions[i].y() +
-                     design_area->_inverse_transformation_translation_y));
+        coords = _design_area->_toNativeCoordinates(init_positions[i].x(),
+                                                    init_positions[i].y());
+        _init_positions[i].setX(coords.first);
+        _init_positions[i].setY(coords.second);
 
-        _final_positions[i].setX(
-          std::round(inv_scale_factor * final_positions[i].x() +
-                     design_area->_inverse_transformation_translation_x));
-        _final_positions[i].setY(
-          std::round(inv_scale_factor * final_positions[i].y() +
-                     design_area->_inverse_transformation_translation_y));
+        coords = _design_area->_toNativeCoordinates(final_positions[i].x(),
+                                                    final_positions[i].y());
+        _final_positions[i].setX(coords.first);
+        _final_positions[i].setY(coords.second);
     }
 }
 
 void MoveComponentsCommand::redo()
 {
-    double scale_factor =
-      std::pow(_design_area->BASE_SCALE_FACTOR,
-               _design_area->_zoom_level - _design_area->BASE_ZOOM_LEVEL);
+    std::pair<int, int> coords;
     for (size_t i = 0; i < _moved_components.size(); ++i)
     {
-        int transformed_x =
-          std::round(scale_factor * _final_positions[i].x() +
-                     _design_area->_transformation_translation_x);
-        int transformed_y =
-          std::round(scale_factor * _final_positions[i].y() +
-                     _design_area->_transformation_translation_y);
-        _moved_components[i]->move(transformed_x, transformed_y);
+        coords = _design_area->_toViewCoordinates(_final_positions[i].x(),
+                                                  _final_positions[i].y());
+        _moved_components[i]->move(coords.first, coords.second);
     }
 }
 
 void MoveComponentsCommand::undo()
 {
-    double scale_factor =
-      std::pow(_design_area->BASE_SCALE_FACTOR,
-               _design_area->_zoom_level - _design_area->BASE_ZOOM_LEVEL);
+    std::pair<int, int> coords;
     for (size_t i = 0; i < _moved_components.size(); ++i)
     {
-        int transformed_x =
-          std::round(scale_factor * _init_positions[i].x() +
-                     _design_area->_transformation_translation_x);
-        int transformed_y =
-          std::round(scale_factor * _init_positions[i].y() +
-                     _design_area->_transformation_translation_y);
-        _moved_components[i]->move(transformed_x, transformed_y);
+        coords = _design_area->_toViewCoordinates(_init_positions[i].x(),
+                                                  _init_positions[i].y());
+        _moved_components[i]->move(coords.first, coords.second);
     }
 }
 

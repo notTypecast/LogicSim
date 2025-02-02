@@ -383,6 +383,50 @@ void TabHandler::setMoveMode()
     emit designToolChanged(TOOL::MOVE);
 }
 
+bool TabHandler::setTempMoveMode()
+{
+    DesignArea *design_area = currentDesignArea();
+    if (design_area->isDrawingWire())
+    {
+        // do not allow while drawing wire
+        return false;
+    }
+    if (design_area->mode() != TOOL::SIMULATE)
+    {
+        // set move mode in design area, but don't emit signal
+        design_area->setMode(TOOL::MOVE);
+    }
+    // generate fake mouse click, to save initial cursor positions
+    QPoint      g_pos = QCursor::pos();
+    QPoint      l_pos = design_area->mapFromGlobal(g_pos);
+    QMouseEvent ev(QEvent::MouseButtonPress,
+                   l_pos,
+                   g_pos,
+                   Qt::LeftButton,
+                   Qt::LeftButton,
+                   Qt::NoModifier);
+    QApplication::sendEvent(design_area, &ev);
+    // design_area->setMouseTracking(true);
+    setMouseTrackingRecursive(design_area, true);
+
+    _temp_move = true;
+    return design_area->mode() != TOOL::SIMULATE;
+}
+
+bool TabHandler::endTempMoveMode()
+{
+    if (!_temp_move)
+    {
+        return false;
+    }
+    DesignArea *design_area = currentDesignArea();
+    // correct mode will be set by main window
+    setMouseTrackingRecursive(design_area, false);
+
+    _temp_move = false;
+    return design_area->mode() != TOOL::SIMULATE;
+}
+
 void TabHandler::setWireMode()
 {
     currentDesignArea()->setMode(TOOL::WIRE);
@@ -563,6 +607,29 @@ void TabHandler::zoomOut()
 void TabHandler::resetZoom()
 {
     currentDesignArea()->resetZoom();
+}
+
+void TabHandler::nextComponent()
+{
+    currentDesignArea()->nextComponent();
+}
+
+void TabHandler::previousComponent()
+{
+    currentDesignArea()->previousComponent();
+}
+
+void setMouseTrackingRecursive(QWidget *widget, bool value)
+{
+    widget->setMouseTracking(value);
+
+    for (QObject *child : widget->children())
+    {
+        if (QWidget *childWidget = qobject_cast<QWidget *>(child))
+        {
+            setMouseTrackingRecursive(childWidget, value);
+        }
+    }
 }
 }
 }

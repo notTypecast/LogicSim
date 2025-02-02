@@ -108,6 +108,10 @@ class ComponentLabel : public QLabel
 
     bool _cancel_move = false;
 
+    // flag to avoid move during simulation, if it resulted from click on
+    // component
+    bool _simulate_clicked = false;
+
   public slots:
     // called on object creation
     // triggered by properties popup

@@ -41,7 +41,7 @@ Properties::Properties(QString title, const QString &doc_file_path,
                     current = current->parent();
                 }
 
-                dynamic_cast<MainWindow *>(current)->showDocs(doc_file_path);
+                static_cast<MainWindow *>(current)->showDocs(doc_file_path);
             });
     title_layout->addWidget(help_button);
 

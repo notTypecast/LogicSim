@@ -199,6 +199,22 @@ MainWindow::MainWindow(QWidget *parent)
             _ui->tabHandler,
             &TabHandler::resetZoom);
 
+    _ui->actionNext_Component->setShortcuts(
+      { QKeySequence(Qt::CTRL + Qt::Key_Home),
+        QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_M) });
+    connect(_ui->actionNext_Component,
+            &QAction::triggered,
+            _ui->tabHandler,
+            &TabHandler::nextComponent);
+
+    _ui->actionPrevious_Component->setShortcuts(
+      { QKeySequence(Qt::CTRL + Qt::Key_End),
+        QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_N) });
+    connect(_ui->actionPrevious_Component,
+            &QAction::triggered,
+            _ui->tabHandler,
+            &TabHandler::previousComponent);
+
     // Info menu
     connect(_ui->actionVersion,
             &QAction::triggered,
@@ -259,18 +275,18 @@ MainWindow::MainWindow(QWidget *parent)
             _ui->tabHandler,
             &TabHandler::setWireRemoveMode);
 
-    for (const auto &triplet : _insert_actions)
+    for (const auto &insert_action : _insert_actions)
     {
-        QAction *action = std::get<0>(triplet);
-        _tool_group->addAction(action);
-        action->setProperty("component-type",
-                            static_cast<int>(std::get<1>(triplet)));
-        int res_idx = std::get<2>(triplet);
-        if (res_idx != -1)
+        _tool_group->addAction(insert_action.action);
+        insert_action.action->setProperty(
+          "component-type",
+          static_cast<int>(insert_action.comp_type));
+        if (insert_action.res_idx != -1)
         {
-            action->setProperty("resource-idx", res_idx);
+            insert_action.action->setProperty("resource-idx",
+                                              insert_action.res_idx);
         }
-        connect(action,
+        connect(insert_action.action,
                 &QAction::triggered,
                 _ui->tabHandler,
                 &TabHandler::setInsertMode);
@@ -375,15 +391,14 @@ void MainWindow::setDesignMenu()
     {
     case INSERT:
         // TODO: don't use loop here
-        for (const auto &triplet : _insert_actions)
+        for (const auto &insert_action : _insert_actions)
         {
-            int res_idx = std::get<2>(triplet);
-            if (std::get<1>(triplet) == _last_insert_comp &&
-                (res_idx == -1 || res_idx == _last_insert_res_idx))
+            if (insert_action.comp_type == _last_insert_comp &&
+                (insert_action.res_idx == -1 ||
+                 insert_action.res_idx == _last_insert_res_idx))
             {
-                QAction *action = std::get<0>(triplet);
-                action->setChecked(true);
-                emit action->triggered();
+                insert_action.action->setChecked(true);
+                emit insert_action.action->triggered();
                 break;
             }
         }
@@ -421,9 +436,9 @@ void MainWindow::_setSimulationMenu(bool enabled)
     _wire_button->setEnabled(!enabled);
     _ui->actionWire_Remove->setEnabled(!enabled);
     _wire_remove_button->setEnabled(!enabled);
-    for (const auto &triplet : _insert_actions)
+    for (const auto &insert_action : _insert_actions)
     {
-        std::get<0>(triplet)->setEnabled(!enabled);
+        insert_action.action->setEnabled(!enabled);
     }
     for (const auto &button : _insert_buttons)
     {
@@ -524,6 +539,36 @@ void MainWindow::setSelectActionState(bool have_select, bool have_clipboard)
     _ui->actionDelete->setEnabled(have_select);
 }
 
+void MainWindow::keyPressEvent(QKeyEvent *ev)
+{
+    if (ev->isAutoRepeat())
+    {
+        return;
+    }
+    if (ev->key() == Qt::Key_Space)
+    {
+        if (_ui->tabHandler->setTempMoveMode())
+        {
+            _move_button->setChecked(true);
+        }
+    }
+}
+
+void MainWindow::keyReleaseEvent(QKeyEvent *ev)
+{
+    if (ev->isAutoRepeat())
+    {
+        return;
+    }
+    if (ev->key() == Qt::Key_Space)
+    {
+        if (_ui->tabHandler->endTempMoveMode())
+        {
+            setDesignMenu();
+        }
+    }
+}
+
 void MainWindow::closeEvent(QCloseEvent *ev)
 {
     quit();
@@ -565,6 +610,7 @@ void MainWindow::_setupToolbar()
     _select_button->setFixedSize(button_size);
     _select_button->setCheckable(true);
     _select_button->setChecked(true);
+    _select_button->setFocusPolicy(Qt::NoFocus);
     connect(_select_button,
             &QPushButton::pressed,
             _ui->actionSelect,
@@ -577,6 +623,7 @@ void MainWindow::_setupToolbar()
     _move_button->setIcon(*resources::move_icon);
     _move_button->setFixedSize(button_size);
     _move_button->setCheckable(true);
+    _move_button->setFocusPolicy(Qt::NoFocus);
     connect(_move_button,
             &QPushButton::pressed,
             _ui->actionMove,
@@ -589,6 +636,7 @@ void MainWindow::_setupToolbar()
     _wire_button->setIcon(*resources::wire_icon);
     _wire_button->setFixedSize(button_size);
     _wire_button->setCheckable(true);
+    _wire_button->setFocusPolicy(Qt::NoFocus);
     connect(_wire_button,
             &QPushButton::pressed,
             _ui->actionWire,
@@ -601,6 +649,7 @@ void MainWindow::_setupToolbar()
     _wire_remove_button->setIcon(*resources::wire_remove_icon);
     _wire_remove_button->setFixedSize(button_size);
     _wire_remove_button->setCheckable(true);
+    _wire_remove_button->setFocusPolicy(Qt::NoFocus);
     connect(_wire_remove_button,
             &QPushButton::pressed,
             _ui->actionWire_Remove,
@@ -615,34 +664,36 @@ void MainWindow::_setupToolbar()
     grid->addWidget(hline1, 2, 0, 1, 3);
 
     const std::vector<COMPONENT> split_after = { COMPONENT::XNOR_GATE,
-                                                 COMPONENT::KEYPAD,
+                                                 COMPONENT::RANDOM,
                                                  COMPONENT::_7SEG_8IN };
 
     size_t curr_cmp = 0;
     int    row = 3, col = 0;
-    for (const auto &triplet : _insert_actions)
+    for (const auto &insert_action : _insert_actions)
     {
         QPushButton *button = new QPushButton(_toolbar);
-        int          idx    = std::get<2>(triplet);
-        button->setIcon(*(
-          resources::comp_icons.at(std::get<1>(triplet))[idx == -1 ? 0 : idx]));
+        button->setIcon(*(resources::comp_icons.at(
+          insert_action
+            .comp_type)[insert_action.res_idx == -1 ? 0
+                                                    : insert_action.res_idx]));
         button->setIconSize(QSize(30, 30));
         button->setFixedSize(button_size);
         button->setCheckable(true);
+        button->setFocusPolicy(Qt::NoFocus);
         connect(button,
                 &QPushButton::pressed,
-                std::get<0>(triplet),
+                insert_action.action,
                 &QAction::trigger);
         grid->addWidget(button, row, col);
         button_group->addButton(button);
-        toolbar_actions[std::get<0>(triplet)] = button;
+        toolbar_actions[insert_action.action] = button;
 
         row = row + col / 2;
         col = (col + 1) % 3;
 
         _insert_buttons.push_back(button);
 
-        if (std::get<1>(triplet) == split_after[curr_cmp])
+        if (insert_action.comp_type == split_after[curr_cmp])
         {
             if (++curr_cmp == split_after.size())
             {
@@ -678,6 +729,7 @@ void MainWindow::_setupToolbar()
     _start_sim_button = new QPushButton(_toolbar);
     _start_sim_button->setIcon(*resources::start_sim_icon);
     _start_sim_button->setFixedSize(button_size);
+    _start_sim_button->setFocusPolicy(Qt::NoFocus);
     connect(_start_sim_button,
             &QPushButton::pressed,
             _ui->actionStart,
@@ -688,6 +740,7 @@ void MainWindow::_setupToolbar()
     _stop_sim_button = new QPushButton(_toolbar);
     _stop_sim_button->setIcon(*resources::stop_sim_icon);
     _stop_sim_button->setFixedSize(button_size);
+    _stop_sim_button->setFocusPolicy(Qt::NoFocus);
     connect(_stop_sim_button,
             &QPushButton::pressed,
             _ui->actionStop,
@@ -699,6 +752,7 @@ void MainWindow::_setupToolbar()
     _pause_sim_button->setIcon(*resources::pause_sim_icon);
     _pause_sim_button->setFixedSize(button_size);
     _pause_sim_button->setCheckable(true);
+    _pause_sim_button->setFocusPolicy(Qt::NoFocus);
     connect(_pause_sim_button,
             &QPushButton::toggled,
             [this](int checked)
@@ -722,6 +776,7 @@ void MainWindow::_setupToolbar()
     _step_sim_button = new QPushButton(_toolbar);
     _step_sim_button->setIcon(*resources::step_sim_icon);
     _step_sim_button->setFixedSize(button_size);
+    _step_sim_button->setFocusPolicy(Qt::NoFocus);
     connect(_step_sim_button,
             &QPushButton::pressed,
             _ui->actionStep,
@@ -732,6 +787,7 @@ void MainWindow::_setupToolbar()
     _reset_sim_button = new QPushButton(_toolbar);
     _reset_sim_button->setIcon(*resources::reset_sim_icon);
     _reset_sim_button->setFixedSize(button_size);
+    _reset_sim_button->setFocusPolicy(Qt::NoFocus);
     connect(_reset_sim_button,
             &QPushButton::pressed,
             _ui->actionReset,

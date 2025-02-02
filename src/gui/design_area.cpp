@@ -154,12 +154,12 @@ void DesignArea::mouseMoveEvent(QMouseEvent *ev)
     {
         double inv_scale_factor =
           std::pow(INV_BASE_SCALE_FACTOR, _zoom_level - BASE_ZOOM_LEVEL);
-        int dx                                 = ev->x() - _init_move_x;
-        int dy                                 = ev->y() - _init_move_y;
-        _transformation_translation_x         += dx;
-        _transformation_translation_y         += dy;
-        _inverse_transformation_translation_x -= inv_scale_factor * dx;
-        _inverse_transformation_translation_y -= inv_scale_factor * dy;
+        int dx                  = ev->x() - _init_move_x;
+        int dy                  = ev->y() - _init_move_y;
+        _transformation.tx     += dx;
+        _transformation.ty     += dy;
+        _transformation.tx_inv -= inv_scale_factor * dx;
+        _transformation.ty_inv -= inv_scale_factor * dy;
         emit transformPosition(dx, dy);
         _init_move_x = ev->x();
         _init_move_y = ev->y();
@@ -302,9 +302,10 @@ bool DesignArea::continueState()
     return false;
 }
 
-void DesignArea::_connect_component(ComponentLabel *label, bool first_time)
+void DesignArea::_connectComponent(ComponentLabel *label, bool first_time)
 {
     _circuit_model.add_component(*(label->component_model()));
+    _components.push_back(label);
 
     if (first_time)
     {
@@ -373,9 +374,10 @@ void DesignArea::_connect_component(ComponentLabel *label, bool first_time)
             &DesignArea::propertyUndoActionPerformed);
 }
 
-void DesignArea::_disconnect_component(ComponentLabel *label)
+void DesignArea::_disconnectComponent(ComponentLabel *label)
 {
     _circuit_model.remove_component(*(label->component_model()));
+    _components.erase(std::find(_components.begin(), _components.end(), label));
 
     disconnect(label,
                &ComponentLabel::selected,
@@ -425,7 +427,7 @@ void DesignArea::_disconnect_component(ComponentLabel *label)
                &DesignArea::propertyUndoActionPerformed);
 }
 
-void DesignArea::_connect_wire(Wire *wire, bool first_time)
+void DesignArea::_connectWire(Wire *wire, bool first_time)
 {
     if (first_time)
     {
@@ -445,7 +447,7 @@ void DesignArea::_connect_wire(Wire *wire, bool first_time)
     connect(this, &DesignArea::resetWireResource, wire, &Wire::updateColorWire);
 }
 
-void DesignArea::_disconnect_wire(Wire *wire)
+void DesignArea::_disconnectWire(Wire *wire)
 {
     disconnect(this,
                &DesignArea::wireProximityCheck,
@@ -557,9 +559,9 @@ void DesignArea::finishMove()
 
 void DesignArea::getWireSource(ComponentLabel *component, int dx, int dy)
 {
-    std::get<0>(_wire_snap_closest) = nullptr;
-    _wire                           = new Wire(getScale(), this);
-    bool set                        = _wire->setComponent1(component, dx, dy);
+    _wire_snap_closest.component = nullptr;
+    _wire                        = new Wire(getScale(), this);
+    bool set                     = _wire->setComponent1(component, dx, dy);
     if (!set)
     {
         delete _wire;
@@ -579,26 +581,25 @@ void DesignArea::moveWireDest(int dx, int dy)
     emit wireSnap(_wire->component1(), x, y);
     if (_wire_snap_positions.empty())
     {
-        std::get<0>(_wire_snap_closest) = nullptr;
+        _wire_snap_closest.component = nullptr;
         _wire->repositionDest(x, y);
     }
     else
     {
         double distance = std::numeric_limits<double>::max();
 
-        for (const auto &triplet : _wire_snap_positions)
+        for (const auto &wire_snap_position : _wire_snap_positions)
         {
-            int new_distance = std::pow(x - std::get<1>(triplet), 2) +
-                               std::pow(y - std::get<2>(triplet), 2);
+            int new_distance = std::pow(x - wire_snap_position.x, 2) +
+                               std::pow(y - wire_snap_position.y, 2);
             if (distance > new_distance)
             {
                 distance           = new_distance;
-                _wire_snap_closest = triplet;
+                _wire_snap_closest = wire_snap_position;
             }
         }
 
-        _wire->repositionDest(std::get<1>(_wire_snap_closest),
-                              std::get<2>(_wire_snap_closest));
+        _wire->repositionDest(_wire_snap_closest.x, _wire_snap_closest.y);
     }
 }
 
@@ -609,7 +610,7 @@ void DesignArea::getWireSnapPos(ComponentLabel *component, int x, int y)
 
 void DesignArea::setWireDest()
 {
-    ComponentLabel *dest_component = std::get<0>(_wire_snap_closest);
+    ComponentLabel *dest_component = _wire_snap_closest.component;
     if (_wire == nullptr || dest_component == nullptr)
     {
         delete _wire;
@@ -618,8 +619,8 @@ void DesignArea::setWireDest()
     }
 
     _wire->setComponent2(dest_component,
-                         std::get<1>(_wire_snap_closest) - dest_component->x(),
-                         std::get<2>(_wire_snap_closest) - dest_component->y());
+                         _wire_snap_closest.x - dest_component->x(),
+                         _wire_snap_closest.y - dest_component->y());
 
     InsertWireCommand *wire_command = new InsertWireCommand(this, _wire);
     _undo_stack->push(wire_command);
@@ -805,8 +806,8 @@ bool DesignArea::writeToFile(bool new_file)
     emit writeComponent(
       file,
       std::pow(INV_BASE_SCALE_FACTOR, _zoom_level - BASE_ZOOM_LEVEL),
-      _inverse_transformation_translation_x,
-      _inverse_transformation_translation_y);
+      _transformation.tx_inv,
+      _transformation.ty_inv);
 
     file.close();
 
@@ -846,7 +847,7 @@ void DesignArea::readFromFile(QString filepath)
         std::string id_str = splitter.next();
         if (id_str.empty())
         {
-            _delete_components(components);
+            _deleteComponents(components);
             throw std::invalid_argument("Invalid file format: line " +
                                         std::to_string(i) + " empty");
         }
@@ -854,7 +855,7 @@ void DesignArea::readFromFile(QString filepath)
         std::string ctype;
         if (!splitter.has_next() || (ctype = splitter.next()).empty())
         {
-            _delete_components(components);
+            _deleteComponents(components);
             throw std::invalid_argument("Invalid file format: line " +
                                         std::to_string(i) +
                                         " missing component type");
@@ -863,7 +864,7 @@ void DesignArea::readFromFile(QString filepath)
         std::string params;
         if (!splitter.has_next())
         {
-            _delete_components(components);
+            _deleteComponents(components);
             throw std::invalid_argument("Invalid file format: line " +
                                         std::to_string(i) +
                                         " missing parameters");
@@ -887,14 +888,14 @@ void DesignArea::readFromFile(QString filepath)
                              getScale(),
                              _undo_stack,
                              this);
-        _connect_component(component, true);
+        _connectComponent(component, true);
         components[id_str] = component;
 
         component->setParams(QString::fromStdString(params));
 
         if (!splitter.has_next())
         {
-            _delete_components(components);
+            _deleteComponents(components);
             throw std::invalid_argument("Invalid file format: line " +
                                         std::to_string(i) +
                                         " missing coordinates");
@@ -909,14 +910,14 @@ void DesignArea::readFromFile(QString filepath)
         }
         catch (const std::invalid_argument &)
         {
-            _delete_components(components);
+            _deleteComponents(components);
             throw std::invalid_argument("Invalid file format: line " +
                                         std::to_string(i) + " bad coordinate");
         }
 
         if (!splitter2.has_next())
         {
-            _delete_components(components);
+            _deleteComponents(components);
             throw std::invalid_argument("Invalid file format: line " +
                                         std::to_string(i) +
                                         " missing coordinate 2");
@@ -928,7 +929,7 @@ void DesignArea::readFromFile(QString filepath)
         }
         catch (const std::invalid_argument &)
         {
-            _delete_components(components);
+            _deleteComponents(components);
             throw std::invalid_argument("Invalid file format: line " +
                                         std::to_string(i) + " bad coordinate");
         }
@@ -938,14 +939,14 @@ void DesignArea::readFromFile(QString filepath)
 
         if (splitter2.has_next())
         {
-            _delete_components(components);
+            _deleteComponents(components);
             throw std::invalid_argument("Invalid file format: line " +
                                         std::to_string(i) + " too many fields");
         }
 
         if (!splitter.has_next())
         {
-            _delete_components(components);
+            _deleteComponents(components);
             throw std::invalid_argument("Invalid file format: line " +
                                         std::to_string(i) + " missing inputs");
         }
@@ -954,7 +955,7 @@ void DesignArea::readFromFile(QString filepath)
 
         if (splitter.has_next())
         {
-            _delete_components(components);
+            _deleteComponents(components);
             throw std::invalid_argument("Invalid file format: line " +
                                         std::to_string(i) + " too many fields");
         }
@@ -970,7 +971,7 @@ void DesignArea::readFromFile(QString filepath)
         {
             if (components[input.first]->component_model()->n_inputs() > 0)
             {
-                _delete_components(components);
+                _deleteComponents(components);
                 throw std::invalid_argument(
                   "Invalid file format: missing inputs for component " +
                   input.first);
@@ -985,7 +986,7 @@ void DesignArea::readFromFile(QString filepath)
         {
             if (i >= components[input.first]->component_model()->n_inputs())
             {
-                _delete_components(components);
+                _deleteComponents(components);
                 throw std::invalid_argument(
                   "Invalid file format: too many inputs for component " +
                   input.first);
@@ -1001,7 +1002,7 @@ void DesignArea::readFromFile(QString filepath)
                 components.find(input_id_str) == components.end() ||
                 !splitter2.has_next())
             {
-                _delete_components(components);
+                _deleteComponents(components);
                 throw std::invalid_argument(
                   "Invalid file format: invalid input for component " +
                   input.first);
@@ -1018,28 +1019,28 @@ void DesignArea::readFromFile(QString filepath)
             }
             catch (const std::invalid_argument &e)
             {
-                _delete_components(components);
+                _deleteComponents(components);
                 throw std::invalid_argument(
                   "Invalid file format: invalid output index for component " +
                   input.first);
             }
             if (splitter2.has_next())
             {
-                _delete_components(components);
+                _deleteComponents(components);
                 throw std::invalid_argument(
                   "Invalid file format: too many fields for input of " +
                   input.first);
             }
 
             Wire *wire = new Wire(getScale(), this);
-            _connect_wire(wire);
+            _connectWire(wire);
             wire->setComponent1(components[input.first], true, i);
             wire->setComponent2(components[input_id_str], false, output_idx);
             wire->saveInComponents();
             wire->reposition();
 
             model::component::NInputComponent *n_input_component =
-              dynamic_cast<model::component::NInputComponent *>(
+              static_cast<model::component::NInputComponent *>(
                 components[input.first]->component_model());
             n_input_component->set_input(
               i,
@@ -1049,7 +1050,7 @@ void DesignArea::readFromFile(QString filepath)
 
         if (i < components[input.first]->component_model()->n_inputs())
         {
-            _delete_components(components);
+            _deleteComponents(components);
             throw std::invalid_argument(
               "Invalid file format: missing inputs for component " +
               input.first);
@@ -1060,7 +1061,7 @@ void DesignArea::readFromFile(QString filepath)
     _filepath = filepath;
 }
 
-void DesignArea::_delete_components(
+void DesignArea::_deleteComponents(
   std::unordered_map<std::string, ComponentLabel *> components)
 {
     for (const auto &pair : components)
@@ -1210,24 +1211,20 @@ void DesignArea::_zoom(int origin_x, int origin_y, int new_zoom_level)
     double prev_inv_scale_factor =
       std::pow(INV_BASE_SCALE_FACTOR, _zoom_level - BASE_ZOOM_LEVEL);
 
-    QPoint origin_point = QPoint(origin_x, origin_y);
+    _transformation.tx =
+      scale_factor * _transformation.tx - scale_factor * origin_x + origin_x;
+    _transformation.ty =
+      scale_factor * _transformation.ty - scale_factor * origin_y + origin_y;
 
-    _transformation_translation_x =
-      scale_factor * _transformation_translation_x - scale_factor * origin_x +
-      origin_x;
-    _transformation_translation_y =
-      scale_factor * _transformation_translation_y - scale_factor * origin_y +
-      origin_y;
-
-    _inverse_transformation_translation_x +=
+    _transformation.tx_inv +=
       prev_inv_scale_factor * (origin_x - origin_x / scale_factor);
-    _inverse_transformation_translation_y +=
+    _transformation.ty_inv +=
       prev_inv_scale_factor * (origin_y - origin_y / scale_factor);
 
     emit transformScale(size_scale_factor,
                         scale_factor,
-                        -scale_factor * origin_point.x() + origin_point.x(),
-                        -scale_factor * origin_point.y() + origin_point.y());
+                        -scale_factor * origin_x + origin_x,
+                        -scale_factor * origin_y + origin_y);
 
     _zoom_level = new_zoom_level;
 }
@@ -1241,5 +1238,80 @@ void DesignArea::clearUndoStack()
 {
     _undo_stack->clear();
 }
+
+bool DesignArea::isDrawingWire()
+{
+    return _wire != nullptr;
+}
+
+void DesignArea::nextComponent()
+{
+    if (_components.empty())
+    {
+        return;
+    }
+    _component_idx = (_component_idx + 1) % _components.size();
+    _moveToComponent();
+}
+
+void DesignArea::previousComponent()
+{
+    if (_components.empty())
+    {
+        return;
+    }
+    _component_idx =
+      _component_idx - 1 < 0 ? _components.size() - 1 : _component_idx - 1;
+    _moveToComponent();
+}
+
+void DesignArea::_moveToComponent()
+{
+    // native component coordinates
+    int native_x, native_y;
+    std::tie(native_x, native_y) =
+      _toNativeCoordinates(_components[_component_idx]->x(),
+                           _components[_component_idx]->y());
+
+    // new view position of component
+    int new_view_x = width() / 3;
+    int new_view_y = height() / 3;
+
+    // amount to move from current position to get to new position (offset)
+    int offset_x = new_view_x - _components[_component_idx]->x();
+    int offset_y = new_view_y - _components[_component_idx]->y();
+
+    double scale_factor =
+      std::pow(BASE_SCALE_FACTOR, _zoom_level - BASE_ZOOM_LEVEL);
+    double inv_scale_factor = 1 / scale_factor;
+
+    // since view moves to entirely different position, overwrite these with new
+    // position data
+    _transformation.tx = new_view_x - scale_factor * native_x;
+    _transformation.ty = new_view_y - scale_factor * native_y;
+
+    _transformation.tx_inv = native_x - inv_scale_factor * new_view_x;
+    _transformation.ty_inv = native_y - inv_scale_factor * new_view_y;
+
+    emit transformPosition(offset_x, offset_y);
+}
+
+std::pair<int, int> DesignArea::_toNativeCoordinates(int x, int y)
+{
+    double inv_scale_factor =
+      std::pow(INV_BASE_SCALE_FACTOR, _zoom_level - BASE_ZOOM_LEVEL);
+
+    return { std::round(inv_scale_factor * x + _transformation.tx_inv),
+             std::round(inv_scale_factor * y + _transformation.ty_inv) };
+}
+
+std::pair<int, int> DesignArea::_toViewCoordinates(int x, int y)
+{
+    double scale_factor =
+      std::pow(BASE_SCALE_FACTOR, _zoom_level - BASE_ZOOM_LEVEL);
+    return { std::round(scale_factor * x + _transformation.tx),
+             std::round(scale_factor * y + _transformation.ty) };
+}
+
 } // namespace gui
 } // namespace logicsim

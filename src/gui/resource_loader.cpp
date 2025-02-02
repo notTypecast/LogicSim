@@ -1,6 +1,5 @@
 #include "gui/resource_loader.hpp"
 #include "gui/component_label.hpp"
-#include <iostream>
 
 namespace logicsim
 {
